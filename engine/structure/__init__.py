@@ -1,0 +1,1 @@
+# PROJECT EDGE structure package
