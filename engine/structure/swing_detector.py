@@ -1,21 +1,16 @@
 """
 PROJECT EDGE
-Structure Engine — Swing Detector v1
+Structure Engine — Swing Detector v2
 
-Responsabilidad:
-    Detectar Swing High y Swing Low confirmados.
+Detector causal de Swing High / Swing Low.
 
-Este módulo NO:
-    - ejecuta órdenes
-    - genera señales LONG/SHORT
-    - se conecta a Binance
-    - decide si operar
+Principio:
+- Un pivote solo puede reconocerse después de `pivot_right` velas.
+- Un swing se confirma únicamente cuando el precio, en velas posteriores,
+  se aleja del pivote al menos el umbral adaptativo.
+- Se registra la vela exacta de confirmación para evitar look-ahead bias.
 
-Entrada:
-    Datos OHLCV en formato pandas.DataFrame.
-
-Salida:
-    DataFrame con ATR, candidatos de swing y swings confirmados.
+Este módulo NO ejecuta órdenes ni genera señales LONG/SHORT.
 """
 
 from __future__ import annotations
@@ -26,9 +21,8 @@ import pandas as pd
 
 @dataclass
 class Swing:
-    """Representa un swing confirmado."""
-    index: int
-    timestamp: object
+    pivot_index: int
+    confirmation_index: int
     swing_type: str
     price: float
     atr: float
@@ -37,7 +31,7 @@ class Swing:
 
 
 class SwingDetector:
-    """Detector adaptativo de swings."""
+    """Detector adaptativo y causal de swings."""
 
     def __init__(
         self,
@@ -48,6 +42,15 @@ class SwingDetector:
         min_move_pct: float = 0.0025,
         max_move_pct: float = 0.05,
     ) -> None:
+        if pivot_left < 1 or pivot_right < 1:
+            raise ValueError("pivot_left y pivot_right deben ser >= 1.")
+        if atr_period < 2:
+            raise ValueError("atr_period debe ser >= 2.")
+        if atr_multiplier <= 0:
+            raise ValueError("atr_multiplier debe ser > 0.")
+        if not 0 <= min_move_pct <= max_move_pct:
+            raise ValueError("Debe cumplirse 0 <= min_move_pct <= max_move_pct.")
+
         self.pivot_left = pivot_left
         self.pivot_right = pivot_right
         self.atr_period = atr_period
@@ -62,14 +65,15 @@ class SwingDetector:
 
         if missing:
             raise ValueError(f"Faltan columnas OHLC requeridas: {sorted(missing)}")
-
         if df.empty:
             raise ValueError("El DataFrame está vacío.")
+        if df[["open", "high", "low", "close"]].isna().any().any():
+            raise ValueError("Los datos OHLC contienen valores nulos.")
+        if (df["high"] < df["low"]).any():
+            raise ValueError("Hay velas con high < low.")
 
     def calculate_atr(self, df: pd.DataFrame) -> pd.Series:
-        """Calcula ATR mediante True Range."""
         previous_close = df["close"].shift(1)
-
         true_range = pd.concat(
             [
                 df["high"] - df["low"],
@@ -84,17 +88,17 @@ class SwingDetector:
             min_periods=self.atr_period,
         ).mean()
 
-    def _local_high(self, df: pd.DataFrame, i: int) -> bool:
-        start = i - self.pivot_left
-        end = i + self.pivot_right + 1
-        window = df["high"].iloc[start:end]
-        return df["high"].iloc[i] == window.max()
+    def _is_local_high(self, data: pd.DataFrame, i: int) -> bool:
+        left = data["high"].iloc[i - self.pivot_left:i]
+        right = data["high"].iloc[i + 1:i + self.pivot_right + 1]
+        current = float(data["high"].iloc[i])
+        return current > float(left.max()) and current >= float(right.max())
 
-    def _local_low(self, df: pd.DataFrame, i: int) -> bool:
-        start = i - self.pivot_left
-        end = i + self.pivot_right + 1
-        window = df["low"].iloc[start:end]
-        return df["low"].iloc[i] == window.min()
+    def _is_local_low(self, data: pd.DataFrame, i: int) -> bool:
+        left = data["low"].iloc[i - self.pivot_left:i]
+        right = data["low"].iloc[i + 1:i + self.pivot_right + 1]
+        current = float(data["low"].iloc[i])
+        return current < float(left.min()) and current <= float(right.min())
 
     def _adaptive_threshold(self, price: float, atr: float) -> float:
         if price <= 0:
@@ -111,17 +115,20 @@ class SwingDetector:
 
         data = df.copy().reset_index(drop=False)
         data["atr"] = self.calculate_atr(data)
+
         data["swing_candidate"] = None
         data["swing_confirmed"] = False
         data["swing_type"] = None
         data["swing_price"] = None
         data["swing_move"] = None
         data["swing_threshold"] = None
+        data["swing_confirmation_index"] = None
+        data["swing_confirmation_price"] = None
 
         start = max(self.pivot_left, self.atr_period - 1)
-        end = len(data) - self.pivot_right
+        last_pivot_index = len(data) - self.pivot_right - 1
 
-        for i in range(start, end):
+        for i in range(start, last_pivot_index + 1):
             atr = data.at[i, "atr"]
             if pd.isna(atr) or atr <= 0:
                 continue
@@ -129,37 +136,39 @@ class SwingDetector:
             high = float(data.at[i, "high"])
             low = float(data.at[i, "low"])
 
-            if self._local_high(data, i):
+            if self._is_local_high(data, i):
                 data.at[i, "swing_candidate"] = "HIGH"
                 threshold = self._adaptive_threshold(high, float(atr))
-                future_lows = data["low"].iloc[i + 1:]
+                first_known_at = i + self.pivot_right
 
-                if not future_lows.empty:
-                    lowest_future = float(future_lows.min())
-                    move = high - lowest_future
-
+                for j in range(first_known_at, len(data)):
+                    move = high - float(data.at[j, "low"])
                     if move >= threshold:
                         data.at[i, "swing_confirmed"] = True
                         data.at[i, "swing_type"] = "HIGH"
                         data.at[i, "swing_price"] = high
                         data.at[i, "swing_move"] = move
                         data.at[i, "swing_threshold"] = threshold
+                        data.at[i, "swing_confirmation_index"] = j
+                        data.at[i, "swing_confirmation_price"] = float(data.at[j, "low"])
+                        break
 
-            if self._local_low(data, i):
+            if self._is_local_low(data, i):
                 data.at[i, "swing_candidate"] = "LOW"
                 threshold = self._adaptive_threshold(low, float(atr))
-                future_highs = data["high"].iloc[i + 1:]
+                first_known_at = i + self.pivot_right
 
-                if not future_highs.empty:
-                    highest_future = float(future_highs.max())
-                    move = highest_future - low
-
+                for j in range(first_known_at, len(data)):
+                    move = float(data.at[j, "high"]) - low
                     if move >= threshold:
                         data.at[i, "swing_confirmed"] = True
                         data.at[i, "swing_type"] = "LOW"
                         data.at[i, "swing_price"] = low
                         data.at[i, "swing_move"] = move
                         data.at[i, "swing_threshold"] = threshold
+                        data.at[i, "swing_confirmation_index"] = j
+                        data.at[i, "swing_confirmation_price"] = float(data.at[j, "high"])
+                        break
 
         return data
 
@@ -173,7 +182,6 @@ def detect_swings(
     min_move_pct: float = 0.0025,
     max_move_pct: float = 0.05,
 ) -> pd.DataFrame:
-    """Función simplificada para utilizar el detector."""
     detector = SwingDetector(
         pivot_left=pivot_left,
         pivot_right=pivot_right,
