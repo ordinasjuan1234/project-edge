@@ -55,8 +55,8 @@ def test_run_case_returns_complete_pipeline_result():
     result = engine().run_case(
         timeframe_data=sample_timeframes(),
         entry_price=119.0,
-        stop_price=117.0,
-        target_price=123.0,
+        stop_price=123.0,
+        target_price=113.0,
         future_candles=future,
     )
 
