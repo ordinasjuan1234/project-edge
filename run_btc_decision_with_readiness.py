@@ -23,7 +23,7 @@ def main():
         "BTCUSDT",
         limit=500,
     )
-
+btc_price = float(data["5M"]["close"].iloc[-1])
     mtf = MultiTimeframeStructureEngine(
         structure_engine_kwargs={
             "pivot_left": 2,
@@ -51,6 +51,7 @@ def main():
     print("-" * 60)
     print(f"Alignment:   {mtf['alignment']['alignment']}")
     print(f"Entry ready: {mtf['alignment']['entry_ready']}")
+    print(f"BTC price:   {btc_price}")
 
     print("-" * 60)
     print(f"Decision:    {decision.get('decision')}")
