@@ -23,7 +23,7 @@ def main():
         "BTCUSDT",
         limit=500,
     )
-btc_price = float(data["5M"]["close"].iloc[-1])
+    btc_price = float(data["5M"]["close"].iloc[-1])
     mtf = MultiTimeframeStructureEngine(
         structure_engine_kwargs={
             "pivot_left": 2,
