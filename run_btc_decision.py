@@ -13,7 +13,7 @@ def main():
         "pivot_left": 2, "pivot_right": 2, "atr_period": 14,
         "atr_multiplier": 1.5, "min_move_pct": 0.0025, "max_move_pct": 0.05,
     }).analyze(data)
-    decision = DecisionEngine().evaluate(mtf)
+    decision = DecisionEngine().decide(mtf)
 
     print("=" * 60)
     print("PROJECT EDGE — BTCUSDT REAL DECISION")
