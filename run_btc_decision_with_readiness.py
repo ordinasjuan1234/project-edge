@@ -27,14 +27,14 @@ def main():
     )
 btc_price = float(data["5M"]["close"].iloc[-1])
 
-structural_levels = {}
+    structural_levels = {}
 
-for timeframe in ("30M", "15M"):
-    swings = detect_swings(data[timeframe].copy())
-    levels = calculate_structural_levels(swings)
-    structural_levels[timeframe] = levels.iloc[-1] 
-    
- mtf     = MultiTimeframeStructureEngine(
+    for timeframe in ("30M", "15M"):
+        swings = detect_swings(data[timeframe].copy())
+        levels = calculate_structural_levels(swings)
+        structural_levels[timeframe] = levels.iloc[-1]
+
+    mtf = MultiTimeframeStructureEngine(
         structure_engine_kwargs={
             "pivot_left": 2,
             "pivot_right": 2,
