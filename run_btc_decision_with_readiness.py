@@ -1,13 +1,11 @@
 """
 PROJECT EDGE
-BTC Real Decision + Entry Readiness v1
+BTC Real Decision + Entry Readiness
 
-Datos públicos de BTCUSDT:
-Historical Data -> Multi-Timeframe -> Decision Engine -> Entry Readiness.
-
-NO usa API key.
-NO accede a saldo.
-NO ejecuta órdenes.
+Datos públicos de BTCUSDT.
+No usa API key.
+No accede a saldo.
+No ejecuta órdenes.
 """
 
 from engine.data.binance_historical_data import BinanceHistoricalData
@@ -18,7 +16,6 @@ from engine.decision.decision_engine import DecisionEngine
 from engine.decision.entry_readiness import EntryReadiness
 from engine.structure.swing_detector import detect_swings
 from engine.structure.support_resistance import calculate_structural_levels
-from dashboard_data import build_dashboard_data, save_dashboard_data
 
 
 def main():
@@ -53,16 +50,6 @@ def main():
         mtf_result=mtf,
         decision_result=decision,
     )
-
-    dashboard = build_dashboard_data(
-    symbol="BTCUSDT",
-    btc_price=btc_price,
-    analysis=mtf,
-    decision=decision,
-    readiness=readiness,
-    structural_levels=structural_levels,
-)
-    save_dashboard_data(dashboard)
 
     print("=" * 60)
     print("PROJECT EDGE - BTCUSDT REAL DECISION + READINESS")
