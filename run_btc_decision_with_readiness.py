@@ -62,28 +62,28 @@ def main():
 )
 save_dashboard_data(dashboard)
 
-    print("=" * 60)
-    print("PROJECT EDGE — BTCUSDT REAL DECISION + READINESS")
-    print("=" * 60)
+print("=" * 60)
+print("PROJECT EDGE — BTCUSDT REAL DECISION + READINESS")
+print("=" * 60)
 
-    for timeframe, state in mtf["states"].items():
-        print(f"{timeframe:>3}: {state}")
+for timeframe, state in mtf["states"].items():
+    print(f"{timeframe:>3}: {state}")
 
-    print("-" * 60)
-    print(f"Alignment:   {mtf['alignment']['alignment']}")
-    print(f"Entry ready: {mtf['alignment']['entry_ready']}")
-    print(f"BTC price:   {btc_price}")
+print("-" * 60)
+print(f"Alignment:   {mtf['alignment']['alignment']}")
+print(f"Entry ready: {mtf['alignment']['entry_ready']}")
+print(f"BTC price:   {btc_price}")
 
-    print("-" * 60)
-    print(f"Decision:    {decision.get('decision')}")
-    print(f"Direction:   {decision.get('direction')}")
-    print(f"Can execute: {decision.get('can_execute')}")
+print("-" * 60)
+print(f"Decision:    {decision.get('decision')}")
+print(f"Direction:   {decision.get('direction')}")
+print(f"Can execute: {decision.get('can_execute')}")
 
-    print("-" * 60)
-    print("ENTRY READINESS")
-    print(f"Status:      {readiness.get('status')}")
-    print(f"Bias:        {readiness.get('bias')}")
-    print(f"Message:     {readiness.get('message')}")
+print("-" * 60)
+print("ENTRY READINESS")
+print(f"Status:      {readiness.get('status')}")
+print(f"Bias:        {readiness.get('bias')}")
+print(f"Message:     {readiness.get('message')}")
 
     missing = readiness.get("missing_conditions", [])
     if missing:
