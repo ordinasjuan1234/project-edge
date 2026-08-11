@@ -16,6 +16,8 @@ from engine.multitimeframe.multi_timeframe_structure_engine import (
 )
 from engine.decision.decision_engine import DecisionEngine
 from engine.decision.entry_readiness import EntryReadiness
+from engine.structure.swing_detector import detect_swings
+from engine.structure.support_resistance import calculate_structural_levels
 
 
 def main():
@@ -23,8 +25,16 @@ def main():
         "BTCUSDT",
         limit=500,
     )
-    btc_price = float(data["5M"]["close"].iloc[-1])
-    mtf = MultiTimeframeStructureEngine(
+btc_price = float(data["5M"]["close"].iloc[-1])
+
+structural_levels = {}
+
+for timeframe in ("30M", "15M"):
+    swings = detect_swings(data[timeframe].copy())
+    levels = calculate_structural_levels(swings)
+    structural_levels[timeframe] = levels.iloc[-1]
+    
+ mtf = MultiTimeframeStructureEngine(
         structure_engine_kwargs={
             "pivot_left": 2,
             "pivot_right": 2,
@@ -73,7 +83,14 @@ def main():
         print("Missing conditions: none")
 
     print("=" * 60)
-
+    print("STRUCTURAL LEVELS")
+    for timeframe, levels in structural_levels.items():
+        print(
+            f"{timeframe}: "
+            f"Support={levels.get('structural_support')} | "
+            f"Resistance={levels.get('structural_resistance')}"
+        )
+    print("=" * 60)
 
 if __name__ == "__main__":
     main()
