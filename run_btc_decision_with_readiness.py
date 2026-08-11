@@ -53,14 +53,14 @@ def main():
         decision_result=decision,
     )
 
-        dashboard = build_dashboard_data(
-        btc_price=btc_price,
-        mtf=mtf,
-        decision=decision,
-        readiness=readiness,
-        structural_levels=structural_levels,
-    )
-    save_dashboard_data(dashboard)
+    dashboard = build_dashboard_data(
+    btc_price=btc_price,
+    mtf=mtf,
+    decision=decision,
+    readiness=readiness,
+    structural_levels=structural_levels,
+)
+save_dashboard_data(dashboard)
 
     print("=" * 60)
     print("PROJECT EDGE — BTCUSDT REAL DECISION + READINESS")
