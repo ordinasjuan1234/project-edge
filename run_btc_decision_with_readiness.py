@@ -48,44 +48,46 @@ def main():
     ).analyze(data)
 
     decision = DecisionEngine().decide(mtf)
+
     readiness = EntryReadiness().evaluate(
         mtf_result=mtf,
         decision_result=decision,
     )
 
     dashboard = build_dashboard_data(
-    btc_price=btc_price,
-    mtf=mtf,
-    decision=decision,
-    readiness=readiness,
-    structural_levels=structural_levels,
-)
-save_dashboard_data(dashboard)
+        btc_price=btc_price,
+        mtf=mtf,
+        decision=decision,
+        readiness=readiness,
+        structural_levels=structural_levels,
+    )
+    save_dashboard_data(dashboard)
 
-print("=" * 60)
-print("PROJECT EDGE — BTCUSDT REAL DECISION + READINESS")
-print("=" * 60)
+    print("=" * 60)
+    print("PROJECT EDGE - BTCUSDT REAL DECISION + READINESS")
+    print("=" * 60)
 
-for timeframe, state in mtf["states"].items():
-    print(f"{timeframe:>3}: {state}")
+    for timeframe, state in mtf["states"].items():
+        print(f"{timeframe:>3}: {state}")
 
-print("-" * 60)
-print(f"Alignment:   {mtf['alignment']['alignment']}")
-print(f"Entry ready: {mtf['alignment']['entry_ready']}")
-print(f"BTC price:   {btc_price}")
+    print("-" * 60)
+    print(f"Alignment:   {mtf['alignment']['alignment']}")
+    print(f"Entry ready: {mtf['alignment']['entry_ready']}")
+    print(f"BTC price:   {btc_price}")
 
-print("-" * 60)
-print(f"Decision:    {decision.get('decision')}")
-print(f"Direction:   {decision.get('direction')}")
-print(f"Can execute: {decision.get('can_execute')}")
+    print("-" * 60)
+    print(f"Decision:    {decision.get('decision')}")
+    print(f"Direction:   {decision.get('direction')}")
+    print(f"Can execute: {decision.get('can_execute')}")
 
-print("-" * 60)
-print("ENTRY READINESS")
-print(f"Status:      {readiness.get('status')}")
-print(f"Bias:        {readiness.get('bias')}")
-print(f"Message:     {readiness.get('message')}")
+    print("-" * 60)
+    print("ENTRY READINESS")
+    print(f"Status:      {readiness.get('status')}")
+    print(f"Bias:        {readiness.get('bias')}")
+    print(f"Message:     {readiness.get('message')}")
 
     missing = readiness.get("missing_conditions", [])
+
     if missing:
         print("Missing conditions:")
         for condition in missing:
@@ -95,13 +97,16 @@ print(f"Message:     {readiness.get('message')}")
 
     print("=" * 60)
     print("STRUCTURAL LEVELS")
+
     for timeframe, levels in structural_levels.items():
         print(
             f"{timeframe}: "
             f"Support={levels.get('structural_support')} | "
             f"Resistance={levels.get('structural_resistance')}"
         )
+
     print("=" * 60)
+
 
 if __name__ == "__main__":
     main()
