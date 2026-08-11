@@ -54,14 +54,14 @@ def main():
         decision_result=decision,
     )
 
-        dashboard = build_dashboard_data(
-        symbol="BTCUSDT",
-        btc_price=btc_price,
-        analysis=mtf,
-        decision=decision,
-        readiness=readiness,
-        structural_levels=structural_levels,
-    )
+    dashboard = build_dashboard_data(
+    symbol="BTCUSDT",
+    btc_price=btc_price,
+    analysis=mtf,
+    decision=decision,
+    readiness=readiness,
+    structural_levels=structural_levels,
+)
     save_dashboard_data(dashboard)
 
     print("=" * 60)
