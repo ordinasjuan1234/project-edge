@@ -27,9 +27,9 @@ def main():
     )
 btc_price = float(data["5M"]["close"].iloc[-1])
 
-    structural_levels = {}
+structural_levels = {}
 
-    for timeframe in ("30M", "15M"):
+for timeframe in ("30M", "15M"):
         swings = detect_swings(data[timeframe].copy())
         levels = calculate_structural_levels(swings)
         structural_levels[timeframe] = levels.iloc[-1]
