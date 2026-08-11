@@ -18,6 +18,7 @@ from engine.decision.decision_engine import DecisionEngine
 from engine.decision.entry_readiness import EntryReadiness
 from engine.structure.swing_detector import detect_swings
 from engine.structure.support_resistance import calculate_structural_levels
+from dashboard_data import build_dashboard_data, save_dashboard_data
 
 
 def main():
@@ -51,6 +52,15 @@ def main():
         mtf_result=mtf,
         decision_result=decision,
     )
+
+        dashboard = build_dashboard_data(
+        btc_price=btc_price,
+        mtf=mtf,
+        decision=decision,
+        readiness=readiness,
+        structural_levels=structural_levels,
+    )
+    save_dashboard_data(dashboard)
 
     print("=" * 60)
     print("PROJECT EDGE — BTCUSDT REAL DECISION + READINESS")
