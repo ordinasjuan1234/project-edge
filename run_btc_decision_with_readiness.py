@@ -117,22 +117,22 @@ def main():
         )
 
     print("=" * 60)
-        telegram_message = (
-        "PROJECT EDGE - BTCUSDT\n"
-        f"BTC price: {btc_price:.2f}\n"
-        f"4H: {mtf['states'].get('4H')}\n"
-        f"1H: {mtf['states'].get('1H')}\n"
-        f"30M: {mtf['states'].get('30M')}\n"
-        f"15M: {mtf['states'].get('15M')}\n"
-        f"5M: {mtf['states'].get('5M')}\n"
-        f"Decision: {decision.get('decision')}\n"
-        f"Direction: {decision.get('direction')}\n"
-        f"Readiness: {readiness.get('status')}\n"
-        f"Bias: {readiness.get('bias')}\n"
-        f"Message: {readiness.get('message')}"
-    )
+    telegram_message = (
+    "PROJECT EDGE - BTCUSDT\n"
+    f"BTC price: {btc_price:.2f}\n"
+    f"4H: {mtf['states'].get('4H')}\n"
+    f"1H: {mtf['states'].get('1H')}\n"
+    f"30M: {mtf['states'].get('30M')}\n"
+    f"15M: {mtf['states'].get('15M')}\n"
+    f"5M: {mtf['states'].get('5M')}\n"
+    f"Decision: {decision.get('decision')}\n"
+    f"Direction: {decision.get('direction')}\n"
+    f"Readiness: {readiness.get('status')}\n"
+    f"Bias: {readiness.get('bias')}\n"
+    f"Message: {readiness.get('message')}"
+)
 
-    send_telegram_message(telegram_message)
+send_telegram_message(telegram_message)
 
 
 if __name__ == "__main__":
