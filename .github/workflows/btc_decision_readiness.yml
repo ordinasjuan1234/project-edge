@@ -23,9 +23,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-            - name: Run BTC decision with readiness
+      - name: Run BTC decision with readiness
         env:
           PYTHONPATH: ${{ github.workspace }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python run_btc_decision_with_readiness.py
+        run: python run_btc_decision_with_readiness.py           
