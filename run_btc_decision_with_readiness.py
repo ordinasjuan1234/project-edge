@@ -117,21 +117,39 @@ def main():
         )
 
     print("=" * 60)
-    telegram_message = (
-    "PROJECT EDGE - BTCUSDT\n"
-    f"BTC price: {btc_price:.2f}\n"
-    f"4H: {mtf['states'].get('4H')}\n"
-    f"1H: {mtf['states'].get('1H')}\n"
-    f"30M: {mtf['states'].get('30M')}\n"
-    f"15M: {mtf['states'].get('15M')}\n"
-    f"5M: {mtf['states'].get('5M')}\n"
-    f"Decision: {decision.get('decision')}\n"
-    f"Direction: {decision.get('direction')}\n"
-    f"Readiness: {readiness.get('status')}\n"
-    f"Bias: {readiness.get('bias')}\n"
-    f"Message: {readiness.get('message')}"
-)
+        status = readiness.get("status")
+    bias = readiness.get("bias")
 
+    if status == "NOT_READY":
+        estado_operativo = f"{bias} EN ESPERA"
+    else:
+        estado_operativo = status
+
+    missing = readiness.get("missing_conditions", [])
+    missing_text = "\n".join(f"- {item}" for item in missing) if missing else "- Sin condiciones pendientes"
+
+    nivel_30m = structural_levels.get("30M", {})
+    nivel_15m = structural_levels.get("15M", {})
+
+    telegram_message = (
+        "PROJECT EDGE - BTCUSDT\n\n"
+        f"Precio: {btc_price:.2f}\n\n"
+        f"Sesgo macro: {bias}\n"
+        f"Estado: {estado_operativo}\n\n"
+        f"4H: {mtf['states'].get('4H')}\n"
+        f"1H: {mtf['states'].get('1H')}\n"
+        f"30M: {mtf['states'].get('30M')}\n"
+        f"15M: {mtf['states'].get('15M')}\n"
+        f"5M: {mtf['states'].get('5M')}\n\n"
+        f"Decision: {decision.get('decision')}\n"
+        f"Direction: {decision.get('direction')}\n"
+        f"Readiness: {status}\n\n"
+        f"Falta para habilitar entrada:\n{missing_text}\n\n"
+        f"Niveles estructurales:\n"
+        f"30M Soporte: {nivel_30m.get('structural_support')} | Resistencia: {nivel_30m.get('structural_resistance')}\n"
+        f"15M Soporte: {nivel_15m.get('structural_support')} | Resistencia: {nivel_15m.get('structural_resistance')}\n\n"
+        f"Mensaje: {readiness.get('message')}"
+    )
     send_telegram_message(telegram_message)
 
 
