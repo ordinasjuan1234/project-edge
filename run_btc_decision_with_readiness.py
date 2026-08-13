@@ -132,7 +132,7 @@ def main():
     f"Message: {readiness.get('message')}"
 )
 
-send_telegram_message(telegram_message)
+    send_telegram_message(telegram_message)
 
 
 if __name__ == "__main__":
