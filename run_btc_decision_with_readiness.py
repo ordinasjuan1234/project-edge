@@ -117,7 +117,7 @@ def main():
         )
 
     print("=" * 60)
-        status = readiness.get("status")
+    status = readiness.get("status")
     bias = readiness.get("bias")
 
     if status == "NOT_READY":
