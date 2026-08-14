@@ -130,17 +130,33 @@ def main():
 
     nivel_30m = structural_levels.get("30M", {})
     nivel_15m = structural_levels.get("15M", {})
+        def simbolo_estado(estado):
+        if estado == "TRANSITION":
+            return "⏳"
 
+        if bias == "SHORT":
+            return "✅" if estado == "BEARISH" else "❌"
+
+        if bias == "LONG":
+            return "✅" if estado == "BULLISH" else "❌"
+
+        return "⏳"
+
+    s4h = simbolo_estado(mtf["states"].get("4H"))
+    s1h = simbolo_estado(mtf["states"].get("1H"))
+    s30m = simbolo_estado(mtf["states"].get("30M"))
+    s15m = simbolo_estado(mtf["states"].get("15M"))
+    s5m = simbolo_estado(mtf["states"].get("5M"))
     telegram_message = (
         "PROJECT EDGE - BTCUSDT\n\n"
         f"Precio: {btc_price:.2f}\n\n"
         f"Sesgo macro: {bias}\n"
         f"Estado: {estado_operativo}\n\n"
-        f"4H: {mtf['states'].get('4H')} ✅\n"
-        f"1H: {mtf['states'].get('1H')} ⏳\n"
-        f"30M: {mtf['states'].get('30M')} ❌\n"
-        f"15M: {mtf['states'].get('15M')} ❌\n"
-        f"5M: {mtf['states'].get('5M')} ❌\n\n"
+        f"4H: {mtf['states'].get('4H')} {s4h}\n"
+        f"1H: {mtf['states'].get('1H')} {s1h}\n"
+        f"30M: {mtf['states'].get('30M')} {s30m}\n"
+        f"15M: {mtf['states'].get('15M')} {s15m}\n"
+        f"5M: {mtf['states'].get('5M')} {s5m}\n\n"
         f"Decision: {decision.get('decision')}\n"
         f"Direction: {decision.get('direction')}\n"
         f"Readiness: {status}\n\n"
