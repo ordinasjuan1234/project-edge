@@ -166,7 +166,10 @@ def main():
         f"15M Soporte: {nivel_15m.get('structural_support')} | Resistencia: {nivel_15m.get('structural_resistance')}\n\n"
         f"Mensaje: {readiness.get('message')}"
     )
-    send_telegram_message(telegram_message)
+        if status != "NOT_READY" or decision.get("decision") != "BLOCKED":
+        send_telegram_message(telegram_message)
+    else:
+        print("Telegram: sin alerta importante, no se envia mensaje")
 
 
 if __name__ == "__main__":
