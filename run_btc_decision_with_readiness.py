@@ -130,7 +130,7 @@ def main():
 
     nivel_30m = structural_levels.get("30M", {})
     nivel_15m = structural_levels.get("15M", {})
-        def simbolo_estado(estado):
+    def simbolo_estado(estado):
         if estado == "TRANSITION":
             return "⏳"
 
