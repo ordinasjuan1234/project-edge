@@ -172,10 +172,10 @@ def main():
         f"15M Soporte: {nivel_15m.get('structural_support')} | Resistencia: {nivel_15m.get('structural_resistance')}\n\n"
         f"Mensaje: {readiness.get('message')}"
     )
-       if entrada_confirmada:
-        send_telegram_message(telegram_message)
-    else:
-        print("Telegram: sin entrada confirmada, no se envia mensaje")
+   if entrada_confirmada:
+    send_telegram_message(telegram_message)
+else:
+    print("Telegram: sin entrada confirmada, no se envia mensaje")
 
 if __name__ == "__main__":
     main()
