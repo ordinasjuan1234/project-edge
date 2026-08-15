@@ -147,6 +147,12 @@ def main():
     s30m = simbolo_estado(mtf["states"].get("30M"))
     s15m = simbolo_estado(mtf["states"].get("15M"))
     s5m = simbolo_estado(mtf["states"].get("5M"))
+    entrada_confirmada = (
+        status == "READY"
+        and decision.get("decision") != "BLOCKED"
+        and decision.get("direction") in ("LONG", "SHORT")
+    )
+    
     telegram_message = (
         "PROJECT EDGE - BTCUSDT\n\n"
         f"Precio: {btc_price:.2f}\n\n"
@@ -166,11 +172,10 @@ def main():
         f"15M Soporte: {nivel_15m.get('structural_support')} | Resistencia: {nivel_15m.get('structural_resistance')}\n\n"
         f"Mensaje: {readiness.get('message')}"
     )
-    if status != "NOT_READY" or decision.get("decision") != "BLOCKED":
+       if entrada_confirmada:
         send_telegram_message(telegram_message)
     else:
-        print("Telegram: sin alerta importante, no se envia mensaje")
-
+        print("Telegram: sin entrada confirmada, no se envia mensaje")
 
 if __name__ == "__main__":
     main()
