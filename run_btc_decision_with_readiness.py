@@ -153,7 +153,7 @@ def main():
         and decision.get("direction") in ("LONG", "SHORT")
     )
     # TEST TEMPORAL TELEGRAM
-entrada_confirmada = True
+    entrada_confirmada = True
     telegram_message = (
         "PROJECT EDGE - BTCUSDT\n\n"
         f"Precio: {btc_price:.2f}\n\n"
