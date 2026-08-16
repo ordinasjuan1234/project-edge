@@ -177,6 +177,6 @@ def main():
     else:
         print("Telegram: sin entrada confirmada, no se envia mensaje")
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+main()
    
