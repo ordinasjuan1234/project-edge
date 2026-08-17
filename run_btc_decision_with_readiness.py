@@ -74,7 +74,22 @@ def main():
         mtf_result=mtf,
         decision_result=decision,
     )
+        # ===== MODO DE PRUEBA CONTROLADA =====
+    TEST_MODE = True
 
+    if TEST_MODE:
+        decision = {
+            "decision": "ENTRY",
+            "direction": "SHORT",
+            "can_execute": True,
+        }
+
+        readiness = {
+            "status": "READY",
+            "bias": "SHORT",
+            "message": "PRUEBA CONTROLADA - Entrada SHORT habilitada.",
+            "missing_conditions": [],
+        }
     print("=" * 60)
     print("PROJECT EDGE - BTCUSDT REAL DECISION + READINESS")
     print("=" * 60)
