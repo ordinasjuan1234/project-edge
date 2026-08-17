@@ -75,7 +75,7 @@ def main():
         decision_result=decision,
     )
         # ===== MODO DE PRUEBA CONTROLADA =====
-    TEST_MODE = True
+    TEST_MODE = False
 
     if TEST_MODE:
         decision = {
