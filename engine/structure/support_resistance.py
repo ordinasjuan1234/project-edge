@@ -84,19 +84,19 @@ class StructuralLevels:
                     resistance_pivot = pivot_index
 
                 event_pos += 1
-                    current_price = float(data.at[i, "close"])
+current_price = float(data.at[i, "close"])
 
-            if latest_support is not None and latest_support > current_price:
+     if latest_support is not None and latest_support > current_price:
                 latest_support = None
                 support_pivot = None
 
-            if latest_resistance is not None and latest_resistance < current_price:
+     if latest_resistance is not None and latest_resistance < current_price:
                 latest_resistance = None
                 resistance_pivot = None
-            data.at[i, "structural_support"] = latest_support
-            data.at[i, "structural_resistance"] = latest_resistance
-            data.at[i, "support_source_pivot"] = support_pivot
-            data.at[i, "resistance_source_pivot"] = resistance_pivot
+    data.at[i, "structural_support"] = latest_support
+    data.at[i, "structural_resistance"] = latest_resistance
+    data.at[i, "support_source_pivot"] = support_pivot
+    data.at[i, "resistance_source_pivot"] = resistance_pivot
 
         return data
 
