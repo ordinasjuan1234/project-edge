@@ -18,6 +18,7 @@ from engine.decision.decision_engine import DecisionEngine
 from engine.decision.entry_readiness import EntryReadiness
 from engine.structure.swing_detector import detect_swings
 from engine.structure.support_resistance import calculate_structural_levels
+TEST_MODE = False
 def send_telegram_message(message):
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
