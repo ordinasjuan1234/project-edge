@@ -80,14 +80,14 @@ def main():
     if TEST_MODE:
         decision = {
             "decision": "ENTRY",
-            "direction": "SHORT",
+            "direction": "LONG",
             "can_execute": True,
         }
 
         readiness = {
             "status": "READY",
-            "bias": "SHORT",
-            "message": "PRUEBA CONTROLADA - Entrada SHORT habilitada.",
+            "bias": "LONG",
+            "message": "PRUEBA CONTROLADA - Entrada LONG habilitada.",
             "missing_conditions": [],
         }
     print("=" * 60)
