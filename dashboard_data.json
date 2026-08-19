@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-08-19T01:31:46+00:00",
+  "symbol": "BTCUSDT",
+  "price": 64475.39,
+  "timeframes": {
+    "4H": "BULLISH",
+    "1H": "BEARISH",
+    "30M": "TRANSITION",
+    "15M": "BEARISH",
+    "5M": "BULLISH"
+  },
+  "alignment": "MACRO_CONTEXT_CONFLICT",
+  "decision": {
+    "action": "BLOCKED",
+    "direction": null,
+    "can_execute": false
+  },
+  "readiness": {
+    "status": "NOT_READY",
+    "bias": "LONG",
+    "message": "Sesgo macro LONG, pero faltan confirmaciones en temporalidades inferiores.",
+    "missing_conditions": [
+      "1H debe volver a BULLISH.",
+      "30M debe recuperar estructura BULLISH.",
+      "15M debe confirmar BULLISH."
+    ]
+  },
+  "paper": {
+    "initial_balance": 10000.0,
+    "balance": 10000.0,
+    "position": null,
+    "unrealized_pnl": 0.0,
+    "closed_trades": []
+  }
+}
