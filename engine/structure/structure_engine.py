@@ -1,10 +1,10 @@
 """
 PROJECT EDGE
-Structure Engine — Integration Pipeline v1
+Structure Engine — Integration Pipeline v2
 
 Integra los módulos estructurales en una sola cadena:
 OHLC -> swings -> HH/HL/LH/LL -> estado de mercado ->
-impulso/corrección -> soportes/resistencias -> BOS/CHoCH.
+impulso/corrección -> soportes/resistencias -> FVG -> BOS/CHoCH.
 
 No ejecuta órdenes ni genera señales LONG/SHORT.
 """
@@ -18,6 +18,7 @@ from engine.structure.structure_classifier import StructureClassifier
 from engine.structure.market_structure import MarketStructureInterpreter
 from engine.structure.impulse_correction import ImpulseCorrectionClassifier
 from engine.structure.support_resistance import StructuralLevels
+from engine.structure.fair_value_gap import FairValueGapDetector
 from engine.structure.break_of_structure import BreakOfStructureDetector
 
 
@@ -32,6 +33,7 @@ class StructureEngine:
         atr_multiplier: float = 1.5,
         min_move_pct: float = 0.0025,
         max_move_pct: float = 0.05,
+        fvg_min_gap_pct: float = 0.0,
     ) -> None:
         self.swing_detector = SwingDetector(
             pivot_left=pivot_left,
@@ -45,6 +47,9 @@ class StructureEngine:
         self.market_interpreter = MarketStructureInterpreter()
         self.impulse_classifier = ImpulseCorrectionClassifier()
         self.structural_levels = StructuralLevels()
+        self.fvg_detector = FairValueGapDetector(
+            min_gap_pct=fvg_min_gap_pct
+        )
         self.break_detector = BreakOfStructureDetector()
 
     def analyze(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -54,6 +59,7 @@ class StructureEngine:
         data = self.market_interpreter.interpret(data)
         data = self.impulse_classifier.classify(data)
         data = self.structural_levels.calculate(data)
+        data = self.fvg_detector.detect(data)
         data = self.break_detector.detect(data)
         return data
 
