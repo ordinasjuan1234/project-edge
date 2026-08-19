@@ -1,14 +1,20 @@
 """
-PROJECT EDGE - Live Dashboard Builder
+PROJECT EDGE - Live Dashboard Builder v2
 
-Genera dashboard_data.json con datos reales de BTCUSDT,
-el estado multitemporal, la decisión del motor y el estado PAPER.
+Genera dashboard_data.json con:
+- datos reales de BTCUSDT
+- estado multitemporal
+- Fair Value Gaps activos por temporalidad
+- decisión del motor
+- estado PAPER
+
 No envía órdenes reales.
 """
 
 from __future__ import annotations
 
 import json
+import math
 from datetime import datetime, timezone
 
 from engine.data.binance_historical_data import BinanceHistoricalData
@@ -38,6 +44,66 @@ def calculate_unrealized_pnl(position, current_price):
     return (entry_price - current_price) * quantity
 
 
+def clean_value(value):
+    if value is None:
+        return None
+
+    try:
+        if math.isnan(value):
+            return None
+    except (TypeError, ValueError):
+        pass
+
+    if hasattr(value, "item"):
+        value = value.item()
+
+    return value
+
+
+def extract_fvg_by_timeframe(mtf):
+    result = {}
+    analyses = mtf.get("analyses", {})
+
+    for timeframe, analysis in analyses.items():
+        if analysis is None or analysis.empty:
+            result[timeframe] = None
+            continue
+
+        row = analysis.iloc[-1]
+
+        fvg_type = clean_value(row.get("active_fvg_type"))
+        lower = clean_value(row.get("active_fvg_lower"))
+        upper = clean_value(row.get("active_fvg_upper"))
+        mid = clean_value(row.get("active_fvg_mid"))
+        state = clean_value(row.get("active_fvg_state"))
+        distance_pct = clean_value(row.get("active_fvg_distance_pct"))
+        created_index = clean_value(row.get("active_fvg_created_index"))
+
+        if fvg_type is None:
+            result[timeframe] = None
+            continue
+
+        result[timeframe] = {
+            "type": str(fvg_type),
+            "lower": float(lower) if lower is not None else None,
+            "upper": float(upper) if upper is not None else None,
+            "mid": float(mid) if mid is not None else None,
+            "state": str(state) if state is not None else None,
+            "distance_pct": (
+                float(distance_pct)
+                if distance_pct is not None
+                else None
+            ),
+            "created_index": (
+                int(created_index)
+                if created_index is not None
+                else None
+            ),
+        }
+
+    return result
+
+
 def main():
     data = BinanceHistoricalData().fetch_project_edge_timeframes(
         SYMBOL,
@@ -64,49 +130,84 @@ def main():
     )
 
     state = PaperState(initial_balance=INITIAL_BALANCE)
-    # Garantiza que exista un estado persistible desde la primera corrida.
     state.save()
 
     position = state.position
-    unrealized_pnl = calculate_unrealized_pnl(position, btc_price)
+    unrealized_pnl = calculate_unrealized_pnl(
+        position,
+        btc_price,
+    )
 
     alignment = mtf.get("alignment", {})
     if isinstance(alignment, dict):
-        alignment_value = alignment.get("alignment", "UNKNOWN")
+        alignment_value = alignment.get(
+            "alignment",
+            "UNKNOWN",
+        )
     else:
         alignment_value = str(alignment)
 
     payload = {
-        "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "timestamp": datetime.now(
+            timezone.utc
+        ).isoformat(timespec="seconds"),
         "symbol": SYMBOL,
         "price": btc_price,
         "timeframes": mtf.get("states", {}),
+        "fvg": extract_fvg_by_timeframe(mtf),
         "alignment": alignment_value,
         "decision": {
             "action": decision.get("decision"),
             "direction": decision.get("direction"),
-            "can_execute": bool(decision.get("can_execute", False)),
+            "can_execute": bool(
+                decision.get("can_execute", False)
+            ),
         },
         "readiness": {
             "status": readiness.get("status"),
             "bias": readiness.get("bias"),
             "message": readiness.get("message", ""),
-            "missing_conditions": readiness.get("missing_conditions", []),
+            "missing_conditions": readiness.get(
+                "missing_conditions",
+                [],
+            ),
         },
         "paper": {
-            "initial_balance": float(state.data.get("initial_balance", INITIAL_BALANCE)),
+            "initial_balance": float(
+                state.data.get(
+                    "initial_balance",
+                    INITIAL_BALANCE,
+                )
+            ),
             "balance": state.balance,
             "position": position,
             "unrealized_pnl": float(unrealized_pnl),
-            "closed_trades": state.data.get("closed_trades", [])[-10:],
+            "closed_trades": state.data.get(
+                "closed_trades",
+                [],
+            )[-10:],
         },
     }
 
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
-        json.dump(payload, file, indent=2, ensure_ascii=False)
+    with open(
+        OUTPUT_FILE,
+        "w",
+        encoding="utf-8",
+    ) as file:
+        json.dump(
+            payload,
+            file,
+            indent=2,
+            ensure_ascii=False,
+        )
 
-    print(f"Dashboard actualizado: {OUTPUT_FILE}")
-    print(f"BTC: {btc_price:.2f} | Decision: {payload['decision']['action']}")
+    print(
+        f"Dashboard actualizado: {OUTPUT_FILE}"
+    )
+    print(
+        f"BTC: {btc_price:.2f} | "
+        f"Decision: {payload['decision']['action']}"
+    )
 
 
 if __name__ == "__main__":
