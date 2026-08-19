@@ -19,6 +19,10 @@ def _mtf(direction="BULLISH", fvg_15m=None, fvg_5m=None):
         "15M": direction,
         "5M": direction,
     }
+
+    analysis_15m = fvg_15m if fvg_15m is not None else _analysis()
+    analysis_5m = fvg_5m if fvg_5m is not None else _analysis()
+
     return {
         "states": states,
         "alignment": {
@@ -29,8 +33,8 @@ def _mtf(direction="BULLISH", fvg_15m=None, fvg_5m=None):
             "4H": _analysis(),
             "1H": _analysis(),
             "30M": _analysis(),
-            "15M": fvg_15m or _analysis(),
-            "5M": fvg_5m or _analysis(),
+            "15M": analysis_15m,
+            "5M": analysis_5m,
         },
     }
 
@@ -42,7 +46,6 @@ def test_bullish_fvg_confirms_ready_long():
             fvg_15m=_analysis("BULLISH", "ACTIVE", 0.008),
         )
     )
-
     assert result["decision"] == "READY_LONG"
     assert result["can_execute"] is True
     assert result["fvg_confirmed"] is True
@@ -57,7 +60,6 @@ def test_wrong_fvg_direction_keeps_long_on_watch():
             fvg_5m=_analysis("BEARISH", "PARTIAL", 0.003),
         )
     )
-
     assert result["decision"] == "WATCH_LONG"
     assert result["can_execute"] is False
     assert result["fvg_confirmed"] is False
@@ -72,7 +74,6 @@ def test_far_fvg_does_not_confirm():
             fvg_5m=_analysis("BULLISH", "ACTIVE", 0.02),
         )
     )
-
     assert result["decision"] == "WATCH_LONG"
     assert result["can_execute"] is False
 
@@ -84,7 +85,6 @@ def test_bearish_fvg_confirms_ready_short():
             fvg_5m=_analysis("BEARISH", "PARTIAL", 0.01),
         )
     )
-
     assert result["decision"] == "READY_SHORT"
     assert result["can_execute"] is True
     assert result["fvg_confirmed"] is True
