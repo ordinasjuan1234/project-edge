@@ -36,24 +36,21 @@ jobs:
       - name: Run BTC paper trading
         run: python run_btc_paper.py
 
-      - name: Persist paper trading state
-        run: |
-          if [ ! -f paper_state.json ]; then
-            echo "No paper_state.json was created."
-            echo "Nothing to persist."
-            exit 0
-          fi
+      - name: Build live dashboard data
+        run: python build_live_dashboard.py
 
+      - name: Persist paper trading state and dashboard data
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add paper_state.json
+          git add paper_state.json dashboard_data.json
 
           if git diff --cached --quiet; then
-            echo "Paper state unchanged."
+            echo "Paper state/dashboard unchanged."
             exit 0
           fi
 
-          git commit -m "Update paper trading state"
+          git commit -m "Update paper trading state and dashboard"
           git pull --rebase origin main
           git push origin HEAD:main
