@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PROJECT EDGE · Live Paper</title>
+<style>
+:root{--bg:#07101b;--p:#0d1927;--l:#20354b;--t:#edf4fa;--m:#8195a9;--g:#36d39a;--r:#ff6b6b;--y:#f4c95d;--b:#62a8ff;--c:#4dd9ff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(140deg,#06101a,#0a1725);color:var(--t);font:14px Arial,sans-serif}.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}.side{background:#08131f;border-right:1px solid var(--l);padding:20px 14px}.logo{font-size:20px;font-weight:900;letter-spacing:1px;margin-bottom:25px}.logo i{color:var(--c);font-style:normal}.nav button{width:100%;text-align:left;background:none;border:0;color:var(--m);padding:12px;border-radius:8px;margin:2px 0}.nav .active,.nav button:hover{background:#10293a;color:#fff}.system{margin-top:25px;padding:13px;border:1px solid var(--l);border-radius:10px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--g);margin-right:6px}.dot.off{background:var(--r)}.main{padding:22px 25px}.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:18px}h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px solid #27536b;padding:8px 10px;border-radius:8px;color:var(--c);white-space:nowrap}.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.card,.panel{background:rgba(13,25,39,.95);border:1px solid var(--l);border-radius:11px}.card{padding:14px}.lab{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:1px}.val{font-size:19px;font-weight:800;margin-top:7px;word-break:break-word}.g{color:var(--g)}.r{color:var(--r)}.y{color:var(--y)}.b{color:var(--b)}.layout{display:grid;grid-template-columns:1.45fr 1fr;gap:12px;margin-top:12px}.panel{padding:15px}.panel h2{font-size:14px;margin:0 0 13px}.matrix,.trades{width:100%;border-collapse:collapse}.matrix th,.matrix td,.trades th,.trades td{border-bottom:1px solid var(--l);padding:9px 5px;text-align:center;font-size:11px}.matrix th,.trades th{color:var(--m)}.matrix td:first-child,.trades td:first-child{text-align:left;font-weight:bold}.tag{padding:4px 6px;border-radius:5px;font-size:9px;display:inline-block}.tg{background:#10392f;color:var(--g)}.tr{background:#3a2027;color:var(--r)}.ty{background:#3a321b;color:var(--y)}.tb{background:#102b45;color:var(--b)}.signal{border:1px solid #2a4a5e;border-radius:9px;padding:13px;background:#0a1b2a}.signal strong{font-size:17px}.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mini{background:#0a1724;border:1px solid var(--l);border-radius:8px;padding:10px}.mini b{display:block;margin-top:5px;font-size:13px}.action{margin-top:10px;background:#10362f;color:var(--g);border:1px solid #286b59;padding:9px 12px;border-radius:7px;cursor:pointer}.action:hover{filter:brightness(1.15)}.footer{color:#62788e;font-size:10px;margin-top:12px}.list{margin:10px 0 0;padding-left:18px;color:var(--m)}.position{display:grid;grid-template-columns:1fr 1fr;gap:8px}.empty{color:var(--m);padding:10px 0}.error{color:var(--r)}
+@media(max-width:950px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.top{flex-direction:column}.position{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="logo">PROJECT <i>EDGE</i></div>
+  <div class="nav"><button class="active">◈ Cerebro</button><button>◌ Mercado</button><button>⌁ Estructura</button><button>◎ Señales</button><button>▣ Operaciones</button><button>⚙ Reglas</button><button>◉ Sistema</button></div>
+  <div class="system"><span id="backendDot" class="dot off"></span><b id="backendText">Conectando...</b><div class="mut" style="margin-top:7px">Modo PAPER / DEMO</div><div class="mut">Sin órdenes reales</div></div>
+</aside>
+<main class="main">
+  <div class="top"><div><h1>Motor de Estructura Multitemporal</h1><div class="mut">PROJECT EDGE · tablero conectado al motor PAPER</div><div id="updated" class="mut" style="margin-top:4px">Última actualización: —</div></div><div class="mode">● PAPER LIVE · BTCUSDT</div></div>
+
+  <div class="cards">
+    <div class="card"><div class="lab">Activo</div><div id="symbol" class="val">BTC/USDT</div></div>
+    <div class="card"><div class="lab">Precio</div><div id="price" class="val b">—</div></div>
+    <div class="card"><div class="lab">Contexto 4H</div><div id="tf4h" class="val">—</div></div>
+    <div class="card"><div class="lab">Decisión</div><div id="decisionCard" class="val y">—</div></div>
+    <div class="card"><div class="lab">Saldo PAPER</div><div id="balance" class="val g">—</div></div>
+  </div>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>Lectura multitemporal en vivo</h2>
+      <table class="matrix"><thead><tr><th>TF</th><th>Estado</th><th>Lectura</th></tr></thead><tbody id="tfBody"></tbody></table>
+    </section>
+    <section class="panel">
+      <h2>Decisión del cerebro</h2>
+      <div class="signal"><strong id="decision">🟡 ESPERAR</strong><div id="message" class="mut" style="margin-top:7px">Esperando datos...</div></div>
+      <div class="kpis" style="margin-top:10px">
+        <div class="mini"><span class="mut">Alineación</span><b id="alignment">—</b></div>
+        <div class="mini"><span class="mut">Sesgo</span><b id="bias">—</b></div>
+        <div class="mini"><span class="mut">Readiness</span><b id="readiness">—</b></div>
+        <div class="mini"><span class="mut">Puede ejecutar</span><b id="canExecute">—</b></div>
+      </div>
+      <ul id="missing" class="list"></ul>
+      <button class="action" onclick="loadData()">Actualizar ahora</button>
+    </section>
+  </div>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>Operación PAPER actual</h2>
+      <div id="positionBox" class="empty">No hay posición abierta.</div>
+    </section>
+    <section class="panel">
+      <h2>Resultado PAPER</h2>
+      <div class="kpis">
+        <div class="mini"><span class="mut">Saldo inicial</span><b id="initialBalance">—</b></div>
+        <div class="mini"><span class="mut">PnL abierto</span><b id="unrealized">—</b></div>
+        <div class="mini"><span class="mut">Trades cerrados</span><b id="closedCount">—</b></div>
+        <div class="mini"><span class="mut">Modo</span><b class="b">AUTOMÁTICO</b></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:12px">
+    <h2>Últimas operaciones cerradas</h2>
+    <table class="trades"><thead><tr><th>Par</th><th>Dirección</th><th>Entrada</th><th>Salida</th><th>P&L</th><th>Motivo</th></tr></thead><tbody id="tradesBody"><tr><td colspan="6" class="mut">Sin operaciones cerradas todavía.</td></tr></tbody></table>
+  </section>
+
+  <div class="footer">PROJECT EDGE · Dashboard PAPER conectado por dashboard_data.json · La ejecución real de Binance permanece deshabilitada.</div>
+</main>
+</div>
+<script>
+const fmt=n=>Number(n??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+function cls(state){state=(state||'').toUpperCase();if(state.includes('BULL')||state.includes('LONG')||state==='READY')return'g';if(state.includes('BEAR')||state.includes('SHORT')||state.includes('BLOCK'))return'r';if(state.includes('TRANS')||state.includes('WATCH')||state.includes('WAIT')||state.includes('NOT_READY'))return'y';return'b'}
+function tag(state){return `<span class="tag ${cls(state)==='g'?'tg':cls(state)==='r'?'tr':cls(state)==='y'?'ty':'tb'}">${state||'UNKNOWN'}</span>`}
+function decisionLabel(action){action=(action||'WAIT').toUpperCase();if(action.includes('LONG'))return'🟢 '+action;if(action.includes('SHORT'))return'🔴 '+action;return'🟡 '+action}
+async function loadData(){
+ try{
+   const r=await fetch('dashboard_data.json?t='+Date.now(),{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); const d=await r.json();
+   document.getElementById('backendDot').className='dot';document.getElementById('backendText').textContent='Backend online';
+   document.getElementById('updated').textContent='Última actualización: '+new Date(d.timestamp).toLocaleString('es-AR');
+   document.getElementById('symbol').textContent=(d.symbol||'BTCUSDT').replace('USDT','/USDT');document.getElementById('price').textContent=fmt(d.price)+' USDT';
+   const tfs=d.timeframes||{};document.getElementById('tf4h').textContent=tfs['4H']||'UNKNOWN';document.getElementById('tf4h').className='val '+cls(tfs['4H']);
+   const action=d.decision?.action||'WAIT';document.getElementById('decisionCard').textContent=action;document.getElementById('decisionCard').className='val '+cls(action);
+   document.getElementById('decision').textContent=decisionLabel(action);document.getElementById('decision').className=cls(action);
+   document.getElementById('message').textContent=d.readiness?.message||'El motor sigue evaluando las confirmaciones.';
+   document.getElementById('alignment').textContent=d.alignment||'—';document.getElementById('bias').textContent=d.readiness?.bias||d.decision?.direction||'—';document.getElementById('readiness').textContent=d.readiness?.status||'—';document.getElementById('canExecute').textContent=d.decision?.can_execute?'SÍ':'NO';
+   const order=['4H','1H','30M','15M','5M'];document.getElementById('tfBody').innerHTML=order.map(tf=>`<tr><td>${tf}</td><td>${tag(tfs[tf])}</td><td>${tf==='4H'?'Contexto mayor':tf==='1H'?'Estructura principal':tf==='30M'?'Intermedia':tf==='15M'?'Timing':'Confirmación'}</td></tr>`).join('');
+   const miss=d.readiness?.missing_conditions||[];document.getElementById('missing').innerHTML=miss.map(x=>`<li>${x}</li>`).join('');
+   const p=d.paper||{};document.getElementById('balance').textContent=fmt(p.balance)+' USDT';document.getElementById('initialBalance').textContent=fmt(p.initial_balance)+' USDT';
+   document.getElementById('unrealized').textContent=(p.unrealized_pnl>=0?'+':'')+fmt(p.unrealized_pnl)+' USDT';document.getElementById('unrealized').className=p.unrealized_pnl>0?'g':p.unrealized_pnl<0?'r':'';
+   const pos=p.position;const box=document.getElementById('positionBox');if(pos){box.className='position';box.innerHTML=`<div class="mini"><span class="mut">Dirección</span><b class="${pos.direction==='LONG'?'g':'r'}">${pos.direction}</b></div><div class="mini"><span class="mut">Entrada</span><b>${fmt(pos.entry_price)}</b></div><div class="mini"><span class="mut">Stop Loss</span><b class="r">${fmt(pos.stop_loss)}</b></div><div class="mini"><span class="mut">Take Profit</span><b class="g">${fmt(pos.take_profit)}</b></div>`}else{box.className='empty';box.textContent='No hay posición abierta. El bot está esperando una entrada confirmada.'}
+   const trades=p.closed_trades||[];document.getElementById('closedCount').textContent=trades.length;const tb=document.getElementById('tradesBody');tb.innerHTML=trades.length?trades.slice().reverse().map(t=>`<tr><td>${(t.symbol||'').replace('USDT','/USDT')}</td><td class="${t.direction==='LONG'?'g':'r'}">${t.direction}</td><td>${fmt(t.entry_price)}</td><td>${fmt(t.exit_price)}</td><td class="${Number(t.pnl)>=0?'g':'r'}">${Number(t.pnl)>=0?'+':''}${fmt(t.pnl)}</td><td>${t.reason||'—'}</td></tr>`).join(''):'<tr><td colspan="6" class="mut">Sin operaciones cerradas todavía.</td></tr>';
+ }catch(e){document.getElementById('backendDot').className='dot off';document.getElementById('backendText').textContent='Sin datos del dashboard';document.getElementById('message').innerHTML='<span class="error">No se pudo leer dashboard_data.json. Esperá a que corra el workflow o revisá GitHub Pages.</span>';}
+}
+loadData();setInterval(loadData,30000);
+</script>
+</body>
+</html>
