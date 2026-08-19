@@ -1,28 +1,26 @@
 {
-  "timestamp": "2026-08-19T14:43:13+00:00",
+  "timestamp": "2026-08-19T15:15:29+00:00",
   "symbol": "BTCUSDT",
-  "price": 65451.95,
+  "price": 66664.75,
   "timeframes": {
-    "4H": "BULLISH",
+    "4H": "TRANSITION",
     "1H": "TRANSITION",
     "30M": "BEARISH",
     "15M": "TRANSITION",
     "5M": "BULLISH"
   },
-  "alignment": "INTERMEDIATE_CONFLICT",
+  "alignment": "NO_DIRECTION",
   "decision": {
-    "action": "BLOCKED",
+    "action": "WAIT",
     "direction": null,
     "can_execute": false
   },
   "readiness": {
     "status": "NOT_READY",
-    "bias": "LONG",
-    "message": "Sesgo macro LONG, pero faltan confirmaciones en temporalidades inferiores.",
+    "bias": null,
+    "message": "4H todavía no tiene una dirección estructural definida.",
     "missing_conditions": [
-      "1H debe volver a BULLISH.",
-      "30M debe recuperar estructura BULLISH.",
-      "15M debe confirmar BULLISH."
+      "4H debe definir una estructura BULLISH o BEARISH."
     ]
   },
   "paper": {
