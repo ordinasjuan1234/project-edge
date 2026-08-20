@@ -262,7 +262,7 @@ def main():
             position_price,
         )
         return
-        decision, readiness = analyze_market(
+    decision, readiness = analyze_market(
         data,
         btc_price,
     )
