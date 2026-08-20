@@ -276,7 +276,20 @@ const AUTO_WORKFLOW='btc_paper.yml';
 
 function getToken(){return sessionStorage.getItem('projectEdgeGhToken')||''}
 function setControlEnabled(enabled){
-  document.querySelectorAll('.manual-btn').forEach(b=>b.disabled=!enabled);
+  document.getElementById('manualSymbol').disabled=!enabled;
+  document.getElementById('manualLeverage').disabled=!enabled;
+  document.getElementById('manualCapital').disabled=!enabled;
+  document.getElementById('manualSL').disabled=!enabled;
+  document.getElementById('manualTP').disabled=!enabled;
+
+  document.getElementById('manualLongBtn').disabled=!enabled;
+  document.getElementById('manualShortBtn').disabled=!enabled;
+  document.getElementById('manualCloseBtn').disabled=!enabled;
+
+  // MARKET habilitado. LIMIT queda bloqueado hasta el próximo paso.
+  document.getElementById('manualOrderType').disabled=true;
+  document.getElementById('manualLimitPrice').disabled=true;
+
   document.getElementById('autoEnableBtn').disabled=!enabled;
   document.getElementById('autoDisableBtn').disabled=!enabled;
 }
@@ -323,6 +336,86 @@ function disconnectControl(){
   document.getElementById('autoStatus').textContent='Los botones AUTO requieren conexión GitHub.';
 }
 async function triggerManual(action){
+  if(!getToken()){
+    showTab('sistema');
+    setControlStatus('Conectá GitHub para usar los controles.','y');
+    return;
+  }
+
+  const symbol=document.getElementById('manualSymbol').value.replace('/','');
+  const leverage=document.getElementById('manualLeverage').value.replace('x','');
+  const capital=document.getElementById('manualCapital').value.trim();
+  const stopLoss=document.getElementById('manualSL').value.trim();
+  const takeProfit=document.getElementById('manualTP').value.trim();
+  const orderType=document.getElementById('manualOrderType').value;
+
+  if(action!=='CLOSE'){
+    if(orderType!=='MARKET'){
+      document.getElementById('manualStatus').textContent=
+        'LIMIT todavía no está habilitado. Usá MARKET.';
+      return;
+    }
+
+    if(!capital || Number(capital)<=0){
+      document.getElementById('manualStatus').textContent=
+        'Ingresá primero el capital en USDT.';
+      return;
+    }
+  }
+
+  const inputs={
+    action:action,
+    symbol:symbol,
+    capital:action==='CLOSE'?'':capital,
+    leverage:action==='CLOSE'?'1':leverage,
+    stop_loss:action==='CLOSE'?'':stopLoss,
+    take_profit:action==='CLOSE'?'':takeProfit
+  };
+
+  let label='CERRAR la posición PAPER';
+
+  if(action!=='CLOSE'){
+    label=
+      action+' '+symbol+
+      ' · '+capital+' USDT'+
+      ' · x'+leverage+
+      (stopLoss?' · SL '+stopLoss:' · SL automático')+
+      (takeProfit?' · TP '+takeProfit:' · TP automático');
+  }
+
+  if(!confirm('Confirmar PAPER: '+label+'?')) return;
+
+  const box=document.getElementById('manualStatus');
+  box.textContent='Enviando '+action+' PAPER...';
+
+  try{
+    const r=await githubRequest(
+      GH_API+'/actions/workflows/'+MANUAL_WORKFLOW+'/dispatches',
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          ref:'main',
+          inputs:inputs
+        })
+      }
+    );
+
+    if(r.status!==204){
+      throw new Error('GitHub respondió '+r.status);
+    }
+
+    box.textContent=
+      '✓ '+action+' PAPER enviado. Esperando ejecución del workflow...';
+
+    setTimeout(loadData,15000);
+    setTimeout(loadData,30000);
+    setTimeout(loadData,50000);
+
+  }catch(e){
+    box.textContent='Error: '+e.message;
+  }
+}
   if(!getToken()){showTab('sistema');setControlStatus('Conectá GitHub para usar los controles.','y');return}
   const label=action==='CLOSE'?'CERRAR la posición PAPER':'abrir '+action+' PAPER';
   if(!confirm('Confirmar: '+label+'?'))return;
@@ -374,7 +467,9 @@ document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',(
 document.getElementById('refreshBtn').addEventListener('click',loadData);
 document.getElementById('connectControlBtn').addEventListener('click',connectControl);
 document.getElementById('disconnectControlBtn').addEventListener('click',disconnectControl);
-document.querySelectorAll('.manual-btn').forEach(b=>b.addEventListener('click',()=>triggerManual(b.dataset.action)));
+document.getElementById('manualLongBtn').addEventListener('click',()=>triggerManual('LONG'));
+document.getElementById('manualShortBtn').addEventListener('click',()=>triggerManual('SHORT'));
+document.getElementById('manualCloseBtn').addEventListener('click',()=>triggerManual('CLOSE'));
 document.getElementById('autoEnableBtn').addEventListener('click',()=>setAuto(true));
 document.getElementById('autoDisableBtn').addEventListener('click',()=>setAuto(false));
 
