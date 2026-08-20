@@ -416,22 +416,7 @@ async function triggerManual(action){
     box.textContent='Error: '+e.message;
   }
 }
-  if(!getToken()){showTab('sistema');setControlStatus('Conectá GitHub para usar los controles.','y');return}
-  const label=action==='CLOSE'?'CERRAR la posición PAPER':'abrir '+action+' PAPER';
-  if(!confirm('Confirmar: '+label+'?'))return;
-  const box=document.getElementById('manualStatus');
-  box.textContent='Enviando '+action+'...';
-  try{
-    const r=await githubRequest(GH_API+'/actions/workflows/'+MANUAL_WORKFLOW+'/dispatches',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ref:'main',inputs:{action}})
-    });
-    if(r.status!==204) throw new Error('GitHub respondió '+r.status);
-    box.textContent='✓ '+action+' PAPER enviado. Esperando ejecución del workflow...';
-    setTimeout(loadData,15000);setTimeout(loadData,30000);setTimeout(loadData,50000);
-  }catch(e){box.textContent='Error: '+e.message}
-}
+  
 async function setAuto(enabled){
   if(!getToken()){showTab('sistema');setControlStatus('Conectá GitHub para usar AUTO.','y');return}
   const action=enabled?'ACTIVAR':'PAUSAR';
