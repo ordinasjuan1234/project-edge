@@ -239,29 +239,29 @@ def main():
     print(f"BTC actual: {btc_price:.2f}")
 
     if state.has_open_position:
+        position_symbol = state.position["symbol"]
+
+        if position_symbol == SYMBOL:
+            position_price = btc_price
+        else:
+            position_data = BinanceHistoricalData().fetch_project_edge_timeframes(
+                position_symbol,
+                limit=100,
+            )
+            position_price = float(
+                position_data["5M"]["close"].iloc[-1]
+            )
+
+        print(
+            f"Precio actual de {position_symbol}: "
+            f"{position_price:.2f}"
+        )
+
         manage_open_position(
             state,
-            btc_price,
+            position_price,
         )
         return
-
-    decision, readiness = analyze_market(
-        data,
-        btc_price,
-    )
-
-    direction = decision.get("direction")
-    decision_status = decision.get("decision")
-    readiness_status = readiness.get("status")
-    can_execute = bool(
-        decision.get("can_execute")
-    )
-
-    entry_confirmed = (
-        readiness_status == "READY"
-        and decision_status != "BLOCKED"
-        and direction in ("LONG", "SHORT")
-        and can_execute
     )
 
     print("")
