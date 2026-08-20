@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-08-20T23:51:04+00:00",
+  "timestamp": "2026-08-20T23:51:45+00:00",
   "symbol": "BTCUSDT",
-  "price": 73062.53,
+  "price": 73048.87,
   "timeframes": {
     "4H": "TRANSITION",
     "1H": "BULLISH",
     "30M": "TRANSITION",
-    "15M": "TRANSITION",
+    "15M": "BULLISH",
     "5M": "BULLISH"
   },
   "fvg": {
@@ -16,7 +16,7 @@
       "upper": 71132.0,
       "mid": 70577.0,
       "state": "ACTIVE",
-      "distance_pct": 0.02642311641506022,
+      "distance_pct": 0.02617613682490864,
       "created_index": 497
     },
     "1H": {
@@ -25,16 +25,16 @@
       "upper": 72205.88,
       "mid": 72097.985,
       "state": "ACTIVE",
-      "distance_pct": 0.011725023520945056,
+      "distance_pct": 0.011474315279240421,
       "created_index": 492
     },
     "30M": {
       "type": "BULLISH",
       "lower": 72878.0,
-      "upper": 73058.82,
-      "mid": 72968.41,
+      "upper": 73023.71,
+      "mid": 72950.85500000001,
       "state": "ACTIVE",
-      "distance_pct": 5.0778422263667176e-05,
+      "distance_pct": 0.0002779146435140727,
       "created_index": 499
     },
     "15M": {
@@ -47,13 +47,13 @@
       "created_index": 498
     },
     "5M": {
-      "type": "BULLISH",
-      "lower": 73026.62,
+      "type": "BEARISH",
+      "lower": 73162.0,
       "upper": 73206.0,
-      "mid": 73116.31,
-      "state": "PARTIAL",
-      "distance_pct": 0.0,
-      "created_index": 495
+      "mid": 73184.0,
+      "state": "ACTIVE",
+      "distance_pct": 0.0015486892541938658,
+      "created_index": 497
     }
   },
   "alignment": "NO_DIRECTION",
@@ -73,8 +73,19 @@
   "paper": {
     "initial_balance": 10000.0,
     "balance": 9943.662754663665,
-    "position": null,
-    "unrealized_pnl": 0.0,
+    "position": {
+      "symbol": "ETHUSDT",
+      "direction": "SHORT",
+      "entry_price": 2326.19,
+      "quantity": 0.008597749968833156,
+      "stop_loss": 2337.82095,
+      "take_profit": 2302.9281,
+      "capital": 10.0,
+      "leverage": 2,
+      "exposure": 20.0,
+      "order_type": "MARKET"
+    },
+    "unrealized_pnl": -0.0016335724940787688,
     "closed_trades": [
       {
         "symbol": "BTCUSDT",
