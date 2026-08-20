@@ -133,9 +133,21 @@ def main():
     state.save()
 
     position = state.position
+    position_price = btc_price
+
+    if position and position.get("symbol") != SYMBOL:
+        position_symbol = position["symbol"]
+        position_data = BinanceHistoricalData().fetch_project_edge_timeframes(
+            position_symbol,
+            limit=100,
+        )
+        position_price = float(
+            position_data["5M"]["close"].iloc[-1]
+        )
+
     unrealized_pnl = calculate_unrealized_pnl(
         position,
-        btc_price,
+        position_price,
     )
 
     alignment = mtf.get("alignment", {})
