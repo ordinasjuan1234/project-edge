@@ -262,6 +262,23 @@ def main():
             position_price,
         )
         return
+        decision, readiness = analyze_market(
+        data,
+        btc_price,
+    )
+
+    direction = decision.get("direction")
+    decision_status = decision.get("decision")
+    readiness_status = readiness.get("status")
+    can_execute = bool(
+        decision.get("can_execute")
+    )
+
+    entry_confirmed = (
+        readiness_status == "READY"
+        and decision_status != "BLOCKED"
+        and direction in ("LONG", "SHORT")
+        and can_execute
     )
 
     print("")
