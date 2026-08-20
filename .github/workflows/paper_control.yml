@@ -4,13 +4,50 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: "Accion PAPER"
+        description: "Acción PAPER"
         required: true
         type: choice
         options:
           - LONG
           - SHORT
           - CLOSE
+
+      symbol:
+        description: "Activo"
+        required: true
+        default: "BTCUSDT"
+        type: choice
+        options:
+          - BTCUSDT
+          - ETHUSDT
+
+      capital:
+        description: "Capital en USDT"
+        required: false
+        default: ""
+        type: string
+
+      leverage:
+        description: "Apalancamiento PAPER"
+        required: true
+        default: "1"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
+
+      stop_loss:
+        description: "Stop Loss personalizado"
+        required: false
+        default: ""
+        type: string
+
+      take_profit:
+        description: "Take Profit personalizado"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: write
@@ -41,7 +78,33 @@ jobs:
           pip install -r requirements.txt
 
       - name: Execute manual PAPER action
-        run: python manual_paper_control.py --action "${{ inputs.action }}"
+        env:
+          ACTION: ${{ inputs.action }}
+          SYMBOL: ${{ inputs.symbol }}
+          CAPITAL: ${{ inputs.capital }}
+          LEVERAGE: ${{ inputs.leverage }}
+          STOP_LOSS: ${{ inputs.stop_loss }}
+          TAKE_PROFIT: ${{ inputs.take_profit }}
+        run: |
+          ARGS=(
+            --action "$ACTION"
+            --symbol "$SYMBOL"
+            --leverage "$LEVERAGE"
+          )
+
+          if [ -n "$CAPITAL" ]; then
+            ARGS+=(--capital "$CAPITAL")
+          fi
+
+          if [ -n "$STOP_LOSS" ]; then
+            ARGS+=(--stop-loss "$STOP_LOSS")
+          fi
+
+          if [ -n "$TAKE_PROFIT" ]; then
+            ARGS+=(--take-profit "$TAKE_PROFIT")
+          fi
+
+          python manual_paper_control.py "${ARGS[@]}"
 
       - name: Build live dashboard data
         run: python build_live_dashboard.py
