@@ -153,15 +153,17 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
           <div class="mini"><span class="mut">Trades cerrados</span><b id="closedCount">—</b></div>
         </div>
         <h2 style="margin-top:18px">Automático PAPER</h2>
-        <div class="kpis">
-          <div class="mini"><span class="mut">Estado por datos</span><b id="autoFresh">—</b></div>
-          <div class="mini"><span class="mut">Último ciclo</span><b id="autoAge">—</b></div>
-        </div>
-        <div class="controls" style="grid-template-columns:1fr 1fr">
-          <button id="autoEnableBtn" class="ctrl auto" disabled>▶ ACTIVAR AUTO</button>
-          <button id="autoDisableBtn" class="ctrl close" disabled>Ⅱ PAUSAR AUTO</button>
-        </div>
-        <div id="autoStatus" class="statusbox">El workflow automático corre cada 5 minutos. Los botones requieren conexión GitHub.</div>
+<div class="kpis">
+  <div class="mini"><span class="mut">Estado AUTO</span><b id="autoState">—</b></div>
+  <div class="mini"><span class="mut">Estado de datos</span><b id="autoFresh">—</b></div>
+  <div class="mini"><span class="mut">Último ciclo</span><b id="autoAge">—</b></div>
+  <div class="mini"><span class="mut">Reloj</span><b>cron-job.org · 5 min</b></div>
+</div>
+<div class="controls" style="display:none">
+  <button id="autoEnableBtn" class="ctrl auto" disabled>▶ ACTIVAR AUTO</button>
+  <button id="autoDisableBtn" class="ctrl close" disabled>Ⅱ PAUSAR AUTO</button>
+</div>
+<div id="autoStatus" class="statusbox">Automático controlado por cron-job.org. GitHub Actions ejecuta el ciclo PAPER cada 5 minutos.</div>
       </section>
     </div>
     <section class="panel" style="margin-top:12px">
@@ -355,8 +357,11 @@ async function loadData(){
    document.getElementById('sysTimestamp').textContent=localTime;
    const ageMin=Math.max(0,Math.round((Date.now()-stamp.getTime())/60000));
    document.getElementById('autoAge').textContent=ageMin+' min';
-   document.getElementById('autoFresh').textContent=ageMin<=12?'RECIBIENDO DATOS':'SIN ACTUALIZAR';
-   document.getElementById('autoFresh').className=ageMin<=12?'g':'r';
+   document.getElementById('autoFresh').textContent=ageMin<=12?'DATOS FRESCOS':'SIN ACTUALIZAR';
+document.getElementById('autoFresh').className=ageMin<=12?'g':'r';
+
+document.getElementById('autoState').textContent=ageMin<=7?'AUTO ACTIVO':ageMin<=12?'AUTO CON DEMORA':'AUTO SIN CICLO';
+document.getElementById('autoState').className=ageMin<=7?'g':ageMin<=12?'y':'r';
 
    setVal('symbol',(d.symbol||'BTCUSDT').replace('USDT','/USDT'));
    setVal('price',fmt(d.price)+' USDT','BULL');
