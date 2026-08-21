@@ -218,6 +218,23 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
           <div class="mini"><span class="mut">PnL abierto</span><b id="unrealized">—</b></div>
           <div class="mini"><span class="mut">Trades cerrados</span><b id="closedCount">—</b></div>
         </div>
+        <h2 style="margin-top:18px">Rendimiento MANUAL</h2>
+<div class="kpis">
+  <div class="mini"><span class="mut">Operaciones</span><b id="manualPerfTotal">—</b></div>
+  <div class="mini"><span class="mut">Ganadas</span><b id="manualPerfWins">—</b></div>
+  <div class="mini"><span class="mut">Perdidas</span><b id="manualPerfLosses">—</b></div>
+  <div class="mini"><span class="mut">% Aciertos</span><b id="manualPerfWinRate">—</b></div>
+  <div class="mini"><span class="mut">P&L MANUAL</span><b id="manualPerfPnl">—</b></div>
+</div>
+
+<h2 style="margin-top:18px">Rendimiento AUTO</h2>
+<div class="kpis">
+  <div class="mini"><span class="mut">Operaciones</span><b id="autoPerfTotal">—</b></div>
+  <div class="mini"><span class="mut">Ganadas</span><b id="autoPerfWins">—</b></div>
+  <div class="mini"><span class="mut">Perdidas</span><b id="autoPerfLosses">—</b></div>
+  <div class="mini"><span class="mut">% Aciertos</span><b id="autoPerfWinRate">—</b></div>
+  <div class="mini"><span class="mut">P&L AUTO</span><b id="autoPerfPnl">—</b></div>
+</div>
         <h2 style="margin-top:18px">Automático PAPER</h2>
 <div class="kpis">
   <div class="mini"><span class="mut">Estado AUTO</span><b id="autoState">—</b></div>
@@ -234,8 +251,8 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
     </div>
     <section class="panel" style="margin-top:12px">
       <h2>Últimas operaciones cerradas</h2>
-      <table class="trades"><thead><tr><th>Par</th><th>Dirección</th><th>Entrada</th><th>Salida</th><th>P&L</th><th>Motivo</th></tr></thead>
-      <tbody id="tradesBody"><tr><td colspan="6" class="mut">Sin operaciones cerradas todavía.</td></tr></tbody></table>
+      <table class="trades"><thead><tr><th>Par</th><th>Dirección</th><th>Entrada</th><th>Salida</th><th>P&L</th><th>Origen</th><th>Motivo</th></tr></thead>
+      <tbody id="tradesBody"><tr><td colspan="7" class="mut">Sin operaciones cerradas todavía.</td></tr></tbody></table>
     </section>
   </section>
 
@@ -549,7 +566,26 @@ document.getElementById('autoState').className=ageMin<=7?'g':ageMin<=12?'y':'r';
    document.getElementById('signalMissing').innerHTML=missHtml;
 
    const p=d.paper||{};
-   setVal('balance',fmt(p.balance)+' USDT','BULL');
+
+const manualPerf=p.manual_performance||{};
+const autoPerf=p.auto_performance||{};
+
+document.getElementById('manualPerfTotal').textContent=manualPerf.total??0;
+document.getElementById('manualPerfWins').textContent=manualPerf.wins??0;
+document.getElementById('manualPerfLosses').textContent=manualPerf.losses??0;
+document.getElementById('manualPerfWinRate').textContent=
+  Number(manualPerf.win_rate??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+document.getElementById('manualPerfPnl').textContent=
+  (Number(manualPerf.pnl??0)>=0?'+':'')+fmt(manualPerf.pnl)+' USDT';
+
+document.getElementById('autoPerfTotal').textContent=autoPerf.total??0;
+document.getElementById('autoPerfWins').textContent=autoPerf.wins??0;
+document.getElementById('autoPerfLosses').textContent=autoPerf.losses??0;
+document.getElementById('autoPerfWinRate').textContent=
+  Number(autoPerf.win_rate??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+document.getElementById('autoPerfPnl').textContent=
+  (Number(autoPerf.pnl??0)>=0?'+':'')+fmt(autoPerf.pnl)+' USDT';
+setVal('balance',fmt(p.balance)+' USDT','BULL');
    document.getElementById('initialBalance').textContent=fmt(p.initial_balance)+' USDT';
    document.getElementById('opBalance').textContent=fmt(p.balance)+' USDT';
    document.getElementById('unrealized').textContent=(Number(p.unrealized_pnl)>=0?'+':'')+fmt(p.unrealized_pnl)+' USDT';
@@ -618,7 +654,8 @@ if(pos){
      <td class="${t.direction==='LONG'?'g':'r'}">${t.direction}</td>
      <td>${fmt(t.entry_price)}</td><td>${fmt(t.exit_price)}</td>
      <td class="${Number(t.pnl)>=0?'g':'r'}">${Number(t.pnl)>=0?'+':''}${fmt(t.pnl)}</td>
-     <td>${t.reason||'—'}</td></tr>`).join(''):'<tr><td colspan="6" class="mut">Sin operaciones cerradas todavía.</td></tr>';
+     <td>${t.source==='MANUAL'?'MANUAL':t.source==='AUTO'?'AUTO':'SIN CLASIFICAR'}</td>
+     <td>${t.reason||'—'}</td></tr>`).join(''):'<tr><td colspan="7" class="mut">Sin operaciones cerradas todavía.</td></tr>';
  }catch(e){
    document.getElementById('backendDot').className='dot off';
    document.getElementById('backendText').textContent='Sin datos del dashboard';
