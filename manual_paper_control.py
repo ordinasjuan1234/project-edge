@@ -1,9 +1,12 @@
 """
-PROJECT EDGE - Manual PAPER Control v2
+PROJECT EDGE - Manual PAPER Control v3
 
 Control manual simulado para BTC/USDT y ETH/USDT.
-Permite elegir capital, apalancamiento x1/x2/x3 y SL/TP.
-NO envia ordenes reales. NO usa API privada de Binance.
+Permite elegir capital, apalancamiento x1/x2/x3, SL/TP
+y modificar SL/TP de una posicion abierta.
+
+NO envia ordenes reales.
+NO usa API privada de Binance.
 """
 
 from __future__ import annotations
@@ -29,7 +32,10 @@ def current_price(symbol: str) -> float:
     return float(data["5M"]["close"].iloc[-1])
 
 
-def default_levels(direction: str, entry_price: float) -> tuple[float, float]:
+def default_levels(
+    direction: str,
+    entry_price: float,
+) -> tuple[float, float]:
     if direction == "LONG":
         return (
             entry_price * (1.0 - DEFAULT_STOP_PCT),
@@ -48,25 +54,40 @@ def resolve_levels(
     stop_loss: float | None,
     take_profit: float | None,
 ) -> tuple[float, float]:
-    default_stop, default_tp = default_levels(direction, entry_price)
+    default_stop, default_tp = default_levels(
+        direction,
+        entry_price,
+    )
 
-    stop = float(stop_loss) if stop_loss is not None else default_stop
-    tp = float(take_profit) if take_profit is not None else default_tp
+    stop = (
+        float(stop_loss)
+        if stop_loss is not None
+        else default_stop
+    )
+
+    tp = (
+        float(take_profit)
+        if take_profit is not None
+        else default_tp
+    )
 
     if direction == "LONG":
         if stop >= entry_price:
             raise ValueError(
                 "En LONG, el Stop Loss debe estar debajo de la entrada."
             )
+
         if tp <= entry_price:
             raise ValueError(
                 "En LONG, el Take Profit debe estar encima de la entrada."
             )
+
     else:
         if stop <= entry_price:
             raise ValueError(
                 "En SHORT, el Stop Loss debe estar encima de la entrada."
             )
+
         if tp >= entry_price:
             raise ValueError(
                 "En SHORT, el Take Profit debe estar debajo de la entrada."
@@ -104,7 +125,9 @@ def open_manual(
     capital = float(capital)
 
     if capital <= 0:
-        raise ValueError("El capital debe ser mayor que 0.")
+        raise ValueError(
+            "El capital debe ser mayor que 0."
+        )
 
     if capital > state.balance:
         raise ValueError(
@@ -158,7 +181,9 @@ def open_manual(
 
 def close_manual(state: PaperState) -> None:
     if not state.has_open_position:
-        print("NO HAY POSICION PAPER ABIERTA PARA CERRAR.")
+        print(
+            "NO HAY POSICION PAPER ABIERTA PARA CERRAR."
+        )
         return
 
     symbol = state.position["symbol"]
@@ -181,8 +206,7 @@ def close_manual(state: PaperState) -> None:
     print("NO se envio ninguna orden real.")
 
 
-def main() -> None:
-    def update_manual_risk(
+def update_manual_risk(
     state: PaperState,
     stop_loss: float | None,
     take_profit: float | None,
@@ -194,7 +218,7 @@ def main() -> None:
 
     if stop_loss is None and take_profit is None:
         raise ValueError(
-            "Ingresá un nuevo Stop Loss, Take Profit o ambos."
+            "Ingresa un nuevo Stop Loss, Take Profit o ambos."
         )
 
     position = state.position
@@ -219,15 +243,18 @@ def main() -> None:
             raise ValueError(
                 "En LONG, el Stop Loss debe estar debajo del precio actual."
             )
+
         if new_tp <= price:
             raise ValueError(
                 "En LONG, el Take Profit debe estar encima del precio actual."
             )
+
     else:
         if new_stop <= price:
             raise ValueError(
                 "En SHORT, el Stop Loss debe estar encima del precio actual."
             )
+
         if new_tp >= price:
             raise ValueError(
                 "En SHORT, el Take Profit debe estar debajo del precio actual."
@@ -247,13 +274,20 @@ def main() -> None:
     print(f"Precio:      {price:.2f}")
     print(f"Nuevo SL:    {new_stop:.2f}")
     print(f"Nuevo TP:    {new_tp:.2f}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
         "--action",
         required=True,
-        choices=["LONG", "SHORT", "CLOSE", "UPDATE_RISK"],
+        choices=[
+            "LONG",
+            "SHORT",
+            "CLOSE",
+            "UPDATE_RISK",
+        ],
     )
 
     parser.add_argument(
@@ -289,18 +323,22 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    state = PaperState(initial_balance=INITIAL_BALANCE)
+    state = PaperState(
+        initial_balance=INITIAL_BALANCE
+    )
 
     if args.action == "CLOSE":
         close_manual(state)
         return
-if args.action == "UPDATE_RISK":
-    update_manual_risk(
-        state=state,
-        stop_loss=args.stop_loss,
-        take_profit=args.take_profit,
-    )
-    return
+
+    if args.action == "UPDATE_RISK":
+        update_manual_risk(
+            state=state,
+            stop_loss=args.stop_loss,
+            take_profit=args.take_profit,
+        )
+        return
+
     capital = (
         state.balance
         if args.capital is None
@@ -309,7 +347,9 @@ if args.action == "UPDATE_RISK":
 
     price = current_price(args.symbol)
 
-    print(f"{args.symbol} actual: {price:.2f}")
+    print(
+        f"{args.symbol} actual: {price:.2f}"
+    )
 
     open_manual(
         state=state,
