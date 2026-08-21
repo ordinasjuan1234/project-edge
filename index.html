@@ -768,6 +768,7 @@ if(pos){
     <div class="mini"><span class="mut">Activo</span><b>${(pos.symbol||'').replace('USDT','/USDT')}</b></div>
     <div class="mini"><span class="mut">Dirección</span><b class="${pos.direction==='LONG'?'g':'r'}">${pos.direction}</b></div>
     <div class="mini"><span class="mut">Entrada</span><b>${fmt(pos.entry_price)}</b></div>
+    <div class="mini"><span class="mut">Cantidad</span><b>${Number(pos.quantity??0).toLocaleString('es-AR',{maximumFractionDigits:8})} ${(pos.symbol||'BTCUSDT').replace('USDT','')}</b></div>
     <div class="mini"><span class="mut">Capital usado</span><b>${fmt(pos.capital)} USDT</b></div>
     <div class="mini"><span class="mut">Apalancamiento</span><b>x${pos.leverage||1}</b></div>
     <div class="mini"><span class="mut">Exposición</span><b>${fmt(pos.exposure)} USDT</b></div>
