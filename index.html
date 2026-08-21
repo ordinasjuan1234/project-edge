@@ -437,7 +437,9 @@ async function triggerManual(action){
   if(!confirm('Confirmar PAPER: '+label+'?')) return;
 
   const box=document.getElementById('manualStatus');
-  box.textContent='Enviando '+action+' PAPER...';
+  box.textContent=action==='CLOSE'
+  ? 'CIERRE EN PROCESO · Esperando confirmación del backend...'
+  : 'Enviando '+action+' PAPER...';
 
   try{
     const r=await githubRequest(
@@ -456,9 +458,9 @@ async function triggerManual(action){
       throw new Error('GitHub respondió '+r.status);
     }
 
-    box.textContent=
-      '✓ '+action+' PAPER enviado. Esperando ejecución del workflow...';
-
+    box.textContent=action==='CLOSE'
+  ? 'CIERRE SOLICITADO · Esperando que el backend confirme...'
+  : '✓ '+action+' PAPER enviado. Esperando ejecución del workflow...';
     setTimeout(loadData,15000);
     setTimeout(loadData,30000);
     setTimeout(loadData,50000);
