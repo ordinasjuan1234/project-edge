@@ -773,8 +773,8 @@ if(pos){
     <div class="mini"><span class="mut">Take Profit</span><b class="g">${fmt(pos.take_profit)}</b></div>
   `;
 
-  document.getElementById('manualSymbol').value=pos.symbol||'BTCUSDT';
-  document.getElementById('manualLeverage').value=String(pos.leverage||1);
+  document.getElementById('manualSymbol').value=(pos.symbol||'BTCUSDT').replace('USDT','/USDT');
+  document.getElementById('manualLeverage').value='x'+(pos.leverage||1);
   document.getElementById('manualCapital').value=pos.capital??'';
   document.getElementById('manualSL').value=pos.stop_loss??'';
   document.getElementById('manualTP').value=pos.take_profit??'';
@@ -799,7 +799,7 @@ if(pos){
 }else{
   box.className='empty';
   box.textContent='No hay posición abierta. Podés preparar una nueva operación manual.';
-
+  document.getElementById('manualStatus').textContent='SIN POSICIÓN · Elegí activo, capital y riesgo; después LONG o SHORT.';
   document.getElementById('manualSymbol').disabled=!connected;
   document.getElementById('manualLeverage').disabled=!connected;
   document.getElementById('manualCapital').disabled=!connected;
