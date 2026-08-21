@@ -231,6 +231,7 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
   <button id="manualLongBtn" class="ctrl long" disabled>▲ PASO 4 · ABRIR LONG</button>
   <button id="manualShortBtn" class="ctrl short" disabled>▼ PASO 4 · ABRIR SHORT</button>
   <button id="manualCloseBtn" class="ctrl close" disabled>■ CERRAR POSICIÓN</button>
+  <button id="manualUpdateRiskBtn" class="ctrl auto" disabled>✎ ACTUALIZAR SL / TP</button>
 </div>
 
 <div id="manualStatus" class="statusbox">
@@ -336,6 +337,7 @@ function setControlEnabled(enabled){
   document.getElementById('manualLongBtn').disabled=!enabled;
   document.getElementById('manualShortBtn').disabled=!enabled;
   document.getElementById('manualCloseBtn').disabled=!enabled;
+  document.getElementById('manualUpdateRiskBtn').disabled=!enabled;
 
   // MARKET habilitado. LIMIT queda bloqueado hasta el próximo paso.
   document.getElementById('manualOrderType').disabled=true;
@@ -400,7 +402,7 @@ async function triggerManual(action){
   const takeProfit=document.getElementById('manualTP').value.trim();
   const orderType=document.getElementById('manualOrderType').value;
 
-  if(action!=='CLOSE'){
+    if(action!=='CLOSE' && action!=='UPDATE_RISK'){
     if(orderType!=='MARKET'){
       document.getElementById('manualStatus').textContent=
         'LIMIT todavía no está habilitado. Usá MARKET.';
@@ -425,21 +427,31 @@ async function triggerManual(action){
 
   let label='CERRAR la posición PAPER';
 
-  if(action!=='CLOSE'){
-    label=
-      action+' '+symbol+
-      ' · '+capital+' USDT'+
-      ' · x'+leverage+
-      (stopLoss?' · SL '+stopLoss:' · SL automático')+
-      (takeProfit?' · TP '+takeProfit:' · TP automático');
-  }
+if(action==='UPDATE_RISK'){
+  label=
+    'ACTUALIZAR SL/TP · '+symbol+
+    (stopLoss?' · SL '+stopLoss:'')+
+    (takeProfit?' · TP '+takeProfit:'');
+}else if(action!=='CLOSE'){
+  label=
+    action+' '+symbol+
+    ' · '+capital+' USDT'+
+    ' · x'+leverage+
+    (stopLoss?' · SL '+stopLoss:' · SL automático')+
+    (takeProfit?' · TP '+takeProfit:' · TP automático');
+}
 
   if(!confirm('Confirmar PAPER: '+label+'?')) return;
 
   const box=document.getElementById('manualStatus');
-  box.textContent=action==='CLOSE'
-  ? 'CIERRE EN PROCESO · Esperando confirmación del backend...'
-  : 'ABRIENDO '+action+' · Esperando confirmación del backend...';
+
+if(action==='CLOSE'){
+  box.textContent='CIERRE EN PROCESO · Esperando confirmación del backend...';
+}else if(action==='UPDATE_RISK'){
+  box.textContent='ACTUALIZANDO SL/TP · Esperando confirmación del backend...';
+}else{
+  box.textContent='ABRIENDO '+action+' · Esperando confirmación del backend...';
+}
 
   try{
     const r=await githubRequest(
@@ -458,9 +470,13 @@ async function triggerManual(action){
       throw new Error('GitHub respondió '+r.status);
     }
 
-    box.textContent=action==='CLOSE'
-  ? 'CIERRE SOLICITADO · Esperando que el backend confirme...'
-  : 'APERTURA '+action+' SOLICITADA · Esperando confirmación; CERRAR se habilitará al abrir.';
+    if(action==='CLOSE'){
+  box.textContent='CIERRE SOLICITADO · Esperando que el backend confirme...';
+}else if(action==='UPDATE_RISK'){
+  box.textContent='CAMBIO DE SL/TP SOLICITADO · Esperando confirmación del backend...';
+}else{
+  box.textContent='APERTURA '+action+' SOLICITADA · Esperando confirmación; CERRAR se habilitará al abrir.';
+}
     setTimeout(loadData,15000);
     setTimeout(loadData,30000);
     setTimeout(loadData,50000);
@@ -618,6 +634,7 @@ document.getElementById('disconnectControlBtn').addEventListener('click',disconn
 document.getElementById('manualLongBtn').addEventListener('click',()=>triggerManual('LONG'));
 document.getElementById('manualShortBtn').addEventListener('click',()=>triggerManual('SHORT'));
 document.getElementById('manualCloseBtn').addEventListener('click',()=>triggerManual('CLOSE'));
+document.getElementById('manualUpdateRiskBtn').addEventListener('click',()=>triggerManual('UPDATE_RISK'));
 document.getElementById('manualSymbol').addEventListener('change',()=>{if(!livePosition)connectLiveMarket(document.getElementById('manualSymbol').value.replace('/',''));});
 document.getElementById('autoEnableBtn').addEventListener('click',()=>setAuto(true));
 document.getElementById('autoDisableBtn').addEventListener('click',()=>setAuto(false));
@@ -785,13 +802,13 @@ if(pos){
   document.getElementById('manualSymbol').disabled=true;
   document.getElementById('manualLeverage').disabled=true;
   document.getElementById('manualCapital').disabled=true;
-  document.getElementById('manualSL').disabled=true;
-  document.getElementById('manualTP').disabled=true;
+  document.getElementById('manualSL').disabled=!connected;
+  document.getElementById('manualTP').disabled=!connected;
 
   document.getElementById('manualLongBtn').disabled=true;
   document.getElementById('manualShortBtn').disabled=true;
   document.getElementById('manualCloseBtn').disabled=!connected;
-
+  document.getElementById('manualUpdateRiskBtn').disabled=!connected;
   document.getElementById('manualStatus').textContent=
     'POSICIÓN ABIERTA · '+(pos.symbol||'').replace('USDT','/USDT')+
     ' · '+pos.direction+
@@ -812,6 +829,7 @@ if(pos){
   document.getElementById('manualLongBtn').disabled=!connected;
   document.getElementById('manualShortBtn').disabled=!connected;
   document.getElementById('manualCloseBtn').disabled=true;
+  document.getElementById('manualUpdateRiskBtn').disabled=true;
 }
 
    const trades=p.closed_trades||[];
