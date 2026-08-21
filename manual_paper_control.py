@@ -182,12 +182,78 @@ def close_manual(state: PaperState) -> None:
 
 
 def main() -> None:
+    def update_manual_risk(
+    state: PaperState,
+    stop_loss: float | None,
+    take_profit: float | None,
+) -> None:
+    if not state.has_open_position:
+        raise ValueError(
+            "No hay una posicion PAPER abierta para modificar."
+        )
+
+    if stop_loss is None and take_profit is None:
+        raise ValueError(
+            "Ingresá un nuevo Stop Loss, Take Profit o ambos."
+        )
+
+    position = state.position
+    symbol = position["symbol"]
+    direction = position["direction"]
+    price = current_price(symbol)
+
+    new_stop = (
+        float(stop_loss)
+        if stop_loss is not None
+        else float(position["stop_loss"])
+    )
+
+    new_tp = (
+        float(take_profit)
+        if take_profit is not None
+        else float(position["take_profit"])
+    )
+
+    if direction == "LONG":
+        if new_stop >= price:
+            raise ValueError(
+                "En LONG, el Stop Loss debe estar debajo del precio actual."
+            )
+        if new_tp <= price:
+            raise ValueError(
+                "En LONG, el Take Profit debe estar encima del precio actual."
+            )
+    else:
+        if new_stop <= price:
+            raise ValueError(
+                "En SHORT, el Stop Loss debe estar encima del precio actual."
+            )
+        if new_tp >= price:
+            raise ValueError(
+                "En SHORT, el Take Profit debe estar debajo del precio actual."
+            )
+
+    position["stop_loss"] = new_stop
+    position["take_profit"] = new_tp
+
+    state.data["position"] = position
+    state.save()
+
+    print("=" * 60)
+    print("PROJECT EDGE - MODIFICAR SL/TP PAPER")
+    print("=" * 60)
+    print(f"Activo:      {symbol}")
+    print(f"Direccion:   {direction}")
+    print(f"Precio:      {price:.2f}")
+    print(f"Nuevo SL:    {new_stop:.2f}")
+    print(f"Nuevo TP:    {new_tp:.2f}")
+def main() -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
         "--action",
         required=True,
-        choices=["LONG", "SHORT", "CLOSE"],
+        choices=["LONG", "SHORT", "CLOSE", "UPDATE_RISK"],
     )
 
     parser.add_argument(
@@ -228,7 +294,13 @@ def main() -> None:
     if args.action == "CLOSE":
         close_manual(state)
         return
-
+if args.action == "UPDATE_RISK":
+    update_manual_risk(
+        state=state,
+        stop_loss=args.stop_loss,
+        take_profit=args.take_profit,
+    )
+    return
     capital = (
         state.balance
         if args.capital is None
