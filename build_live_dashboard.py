@@ -91,7 +91,6 @@ def calculate_performance(trades, source):
 
 
 def clean_value(value):
-def clean_value(value):
     if value is None:
         return None
 
