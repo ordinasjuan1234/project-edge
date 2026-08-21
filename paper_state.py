@@ -106,6 +106,7 @@ class PaperState:
         quantity: float,
         stop_loss: float,
         take_profit: float,
+        source: str = "UNCLASSIFIED",
     ) -> dict[str, Any]:
         if self.has_open_position:
             raise ValueError(
@@ -118,7 +119,12 @@ class PaperState:
             raise ValueError(
                 "direction debe ser LONG o SHORT."
             )
+        source = source.upper()
 
+        if source not in {"MANUAL", "AUTO", "UNCLASSIFIED"}:
+            raise ValueError(
+                "source debe ser MANUAL, AUTO o UNCLASSIFIED."
+            )
         position = {
             "symbol": symbol,
             "direction": direction,
@@ -126,6 +132,7 @@ class PaperState:
             "quantity": float(quantity),
             "stop_loss": float(stop_loss),
             "take_profit": float(take_profit),
+            "source": source,
         }
 
         self.data["position"] = position
@@ -173,6 +180,7 @@ class PaperState:
             "take_profit": float(
                 position["take_profit"]
             ),
+            "source": position.get("source", "UNCLASSIFIED"),
             "pnl": float(pnl),
             "reason": reason,
             "balance": float(self.data["balance"]),
