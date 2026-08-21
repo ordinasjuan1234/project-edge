@@ -549,17 +549,60 @@ document.getElementById('autoState').className=ageMin<=7?'g':ageMin<=12?'y':'r';
    document.getElementById('unrealized').className=Number(p.unrealized_pnl)>0?'g':Number(p.unrealized_pnl)<0?'r':'';
 
    const pos=p.position;
-   const box=document.getElementById('positionBox');
-   if(pos){
-     box.className='position';
-     box.innerHTML=`<div class="mini"><span class="mut">Dirección</span><b class="${pos.direction==='LONG'?'g':'r'}">${pos.direction}</b></div>
-       <div class="mini"><span class="mut">Entrada</span><b>${fmt(pos.entry_price)}</b></div>
-       <div class="mini"><span class="mut">Stop Loss</span><b class="r">${fmt(pos.stop_loss)}</b></div>
-       <div class="mini"><span class="mut">Take Profit</span><b class="g">${fmt(pos.take_profit)}</b></div>`;
-   }else{
-     box.className='empty';
-     box.textContent='No hay posición abierta. El bot está esperando una entrada confirmada.';
-   }
+const box=document.getElementById('positionBox');
+const connected=!!getToken();
+
+if(pos){
+  box.className='position';
+
+  box.innerHTML=`
+    <div class="mini"><span class="mut">Activo</span><b>${(pos.symbol||'').replace('USDT','/USDT')}</b></div>
+    <div class="mini"><span class="mut">Dirección</span><b class="${pos.direction==='LONG'?'g':'r'}">${pos.direction}</b></div>
+    <div class="mini"><span class="mut">Entrada</span><b>${fmt(pos.entry_price)}</b></div>
+    <div class="mini"><span class="mut">Capital usado</span><b>${fmt(pos.capital)} USDT</b></div>
+    <div class="mini"><span class="mut">Apalancamiento</span><b>x${pos.leverage||1}</b></div>
+    <div class="mini"><span class="mut">Exposición</span><b>${fmt(pos.exposure)} USDT</b></div>
+    <div class="mini"><span class="mut">Stop Loss</span><b class="r">${fmt(pos.stop_loss)}</b></div>
+    <div class="mini"><span class="mut">Take Profit</span><b class="g">${fmt(pos.take_profit)}</b></div>
+  `;
+
+  document.getElementById('manualSymbol').value=pos.symbol||'BTCUSDT';
+  document.getElementById('manualLeverage').value=String(pos.leverage||1);
+  document.getElementById('manualCapital').value=pos.capital??'';
+  document.getElementById('manualSL').value=pos.stop_loss??'';
+  document.getElementById('manualTP').value=pos.take_profit??'';
+
+  document.getElementById('manualSymbol').disabled=true;
+  document.getElementById('manualLeverage').disabled=true;
+  document.getElementById('manualCapital').disabled=true;
+  document.getElementById('manualSL').disabled=true;
+  document.getElementById('manualTP').disabled=true;
+
+  document.getElementById('manualLongBtn').disabled=true;
+  document.getElementById('manualShortBtn').disabled=true;
+  document.getElementById('manualCloseBtn').disabled=!connected;
+
+  document.getElementById('manualStatus').textContent=
+    'POSICIÓN ABIERTA · '+(pos.symbol||'').replace('USDT','/USDT')+
+    ' · '+pos.direction+
+    ' · '+fmt(pos.capital)+' USDT'+
+    ' · x'+(pos.leverage||1)+
+    ' · exposición '+fmt(pos.exposure)+' USDT';
+
+}else{
+  box.className='empty';
+  box.textContent='No hay posición abierta. Podés preparar una nueva operación manual.';
+
+  document.getElementById('manualSymbol').disabled=!connected;
+  document.getElementById('manualLeverage').disabled=!connected;
+  document.getElementById('manualCapital').disabled=!connected;
+  document.getElementById('manualSL').disabled=!connected;
+  document.getElementById('manualTP').disabled=!connected;
+
+  document.getElementById('manualLongBtn').disabled=!connected;
+  document.getElementById('manualShortBtn').disabled=!connected;
+  document.getElementById('manualCloseBtn').disabled=true;
+}
 
    const trades=p.closed_trades||[];
    document.getElementById('closedCount').textContent=trades.length;
