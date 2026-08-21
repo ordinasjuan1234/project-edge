@@ -315,6 +315,7 @@ def main():
         quantity=quantity,
         stop_loss=stop_loss,
         take_profit=take_profit,
+        source="AUTO",
     )
 
     risk_usdt = abs(
