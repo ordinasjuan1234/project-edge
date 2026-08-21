@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-21T21:18:04+00:00",
+  "timestamp": "2026-08-21T21:20:25+00:00",
   "symbol": "BTCUSDT",
-  "price": 77675.84,
+  "price": 77592.25,
   "timeframes": {
     "4H": "TRANSITION",
     "1H": "BULLISH",
@@ -16,7 +16,7 @@
       "upper": 76235.76,
       "mid": 76010.79000000001,
       "state": "ACTIVE",
-      "distance_pct": 0.018440668172134193,
+      "distance_pct": 0.0176816823007938,
       "created_index": 496
     },
     "1H": {
@@ -25,7 +25,7 @@
       "upper": 77388.0,
       "mid": 77374.0,
       "state": "ACTIVE",
-      "distance_pct": 0.003605216613635328,
+      "distance_pct": 0.0027320872767928094,
       "created_index": 499
     },
     "30M": {
@@ -34,16 +34,16 @@
       "upper": 76199.48,
       "mid": 75976.23999999999,
       "state": "ACTIVE",
-      "distance_pct": 0.018907784556344356,
+      "distance_pct": 0.018022755995933386,
       "created_index": 472
     },
     "15M": {
       "type": "BULLISH",
       "lower": 77543.4,
-      "upper": 77600.0,
-      "mid": 77571.7,
+      "upper": 77592.24,
+      "mid": 77567.82,
       "state": "ACTIVE",
-      "distance_pct": 0.0009764939810765613,
+      "distance_pct": 1.288788505908942e-07,
       "created_index": 499
     },
     "5M": {
@@ -51,9 +51,9 @@
       "lower": 77484.0,
       "upper": 77600.0,
       "mid": 77542.0,
-      "state": "ACTIVE",
-      "distance_pct": 0.0009763653666313298,
-      "created_index": 499
+      "state": "PARTIAL",
+      "distance_pct": 0.0,
+      "created_index": 498
     }
   },
   "alignment": "NO_DIRECTION",
@@ -72,27 +72,15 @@
   },
   "paper": {
     "initial_balance": 10000.0,
-    "balance": 9943.674506454992,
-    "position": {
-      "symbol": "BTCUSDT",
-      "direction": "LONG",
-      "entry_price": 77668.0,
-      "quantity": 0.00012875315445228408,
-      "stop_loss": 77000.0,
-      "take_profit": 78300.0,
-      "source": "MANUAL",
-      "capital": 10.0,
-      "leverage": 1,
-      "exposure": 10.0,
-      "order_type": "MARKET"
-    },
-    "unrealized_pnl": 0.0010094247309054576,
+    "balance": 9943.666781265725,
+    "position": null,
+    "unrealized_pnl": 0.0,
     "manual_performance": {
-      "total": 4,
+      "total": 5,
       "wins": 3,
-      "losses": 1,
-      "win_rate": 75.0,
-      "pnl": 0.09458102501023408
+      "losses": 2,
+      "win_rate": 60.0,
+      "pnl": 0.08685583574309703
     },
     "auto_performance": {
       "total": 0,
@@ -102,18 +90,6 @@
       "pnl": 0
     },
     "closed_trades": [
-      {
-        "symbol": "BTCUSDT",
-        "direction": "LONG",
-        "entry_price": 68733.99,
-        "exit_price": 68690.01,
-        "quantity": 0.14548842574103438,
-        "stop_loss": 68390.32005000001,
-        "take_profit": 69421.32990000001,
-        "pnl": -6.398580964092217,
-        "reason": "MANUAL_CLOSE",
-        "balance": 9993.601419035907
-      },
       {
         "symbol": "BTCUSDT",
         "direction": "LONG",
@@ -226,6 +202,19 @@
         "pnl": 0.00022068502697344074,
         "reason": "MANUAL_CLOSE",
         "balance": 9943.674506454992
+      },
+      {
+        "symbol": "BTCUSDT",
+        "direction": "LONG",
+        "entry_price": 77668.0,
+        "exit_price": 77608.0,
+        "quantity": 0.00012875315445228408,
+        "stop_loss": 77000.0,
+        "take_profit": 78300.0,
+        "source": "MANUAL",
+        "pnl": -0.0077251892671370455,
+        "reason": "MANUAL_CLOSE",
+        "balance": 9943.666781265725
       }
     ]
   }
