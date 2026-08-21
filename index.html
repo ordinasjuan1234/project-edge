@@ -136,6 +136,33 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
       <section class="panel">
         <h2>Operación PAPER actual</h2>
         <div id="positionBox" class="empty">No hay posición abierta.</div>
+        <h2 style="margin-top:18px">Mercado en vivo</h2>
+
+<div class="kpis" id="liveMarketBox">
+  <div class="mini">
+    <span class="mut">Activo</span>
+    <b id="liveSymbol">BTC/USDT</b>
+  </div>
+
+  <div class="mini">
+    <span class="mut">Precio actual</span>
+    <b id="livePrice">Conectando...</b>
+  </div>
+
+  <div class="mini">
+    <span class="mut">Desde entrada</span>
+    <b id="liveMove">—</b>
+  </div>
+
+  <div class="mini">
+    <span class="mut">P&L abierto</span>
+    <b id="livePnl">—</b>
+  </div>
+</div>
+
+<div id="liveStatus" class="statusbox" style="margin-top:8px">
+  Precio público Binance · esperando conexión en vivo...
+</div>
         <h2 style="margin-top:18px">Mesa manual · guía rápida</h2>
 
 <div class="notice" style="margin-bottom:12px">
@@ -457,6 +484,116 @@ async function setAuto(enabled){
 
 const fmt=n=>Number(n??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pct=n=>n==null?'—':(Number(n)*100).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  let liveSocket=null;
+let liveSocketSymbol='BTCUSDT';
+let livePosition=null;
+let liveReconnectTimer=null;
+
+function updateLiveMarket(price,change24){
+  const priceEl=document.getElementById('livePrice');
+  const moveEl=document.getElementById('liveMove');
+  const pnlEl=document.getElementById('livePnl');
+  const symbolEl=document.getElementById('liveSymbol');
+  const statusEl=document.getElementById('liveStatus');
+
+  if(!priceEl)return;
+
+  symbolEl.textContent=liveSocketSymbol.replace('USDT','/USDT');
+  priceEl.textContent=fmt(price)+' USDT';
+  priceEl.className=change24>=0?'g':'r';
+
+  statusEl.textContent=
+    '● EN VIVO · Binance · 24h '+
+    (change24>=0?'+':'')+
+    change24.toFixed(2)+'%';
+
+  if(!livePosition || livePosition.symbol!==liveSocketSymbol){
+    moveEl.textContent='Sin posición';
+    moveEl.className='';
+    pnlEl.textContent='—';
+    pnlEl.className='';
+    return;
+  }
+
+  const entry=Number(livePosition.entry_price);
+  const qty=Number(livePosition.quantity);
+  const direction=(livePosition.direction||'LONG').toUpperCase();
+
+  const movePct=
+    direction==='LONG'
+      ? ((price-entry)/entry)*100
+      : ((entry-price)/entry)*100;
+
+  const pnl=
+    direction==='LONG'
+      ? (price-entry)*qty
+      : (entry-price)*qty;
+
+  moveEl.textContent=
+    (movePct>=0?'▲ +':'▼ ')+movePct.toFixed(2)+'%';
+  moveEl.className=movePct>=0?'g':'r';
+
+  pnlEl.textContent=
+    (pnl>=0?'+':'')+fmt(pnl)+' USDT';
+  pnlEl.className=pnl>=0?'g':'r';
+}
+
+function connectLiveMarket(symbol){
+  symbol=(symbol||'BTCUSDT').replace('/','').toUpperCase();
+
+  if(
+    liveSocket &&
+    liveSocketSymbol===symbol &&
+    (liveSocket.readyState===0 || liveSocket.readyState===1)
+  ) return;
+
+  if(liveSocket){
+    liveSocket.onclose=null;
+    liveSocket.close();
+  }
+
+  clearTimeout(liveReconnectTimer);
+  liveSocketSymbol=symbol;
+
+  document.getElementById('liveStatus').textContent=
+    'Conectando con Binance en vivo...';
+
+  liveSocket=new WebSocket(
+    'wss://stream.binance.com:9443/ws/'+
+    symbol.toLowerCase()+
+    '@ticker'
+  );
+
+  liveSocket.onopen=()=>{
+    document.getElementById('liveStatus').textContent=
+      '● CONECTADO EN VIVO · Binance';
+  };
+
+  liveSocket.onmessage=(event)=>{
+    const data=JSON.parse(event.data);
+    const price=Number(data.c);
+    const change24=Number(data.P);
+
+    if(Number.isFinite(price)){
+      updateLiveMarket(price,change24);
+    }
+  };
+
+  liveSocket.onerror=()=>{
+    document.getElementById('liveStatus').textContent=
+      'Error de conexión en vivo · reintentando...';
+  };
+
+  liveSocket.onclose=()=>{
+    document.getElementById('liveStatus').textContent=
+      'Reconectando precio en vivo...';
+
+    liveReconnectTimer=setTimeout(
+      ()=>connectLiveMarket(liveSocketSymbol),
+      3000
+    );
+  };
+}
 function cls(state){
   state=(state||'').toUpperCase();
   if(state.includes('BULL')||state.includes('LONG')||state==='READY'||state==='ACTIVE')return'g';
@@ -479,6 +616,7 @@ document.getElementById('disconnectControlBtn').addEventListener('click',disconn
 document.getElementById('manualLongBtn').addEventListener('click',()=>triggerManual('LONG'));
 document.getElementById('manualShortBtn').addEventListener('click',()=>triggerManual('SHORT'));
 document.getElementById('manualCloseBtn').addEventListener('click',()=>triggerManual('CLOSE'));
+document.getElementById('manualSymbol').addEventListener('change',()=>{if(!livePosition)connectLiveMarket(document.getElementById('manualSymbol').value.replace('/',''));});
 document.getElementById('autoEnableBtn').addEventListener('click',()=>setAuto(true));
 document.getElementById('autoDisableBtn').addEventListener('click',()=>setAuto(false));
 
@@ -592,6 +730,9 @@ setVal('balance',fmt(p.balance)+' USDT','BULL');
    document.getElementById('unrealized').className=Number(p.unrealized_pnl)>0?'g':Number(p.unrealized_pnl)<0?'r':'';
 
    const pos=p.position;
+   livePosition=pos||null;
+const liveTargetSymbol=pos?.symbol||(document.getElementById('manualSymbol')?.value||'BTC/USDT').replace('/','');
+connectLiveMarket(liveTargetSymbol);
 const box=document.getElementById('positionBox');
 const connected=!!getToken();
 
