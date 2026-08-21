@@ -44,6 +44,53 @@ def calculate_unrealized_pnl(position, current_price):
     return (entry_price - current_price) * quantity
 
 
+
+def calculate_performance(trades, source):
+    source = source.upper()
+
+    selected = [
+        trade
+        for trade in trades
+        if str(
+            trade.get("source", "UNCLASSIFIED")
+        ).upper() == source
+    ]
+
+    total = len(selected)
+
+    wins = sum(
+        1
+        for trade in selected
+        if float(trade.get("pnl", 0.0)) > 0
+    )
+
+    losses = sum(
+        1
+        for trade in selected
+        if float(trade.get("pnl", 0.0)) < 0
+    )
+
+    pnl = sum(
+        float(trade.get("pnl", 0.0))
+        for trade in selected
+    )
+
+    win_rate = (
+        wins / total * 100.0
+        if total > 0
+        else 0.0
+    )
+
+    return {
+        "total": total,
+        "wins": wins,
+        "losses": losses,
+        "win_rate": win_rate,
+        "pnl": pnl,
+    }
+
+
+def clean_value(value):
 def clean_value(value):
     if value is None:
         return None
@@ -149,7 +196,20 @@ def main():
         position,
         position_price,
     )
+    closed_trades = state.data.get(
+        "closed_trades",
+        [],
+    )
 
+    manual_performance = calculate_performance(
+        closed_trades,
+        "MANUAL",
+    )
+
+    auto_performance = calculate_performance(
+        closed_trades,
+        "AUTO",
+    )
     alignment = mtf.get("alignment", {})
     if isinstance(alignment, dict):
         alignment_value = alignment.get(
@@ -194,10 +254,9 @@ def main():
             "balance": state.balance,
             "position": position,
             "unrealized_pnl": float(unrealized_pnl),
-            "closed_trades": state.data.get(
-                "closed_trades",
-                [],
-            )[-10:],
+            "manual_performance": manual_performance,
+            "auto_performance": auto_performance,
+            "closed_trades": closed_trades[-10:],
         },
     }
 
