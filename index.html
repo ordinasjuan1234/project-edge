@@ -136,7 +136,14 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
       <section class="panel">
         <h2>Operación PAPER actual</h2>
         <div id="positionBox" class="empty">No hay posición abierta.</div>
-        <h2 style="margin-top:18px">Mesa manual profesional</h2>
+        <h2 style="margin-top:18px">Mesa manual · guía rápida</h2>
+
+<div class="notice" style="margin-bottom:12px">
+  <b>1 · Elegí el activo</b> → BTC/USDT o ETH/USDT<br>
+  <b>2 · Elegí el capital</b> → cuánto PAPER querés usar<br>
+  <b>3 · Definí el riesgo</b> → x1/x2/x3, SL y TP<br>
+  <b>4 · Elegí la dirección</b> → LONG si esperás suba · SHORT si esperás baja
+</div>
 
 <div class="kpis">
   <div class="mini">
@@ -146,7 +153,7 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
   </div>
 
   <div class="mini">
-    <span class="mut">Activo</span>
+    <span class="mut">PASO 1 · Activo</span>
     <select id="manualSymbol" disabled style="width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf4fa;border:1px solid #20354b;border-radius:7px">
       <option>BTC/USDT</option>
       <option>ETH/USDT</option>
@@ -173,7 +180,7 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
 
 <div class="kpis" style="margin-top:8px">
   <div class="mini">
-    <span class="mut">Capital USDT</span>
+    <span class="mut">PASO 2 · Capital USDT</span>
     <input id="manualCapital" type="number" placeholder="Ej: 500" disabled style="width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf4fa;border:1px solid #20354b;border-radius:7px">
   </div>
 
@@ -183,19 +190,19 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
   </div>
 
   <div class="mini">
-    <span class="mut">Stop Loss</span>
+    <span class="mut">RIESGO · Stop Loss</span>
     <input id="manualSL" type="number" placeholder="Precio SL" disabled style="width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf4fa;border:1px solid #20354b;border-radius:7px">
   </div>
 
   <div class="mini">
-    <span class="mut">Take Profit</span>
+    <span class="mut">RIESGO · Take Profit</span>
     <input id="manualTP" type="number" placeholder="Precio TP" disabled style="width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf4fa;border:1px solid #20354b;border-radius:7px">
   </div>
 </div>
 
 <div class="controls">
-  <button id="manualLongBtn" class="ctrl long" disabled>▲ ABRIR LONG</button>
-  <button id="manualShortBtn" class="ctrl short" disabled>▼ ABRIR SHORT</button>
+  <button id="manualLongBtn" class="ctrl long" disabled>▲ PASO 4 · ABRIR LONG</button>
+  <button id="manualShortBtn" class="ctrl short" disabled>▼ PASO 4 · ABRIR SHORT</button>
   <button id="manualCloseBtn" class="ctrl close" disabled>■ CERRAR POSICIÓN</button>
 </div>
 
