@@ -460,7 +460,7 @@ async function triggerManual(action){
 
     box.textContent=action==='CLOSE'
   ? 'CIERRE SOLICITADO · Esperando que el backend confirme...'
-    'APERTURA '+action+' SOLICITADA · Esperando confirmación; CERRAR se habilitará al abrir.';
+  : 'APERTURA '+action+' SOLICITADA · Esperando confirmación; CERRAR se habilitará al abrir.';
     setTimeout(loadData,15000);
     setTimeout(loadData,30000);
     setTimeout(loadData,50000);
