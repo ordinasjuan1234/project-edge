@@ -129,6 +129,7 @@ def open_manual(
         quantity=quantity,
         stop_loss=stop,
         take_profit=tp,
+        source="MANUAL",
     )
 
     position["capital"] = capital
