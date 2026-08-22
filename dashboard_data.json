@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-08-22T20:55:51+00:00",
+  "timestamp": "2026-08-22T21:01:27+00:00",
   "symbol": "BTCUSDT",
-  "price": 77298.83,
+  "price": 77230.0,
   "timeframes": {
     "4H": "TRANSITION",
     "1H": "BULLISH",
     "30M": "TRANSITION",
-    "15M": "BULLISH",
+    "15M": "TRANSITION",
     "5M": "TRANSITION"
   },
   "fvg": {
@@ -16,7 +16,7 @@
       "upper": 77683.37,
       "mid": 77564.485,
       "state": "PARTIAL",
-      "distance_pct": 0.0018987350778789805,
+      "distance_pct": 0.0027915314267084918,
       "created_index": 496
     },
     "1H": {
@@ -25,8 +25,8 @@
       "upper": 78207.61,
       "mid": 77889.88500000001,
       "state": "PARTIAL",
-      "distance_pct": 0.0035360172980626195,
-      "created_index": 485
+      "distance_pct": 0.004430402693253962,
+      "created_index": 484
     },
     "30M": {
       "type": "BEARISH",
@@ -34,8 +34,8 @@
       "upper": 78456.0,
       "mid": 78013.64499999999,
       "state": "PARTIAL",
-      "distance_pct": 0.0035247622764793705,
-      "created_index": 469
+      "distance_pct": 0.004419007585263797,
+      "created_index": 468
     },
     "15M": {
       "type": "BULLISH",
@@ -43,17 +43,17 @@
       "upper": 77150.45,
       "mid": 77108.35,
       "state": "PARTIAL",
-      "distance_pct": 0.0019195633362109705,
-      "created_index": 482
+      "distance_pct": 0.00103016948981358,
+      "created_index": 481
     },
     "5M": {
-      "type": "BEARISH",
-      "lower": 77316.01,
-      "upper": 77342.04,
-      "mid": 77329.025,
-      "state": "ACTIVE",
-      "distance_pct": 0.00022225433425050565,
-      "created_index": 499
+      "type": "BULLISH",
+      "lower": 77063.99,
+      "upper": 77155.33,
+      "mid": 77109.66,
+      "state": "PARTIAL",
+      "distance_pct": 0.0009668522594846336,
+      "created_index": 443
     }
   },
   "alignment": "NO_DIRECTION",
@@ -73,31 +73,39 @@
   "paper": {
     "initial_balance": 10000.0,
     "balance": 9943.689206926545,
-    "position": null,
-    "position_price": null,
-    "unrealized_pnl": 0.0,
-    "pending_order": {
+    "position": {
+      "trade_id": "b6eef0fe6b39441e8fe491dfe33661fb",
       "order_id": "25c76c6a3f6c432a9f7f576ed30da3c3",
       "symbol": "BTCUSDT",
       "direction": "LONG",
-      "order_type": "LIMIT",
-      "limit_price": 77250.0,
-      "capital": 10.0,
-      "leverage": 1,
-      "exposure": 10.0,
+      "entry_price": 77250.0,
       "quantity": 0.00012944983818770226,
+      "initial_quantity": 0.00012944983818770226,
       "stop_loss": 76863.75,
       "take_profit": 78022.5,
       "source": "MANUAL",
-      "status": "PENDING",
-      "created_at": "2026-08-22T19:22:44.839959+00:00",
-      "current_price": 77298.83,
-      "distance_pct": -0.06317042573607097,
-      "triggered_now": false
+      "capital": 10.0,
+      "initial_capital": 10.0,
+      "leverage": 1,
+      "exposure": 10.0,
+      "initial_exposure": 10.0,
+      "order_type": "LIMIT",
+      "limit_price": 77250.0,
+      "filled_from_pending": true,
+      "pending_created_at": "2026-08-22T19:22:44.839959+00:00",
+      "opened_at": "2026-08-22T21:01:20.693785+00:00",
+      "realized_pnl": 0.0,
+      "partial_closes": [],
+      "trailing_enabled": false,
+      "trailing_pct": null,
+      "trailing_anchor": null
     },
-    "pending_order_price": 77298.83,
-    "has_open_position": false,
-    "has_pending_order": true,
+    "position_price": 77230.0,
+    "unrealized_pnl": -0.002588996763754045,
+    "pending_order": null,
+    "pending_order_price": null,
+    "has_open_position": true,
+    "has_pending_order": false,
     "manual_performance": {
       "total": 9,
       "wins": 5,
