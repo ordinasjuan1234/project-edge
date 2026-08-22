@@ -1,5 +1,5 @@
 """
-PROJECT EDGE - Manual PAPER Control v7
+PROJECT EDGE - Manual PAPER Control v8
 
 Control manual simulado para BTC/USDT y ETH/USDT.
 
@@ -17,6 +17,7 @@ Permite:
 - Activar / desactivar Trailing Stop
 - PAUSE AUTO
 - RESUME AUTO
+- EMERGENCY STOP AUTO
 
 NO envia ordenes reales.
 NO usa API privada de Binance.
@@ -172,6 +173,44 @@ def pause_auto(
         f"Actualizado:       {result.get('auto_updated_at') or '—'}"
     )
     print("NO se cerro ninguna posicion.")
+
+
+def emergency_stop_auto(
+    state: PaperState,
+) -> None:
+    """
+    Activa una parada de emergencia del AUTO.
+
+    Bloquea NUEVAS entradas automaticas inmediatamente.
+    No cierra posiciones abiertas.
+    No cancela LIMIT pendientes.
+    No cambia el saldo PAPER.
+
+    El motivo queda persistido como EMERGENCY_STOP
+    para distinguirlo de una pausa normal.
+    """
+    result = state.set_auto_enabled(
+        False,
+        reason="EMERGENCY_STOP",
+    )
+
+    print("=" * 60)
+    print("PROJECT EDGE - EMERGENCY STOP AUTO")
+    print("=" * 60)
+    print("Estado AUTO:      EMERGENCIA / BLOQUEADO")
+    print("Nuevas entradas:  BLOQUEADAS")
+    print(
+        "Posiciones abiertas: SIGUEN protegidas por SL / TP / Trailing."
+    )
+    print(
+        "LIMIT pendientes:    SIGUEN siendo gestionadas."
+    )
+    print(f"Saldo PAPER:      {state.balance:.2f} USDT")
+    print(
+        f"Actualizado:       {result.get('auto_updated_at') or '—'}"
+    )
+    print("NO se cerro ninguna posicion.")
+    print("Para habilitar nuevas entradas AUTO, usa RESUME_AUTO.")
 
 
 def resume_auto(
@@ -778,6 +817,7 @@ def main() -> None:
             "TRAILING_OFF",
             "PAUSE_AUTO",
             "RESUME_AUTO",
+            "EMERGENCY_STOP_AUTO",
         ],
     )
 
@@ -851,6 +891,10 @@ def main() -> None:
     )
 
     # Estas acciones no necesitan consultar el mercado.
+    if args.action == "EMERGENCY_STOP_AUTO":
+        emergency_stop_auto(state)
+        return
+
     if args.action == "PAUSE_AUTO":
         pause_auto(state)
         return
