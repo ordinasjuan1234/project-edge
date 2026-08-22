@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-22T17:43:36+00:00",
+  "timestamp": "2026-08-22T17:44:32+00:00",
   "symbol": "BTCUSDT",
-  "price": 77192.92,
+  "price": 77208.79,
   "timeframes": {
     "4H": "TRANSITION",
     "1H": "BULLISH",
@@ -16,7 +16,7 @@
       "upper": 77683.37,
       "mid": 77564.485,
       "state": "PARTIAL",
-      "distance_pct": 0.003464708946308786,
+      "distance_pct": 0.0030671378220020317,
       "created_index": 497
     },
     "1H": {
@@ -25,7 +25,7 @@
       "upper": 78207.61,
       "mid": 77889.88500000001,
       "state": "PARTIAL",
-      "distance_pct": 0.005104550248645426,
+      "distance_pct": 0.004706199293344807,
       "created_index": 488
     },
     "30M": {
@@ -34,17 +34,17 @@
       "upper": 78456.0,
       "mid": 78013.64499999999,
       "state": "PARTIAL",
-      "distance_pct": 0.005093277635394406,
+      "distance_pct": 0.0046950612747590015,
       "created_index": 475
     },
     "15M": {
-      "type": "BULLISH",
-      "lower": 77066.25,
-      "upper": 77150.45,
-      "mid": 77108.35,
-      "state": "PARTIAL",
-      "distance_pct": 0.00039167833193483044,
-      "created_index": 495
+      "type": "BEARISH",
+      "lower": 77220.75,
+      "upper": 77240.0,
+      "mid": 77230.375,
+      "state": "ACTIVE",
+      "distance_pct": 0.0001549046423342006,
+      "created_index": 499
     },
     "5M": {
       "type": "BEARISH",
@@ -72,69 +72,15 @@
   },
   "paper": {
     "initial_balance": 10000.0,
-    "balance": 9943.689156767701,
-    "position": {
-      "trade_id": "a5ccb41969cc44509f09044b376727eb",
-      "symbol": "BTCUSDT",
-      "direction": "LONG",
-      "entry_price": 77192.27,
-      "quantity": 3.036249614112916e-06,
-      "initial_quantity": 0.00012954665020215107,
-      "stop_loss": 76806.30865,
-      "take_profit": 77964.1927,
-      "source": "MANUAL",
-      "realized_pnl": -0.0019012995083575875,
-      "partial_closes": [
-        {
-          "percent_of_remaining": 25.0,
-          "exit_price": 77158.1,
-          "quantity": 3.238666255053777e-05,
-          "pnl": -0.001106652259351819,
-          "balance": 9943.68995141495,
-          "reason": "PARTIAL_CLOSE_25"
-        },
-        {
-          "percent_of_remaining": 50.0,
-          "exit_price": 77168.63,
-          "quantity": 4.8579993825806654e-05,
-          "pnl": -0.001148431054042041,
-          "balance": 9943.688802983896,
-          "reason": "PARTIAL_CLOSE_50"
-        },
-        {
-          "percent_of_remaining": 75.0,
-          "exit_price": 77205.5,
-          "quantity": 3.643499536935499e-05,
-          "pnl": 0.00048203498873641804,
-          "balance": 9943.689285018885,
-          "reason": "PARTIAL_CLOSE_75"
-        },
-        {
-          "percent_of_remaining": 75.0,
-          "exit_price": 77178.19,
-          "quantity": 9.108748842338748e-06,
-          "pnl": -0.00012825118370014547,
-          "balance": 9943.689156767701,
-          "reason": "PARTIAL_CLOSE_75"
-        }
-      ],
-      "capital": 0.234375,
-      "initial_capital": 10.0,
-      "leverage": 1,
-      "exposure": 0.234375,
-      "initial_exposure": 10.0,
-      "order_type": "MARKET",
-      "trailing_enabled": false,
-      "trailing_pct": null,
-      "trailing_anchor": null
-    },
-    "unrealized_pnl": 1.973562249155722e-06,
+    "balance": 9943.689206926545,
+    "position": null,
+    "unrealized_pnl": 0.0,
     "manual_performance": {
-      "total": 8,
+      "total": 9,
       "wins": 5,
-      "losses": 3,
-      "win_rate": 62.5,
-      "pnl": 0.11113263722661353
+      "losses": 4,
+      "win_rate": 55.55555555555556,
+      "pnl": 0.10928149656188105
     },
     "auto_performance": {
       "total": 0,
@@ -144,18 +90,6 @@
       "pnl": 0
     },
     "closed_trades": [
-      {
-        "symbol": "ETHUSDT",
-        "direction": "SHORT",
-        "entry_price": 2326.19,
-        "exit_price": 2337.82095,
-        "quantity": 0.008597749968833156,
-        "stop_loss": 2337.82095,
-        "take_profit": 2302.9281,
-        "pnl": -0.09999999999999791,
-        "reason": "STOP_LOSS",
-        "balance": 9943.562754663664
-      },
       {
         "symbol": "BTCUSDT",
         "direction": "LONG",
@@ -272,6 +206,63 @@
         "pnl": 0.04593341668406675,
         "reason": "MANUAL_CLOSE",
         "balance": 9943.69105806721
+      },
+      {
+        "trade_id": "a5ccb41969cc44509f09044b376727eb",
+        "symbol": "BTCUSDT",
+        "direction": "LONG",
+        "entry_price": 77192.27,
+        "exit_price": 77208.79,
+        "quantity": 0.00012954665020215107,
+        "final_leg_quantity": 3.036249614112916e-06,
+        "stop_loss": 76806.30865,
+        "take_profit": 77964.1927,
+        "source": "MANUAL",
+        "partial_closes": [
+          {
+            "percent_of_remaining": 25.0,
+            "exit_price": 77158.1,
+            "quantity": 3.238666255053777e-05,
+            "pnl": -0.001106652259351819,
+            "balance": 9943.68995141495,
+            "reason": "PARTIAL_CLOSE_25"
+          },
+          {
+            "percent_of_remaining": 50.0,
+            "exit_price": 77168.63,
+            "quantity": 4.8579993825806654e-05,
+            "pnl": -0.001148431054042041,
+            "balance": 9943.688802983896,
+            "reason": "PARTIAL_CLOSE_50"
+          },
+          {
+            "percent_of_remaining": 75.0,
+            "exit_price": 77205.5,
+            "quantity": 3.643499536935499e-05,
+            "pnl": 0.00048203498873641804,
+            "balance": 9943.689285018885,
+            "reason": "PARTIAL_CLOSE_75"
+          },
+          {
+            "percent_of_remaining": 75.0,
+            "exit_price": 77178.19,
+            "quantity": 9.108748842338748e-06,
+            "pnl": -0.00012825118370014547,
+            "balance": 9943.689156767701,
+            "reason": "PARTIAL_CLOSE_75"
+          }
+        ],
+        "partial_count": 4,
+        "realized_pnl_before_final": -0.0019012995083575875,
+        "final_leg_pnl": 5.015884362511356e-05,
+        "pnl": -0.001851140664732474,
+        "reason": "MANUAL_CLOSE",
+        "balance": 9943.689206926545,
+        "is_final": true,
+        "capital": 10.0,
+        "leverage": 1,
+        "exposure": 10.0,
+        "order_type": "MARKET"
       }
     ]
   }
