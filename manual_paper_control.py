@@ -1,11 +1,12 @@
 """
-PROJECT EDGE - Manual PAPER Control v4
+PROJECT EDGE - Manual PAPER Control v5
 
 Control manual simulado para BTC/USDT y ETH/USDT.
 
 Permite:
 - LONG / SHORT
-- Cierre manual
+- Cierre manual total
+- Cierre parcial 25% / 50% / 75% / 100%
 - Capital configurable
 - Apalancamiento x1/x2/x3
 - SL / TP personalizados
@@ -45,6 +46,13 @@ ALLOWED_LEVERAGE = {
     1,
     2,
     3,
+}
+
+ALLOWED_PARTIAL_PCT = {
+    25.0,
+    50.0,
+    75.0,
+    100.0,
 }
 
 
@@ -198,8 +206,13 @@ def open_manual(
     )
 
     position["capital"] = capital
+    position["initial_capital"] = capital
+
     position["leverage"] = leverage
+
     position["exposure"] = exposure
+    position["initial_exposure"] = exposure
+
     position["order_type"] = "MARKET"
 
     # Trailing inicialmente desactivado.
@@ -214,17 +227,18 @@ def open_manual(
     print("PROJECT EDGE - ENTRADA MANUAL PAPER")
     print("=" * 60)
 
-    print(f"Activo:          {position['symbol']}")
-    print(f"Direccion:       {position['direction']}")
-    print(f"Entrada:         {position['entry_price']:.2f}")
-    print(f"Capital:         {capital:.2f} USDT")
-    print(f"Apalancamiento:  x{leverage}")
-    print(f"Exposicion:      {exposure:.2f} USDT")
-    print(f"Cantidad:        {position['quantity']:.8f}")
-    print(f"Stop Loss:       {position['stop_loss']:.2f}")
-    print(f"Take Profit:     {position['take_profit']:.2f}")
-    print("Trailing Stop:   DESACTIVADO")
-    print(f"Saldo PAPER:     {state.balance:.2f} USDT")
+    print(f"Trade ID:         {position['trade_id']}")
+    print(f"Activo:           {position['symbol']}")
+    print(f"Direccion:        {position['direction']}")
+    print(f"Entrada:          {position['entry_price']:.2f}")
+    print(f"Capital:          {capital:.2f} USDT")
+    print(f"Apalancamiento:   x{leverage}")
+    print(f"Exposicion:       {exposure:.2f} USDT")
+    print(f"Cantidad:         {position['quantity']:.8f}")
+    print(f"Stop Loss:        {position['stop_loss']:.2f}")
+    print(f"Take Profit:      {position['take_profit']:.2f}")
+    print("Trailing Stop:    DESACTIVADO")
+    print(f"Saldo PAPER:      {state.balance:.2f} USDT")
 
     print(
         "NO se envio ninguna orden real."
@@ -257,8 +271,130 @@ def close_manual(
     print(f"Direccion:   {trade['direction']}")
     print(f"Entrada:     {trade['entry_price']:.2f}")
     print(f"Salida:      {trade['exit_price']:.2f}")
-    print(f"PnL:         {trade['pnl']:.2f} USDT")
+    print(f"PnL total:   {trade['pnl']:.4f} USDT")
     print(f"Saldo PAPER: {trade['balance']:.2f} USDT")
+
+    if trade.get("partial_count", 0) > 0:
+        print(
+            f"Parciales:   {trade['partial_count']}"
+        )
+
+    print(
+        "NO se envio ninguna orden real."
+    )
+
+
+def partial_close_manual(
+    state: PaperState,
+    partial_pct: float | None,
+) -> None:
+
+    if not state.has_open_position:
+        raise ValueError(
+            "No hay una posicion PAPER abierta "
+            "para realizar cierre parcial."
+        )
+
+    if partial_pct is None:
+        raise ValueError(
+            "Debes indicar el porcentaje de cierre parcial."
+        )
+
+    pct = float(partial_pct)
+
+    if pct not in ALLOWED_PARTIAL_PCT:
+        raise ValueError(
+            "Cierre parcial permitido: "
+            "25%, 50%, 75% o 100%."
+        )
+
+    position_before = state.position
+
+    symbol = position_before["symbol"]
+
+    quantity_before = float(
+        position_before["quantity"]
+    )
+
+    price = current_price(symbol)
+
+    result = state.partial_close_position(
+        exit_price=price,
+        percent=pct,
+        reason=(
+            "MANUAL_CLOSE"
+            if pct == 100.0
+            else f"PARTIAL_CLOSE_{int(pct)}"
+        ),
+    )
+
+    print("=" * 60)
+
+    if result.get("is_final") is True:
+        print(
+            "PROJECT EDGE - CIERRE 100% PAPER"
+        )
+    else:
+        print(
+            "PROJECT EDGE - CIERRE PARCIAL PAPER"
+        )
+
+    print("=" * 60)
+
+    print(f"Activo:          {result['symbol']}")
+    print(f"Direccion:       {result['direction']}")
+    print(f"Entrada:         {result['entry_price']:.2f}")
+    print(f"Salida:          {result['exit_price']:.2f}")
+
+    if result.get("is_final") is True:
+        print("Cierre:           100%")
+        print(
+            f"Cantidad cerrada: {quantity_before:.8f}"
+        )
+        print(
+            f"PnL total trade:  "
+            f"{result['pnl']:.4f} USDT"
+        )
+        print(
+            f"Saldo PAPER:      "
+            f"{result['balance']:.2f} USDT"
+        )
+        print("Posicion:         CERRADA")
+
+    else:
+        print(
+            f"Cierre solicitado: {pct:.0f}% "
+            "de la cantidad abierta"
+        )
+
+        print(
+            f"Cantidad cerrada:  "
+            f"{result['closed_quantity']:.8f}"
+        )
+
+        print(
+            f"Cantidad restante: "
+            f"{result['remaining_quantity']:.8f}"
+        )
+
+        print(
+            f"PnL parcial:       "
+            f"{result['pnl']:.4f} USDT"
+        )
+
+        print(
+            f"PnL realizado:     "
+            f"{result['realized_pnl_total']:.4f} USDT"
+        )
+
+        print(
+            f"Saldo PAPER:       "
+            f"{result['balance']:.2f} USDT"
+        )
+
+        print(
+            "Posicion:          SIGUE ABIERTA"
+        )
 
     print(
         "NO se envio ninguna orden real."
@@ -401,6 +537,7 @@ def set_break_even(
     print(f"Entrada:     {entry_price:.2f}")
     print(f"Precio:      {price:.2f}")
     print(f"Nuevo SL:    {entry_price:.2f}")
+
     print(
         f"TP actual:   "
         f"{position['take_profit']:.2f}"
@@ -539,6 +676,7 @@ def main() -> None:
             "LONG",
             "SHORT",
             "CLOSE",
+            "PARTIAL_CLOSE",
             "UPDATE_RISK",
             "BREAK_EVEN",
             "TRAILING_ON",
@@ -592,6 +730,16 @@ def main() -> None:
         ),
     )
 
+    parser.add_argument(
+        "--partial-pct",
+        type=float,
+        default=None,
+        help=(
+            "Porcentaje de la cantidad abierta "
+            "a cerrar: 25, 50, 75 o 100."
+        ),
+    )
+
     args = parser.parse_args()
 
     state = PaperState(
@@ -600,6 +748,13 @@ def main() -> None:
 
     if args.action == "CLOSE":
         close_manual(state)
+        return
+
+    if args.action == "PARTIAL_CLOSE":
+        partial_close_manual(
+            state=state,
+            partial_pct=args.partial_pct,
+        )
         return
 
     if args.action == "UPDATE_RISK":
