@@ -1,5 +1,5 @@
 """
-PROJECT EDGE - Live Dashboard Builder v3
+PROJECT EDGE - Live Dashboard Builder v4
 
 Genera dashboard_data.json con:
 - datos reales de BTCUSDT
@@ -9,6 +9,7 @@ Genera dashboard_data.json con:
 - estado PAPER
 - posición abierta
 - orden LIMIT pendiente
+- estado AUTO activo / pausado
 - rendimiento MANUAL / AUTO
 - historial reciente
 
@@ -450,6 +451,29 @@ def main():
         state.pending_order
     )
 
+    # Estado persistente del modo AUTO.
+    auto_enabled = bool(
+        state.auto_enabled
+    )
+
+    auto_pause_reason = (
+        state.data.get(
+            "auto_pause_reason"
+        )
+    )
+
+    auto_updated_at = (
+        state.data.get(
+            "auto_updated_at"
+        )
+    )
+
+    auto_status = (
+        "ACTIVE"
+        if auto_enabled
+        else "PAUSED"
+    )
+
     position_price = (
         btc_price
     )
@@ -638,6 +662,18 @@ def main():
             "has_pending_order": bool(
                 pending_order
             ),
+            "auto_enabled": (
+                auto_enabled
+            ),
+            "auto_status": (
+                auto_status
+            ),
+            "auto_pause_reason": (
+                auto_pause_reason
+            ),
+            "auto_updated_at": (
+                auto_updated_at
+            ),
             "manual_performance": (
                 manual_performance
             ),
@@ -671,6 +707,15 @@ def main():
         f"BTC: {btc_price:.2f} | "
         f"Decision: "
         f"{payload['decision']['action']}"
+    )
+
+    print(
+        "AUTO: "
+        + (
+            "ACTIVO"
+            if auto_enabled
+            else "PAUSADO"
+        )
     )
 
     if position:
