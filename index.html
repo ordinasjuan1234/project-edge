@@ -35,10 +35,11 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}.mode{border:1px s
 .ctrl.long{border-color:#286b59;color:var(--g)}.ctrl.short{border-color:#7d3a42;color:var(--r)}.ctrl.close{border-color:#7b6730;color:var(--y)}.ctrl.auto{border-color:#315d86;color:var(--b)}.ctrl.trailing{border-color:#775aa6;color:#c59bff}.ctrl.partial{border-color:#5b7f93;color:#87d8ff}.ctrl:disabled{opacity:.45;cursor:not-allowed}
 .tokenrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:10px}.tokenrow input{width:100%;background:#07111d;border:1px solid var(--l);color:var(--t);padding:10px;border-radius:8px}
 .statusbox{margin-top:10px;padding:10px;border:1px solid var(--l);border-radius:8px;background:#091522;color:var(--m)}
-.position{display:grid;grid-template-columns:1fr 1fr;gap:8px}.empty{color:var(--m);padding:10px 0}.error{color:var(--r)}
+.position,.pending{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pending{padding:10px;border:1px solid #6d5d2f;border-radius:9px;background:#17170f}
+.empty{color:var(--m);padding:10px 0}.error{color:var(--r)}
 .view{display:none}.view.active{display:block}.footer{color:#62788e;font-size:10px;margin-top:12px}
 input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf4fa;border:1px solid #20354b;border-radius:7px}
-@media(max-width:950px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.top{flex-direction:column}.position{grid-template-columns:1fr}.main{padding:14px}.controls{grid-template-columns:1fr 1fr}.partials{grid-template-columns:1fr 1fr}}
+@media(max-width:950px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.top{flex-direction:column}.position,.pending{grid-template-columns:1fr}.main{padding:14px}.controls{grid-template-columns:1fr 1fr}.partials{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -145,6 +146,9 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
         <h2>Operación PAPER actual</h2>
         <div id="positionBox" class="empty">No hay posición abierta.</div>
 
+        <h2 style="margin-top:18px">Orden LIMIT pendiente</h2>
+        <div id="pendingOrderBox" class="empty">No hay orden LIMIT pendiente.</div>
+
         <h2 style="margin-top:18px">Mercado en vivo</h2>
         <div class="kpis">
           <div class="mini"><span class="mut">Activo</span><b id="liveSymbol">BTC/USDT</b></div>
@@ -157,23 +161,23 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
         <h2 style="margin-top:18px">Mesa manual · guía rápida</h2>
         <div class="notice" style="margin-bottom:12px">
           <b>1 · Elegí el activo</b> → BTC/USDT o ETH/USDT<br>
-          <b>2 · Elegí el capital</b> → cuánto PAPER querés usar<br>
-          <b>3 · Definí el riesgo</b> → x1/x2/x3, SL y TP<br>
+          <b>2 · Elegí el tipo</b> → MARKET entra al precio disponible · LIMIT espera el precio elegido<br>
+          <b>3 · Elegí capital y riesgo</b> → USDT, x1/x2/x3, SL y TP<br>
           <b>4 · Elegí la dirección</b> → LONG si esperás suba · SHORT si esperás baja
         </div>
 
         <div class="kpis">
           <div class="mini"><span class="mut">Modo</span><b class="g">PAPER</b><div class="mut" style="margin-top:5px">REAL bloqueado hasta validación</div></div>
           <div class="mini"><span class="mut">PASO 1 · Activo</span><select id="manualSymbol" disabled><option>BTC/USDT</option><option>ETH/USDT</option></select></div>
-          <div class="mini"><span class="mut">Tipo de orden</span><select id="manualOrderType" disabled><option>MARKET</option><option>LIMIT</option></select></div>
+          <div class="mini"><span class="mut">PASO 2 · Tipo de orden</span><select id="manualOrderType" disabled><option>MARKET</option><option>LIMIT</option></select></div>
           <div class="mini"><span class="mut">RIESGO · Apalancamiento</span><select id="manualLeverage" disabled><option>x1</option><option>x2</option><option>x3</option></select></div>
         </div>
 
         <div class="kpis" style="margin-top:8px">
-          <div class="mini"><span class="mut">PASO 2 · Capital USDT</span><input id="manualCapital" type="number" placeholder="Ej: 500" disabled></div>
-          <div class="mini"><span class="mut">Precio LIMIT</span><input id="manualLimitPrice" type="number" placeholder="Solo LIMIT" disabled></div>
-          <div class="mini"><span class="mut">RIESGO · Stop Loss</span><input id="manualSL" type="number" placeholder="Precio SL" disabled></div>
-          <div class="mini"><span class="mut">RIESGO · Take Profit</span><input id="manualTP" type="number" placeholder="Precio TP" disabled></div>
+          <div class="mini"><span class="mut">PASO 3 · Capital USDT</span><input id="manualCapital" type="number" min="0" step="0.01" placeholder="Ej: 500" disabled></div>
+          <div class="mini"><span class="mut">Precio LIMIT</span><input id="manualLimitPrice" type="number" min="0" step="0.01" placeholder="Solo si elegís LIMIT" disabled><div class="mut" style="margin-top:5px">LONG LIMIT: debajo del precio actual · SHORT LIMIT: encima.</div></div>
+          <div class="mini"><span class="mut">RIESGO · Stop Loss</span><input id="manualSL" type="number" min="0" step="0.01" placeholder="Precio SL" disabled></div>
+          <div class="mini"><span class="mut">RIESGO · Take Profit</span><input id="manualTP" type="number" min="0" step="0.01" placeholder="Precio TP" disabled></div>
         </div>
 
         <h2 style="margin-top:18px">Trailing Stop PAPER</h2>
@@ -185,6 +189,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
         <div class="controls">
           <button id="manualLongBtn" class="ctrl long" disabled>▲ PASO 4 · ABRIR LONG</button>
           <button id="manualShortBtn" class="ctrl short" disabled>▼ PASO 4 · ABRIR SHORT</button>
+          <button id="manualCancelLimitBtn" class="ctrl close" disabled>✕ CANCELAR LIMIT</button>
           <button id="manualCloseBtn" class="ctrl close" disabled>■ CERRAR POSICIÓN</button>
           <button id="manualUpdateRiskBtn" class="ctrl auto" disabled>✎ ACTUALIZAR SL / TP</button>
           <button id="manualBreakEvenBtn" class="ctrl auto" disabled>⛨ BREAK-EVEN</button>
@@ -201,7 +206,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <button id="manualPartial100Btn" class="ctrl close" disabled>100%</button>
         </div>
 
-        <div id="manualStatus" class="statusbox">Mesa manual PAPER operativa · MARKET conectado · BTC/ETH · capital, leverage, SL, TP, Break-even, Trailing y cierres parciales configurables.</div>
+        <div id="manualStatus" class="statusbox">Mesa manual PAPER · MARKET/LIMIT · BTC/ETH · capital, leverage, SL, TP, Break-even, Trailing y cierres parciales.</div>
       </section>
 
       <section class="panel">
@@ -256,13 +261,16 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
       <h2>Reglas activas del PAPER actual</h2>
       <div class="rule"><span>Stop Loss por defecto</span><b>0,50%</b></div>
       <div class="rule"><span>Take Profit por defecto</span><b>1,00%</b></div>
-      <div class="rule"><span>Máximo de posiciones simultáneas</span><b>1</b></div>
+      <div class="rule"><span>Máximo de compromisos simultáneos</span><b>1 posición o 1 LIMIT</b></div>
       <div class="rule"><span>Fair Value Gap</span><b class="b">INTEGRADO</b></div>
+      <div class="rule"><span>MARKET PAPER</span><b class="g">OPERATIVO</b></div>
+      <div class="rule"><span>LIMIT PAPER</span><b class="y">EN VALIDACIÓN</b></div>
+      <div class="rule"><span>Cancelar LIMIT pendiente</span><b class="y">EN VALIDACIÓN</b></div>
       <div class="rule"><span>Break-even</span><b class="g">OPERATIVO</b></div>
-      <div class="rule"><span>Trailing Stop PAPER</span><b class="b">CONFIGURABLE</b></div>
-      <div class="rule"><span>Cierre parcial 25/50/75/100</span><b class="y">LISTO PARA PRUEBA</b></div>
+      <div class="rule"><span>Trailing Stop PAPER</span><b class="g">OPERATIVO</b></div>
+      <div class="rule"><span>Cierre parcial 25/50/75/100</span><b class="g">OPERATIVO</b></div>
       <div class="rule"><span>Ejecución real</span><b class="r">DESHABILITADA</b></div>
-      <div class="notice">El Trailing PAPER se actualiza en los ciclos del backend. Con el cron actual, la referencia se revisa cada 5 minutos; no es trailing tick por tick.</div>
+      <div class="notice">Una LIMIT PAPER queda pendiente hasta que el backend detecte el precio en uno de sus ciclos. Con el cron actual se revisa aproximadamente cada 5 minutos; no es una orden de exchange ni una ejecución tick por tick.</div>
     </section>
   </section>
 
@@ -304,7 +312,7 @@ function cls(state){
   state=(state||'').toUpperCase();
   if(state.includes('BULL')||state.includes('LONG')||state==='READY'||state==='ACTIVE') return 'g';
   if(state.includes('BEAR')||state.includes('SHORT')||state.includes('BLOCK')) return 'r';
-  if(state.includes('TRANS')||state.includes('WATCH')||state.includes('WAIT')||state.includes('NOT_READY')||state.includes('PARTIAL')) return 'y';
+  if(state.includes('TRANS')||state.includes('WATCH')||state.includes('WAIT')||state.includes('NOT_READY')||state.includes('PARTIAL')||state.includes('PENDING')) return 'y';
   return 'b';
 }
 function tag(state){const c=cls(state);return `<span class="tag ${c==='g'?'tg':c==='r'?'tr':c==='y'?'ty':'tb'}">${state||'UNKNOWN'}</span>`}
@@ -315,10 +323,22 @@ document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',(
 
 function setControlStatus(msg,kind=''){const el=document.getElementById('controlStatus');el.textContent=msg;el.className='statusbox'+(kind?' '+kind:'')}
 function setPartialButtonsEnabled(enabled){PARTIAL_BUTTON_IDS.forEach(id=>{document.getElementById(id).disabled=!enabled})}
+
+function syncOrderTypeInput(){
+  const orderType=document.getElementById('manualOrderType');
+  const limitInput=document.getElementById('manualLimitPrice');
+  if(!orderType||!limitInput)return;
+  const connected=!!getToken();
+  const canPrepare=!orderType.disabled&&connected;
+  limitInput.disabled=!(canPrepare&&orderType.value==='LIMIT');
+  if(orderType.value==='MARKET')limitInput.value='';
+}
+
 function setControlEnabled(enabled){
-  ['manualSymbol','manualLeverage','manualCapital','manualSL','manualTP'].forEach(id=>document.getElementById(id).disabled=!enabled);
+  ['manualSymbol','manualLeverage','manualCapital','manualSL','manualTP','manualOrderType'].forEach(id=>document.getElementById(id).disabled=!enabled);
   document.getElementById('manualLongBtn').disabled=!enabled;
   document.getElementById('manualShortBtn').disabled=!enabled;
+  document.getElementById('manualCancelLimitBtn').disabled=true;
   document.getElementById('manualCloseBtn').disabled=true;
   document.getElementById('manualUpdateRiskBtn').disabled=true;
   document.getElementById('manualBreakEvenBtn').disabled=true;
@@ -326,8 +346,7 @@ function setControlEnabled(enabled){
   document.getElementById('manualTrailingOnBtn').disabled=true;
   document.getElementById('manualTrailingOffBtn').disabled=true;
   setPartialButtonsEnabled(false);
-  document.getElementById('manualOrderType').disabled=true;
-  document.getElementById('manualLimitPrice').disabled=true;
+  syncOrderTypeInput();
 }
 
 async function githubRequest(url,options={}){
@@ -349,9 +368,12 @@ async function connectControl(){
 function disconnectControl(){sessionStorage.removeItem('projectEdgeGhToken');setControlEnabled(false);setControlStatus('Control no conectado.');document.getElementById('manualStatus').textContent='Control manual bloqueado. Conectá GitHub desde Sistema.';loadData()}
 
 let partialCloseBusy=false;
+let manualActionBusy=false;
+let liveLastPrice=null;
 
 async function triggerManual(action,partialPct=''){
   if(!getToken()){showTab('sistema');setControlStatus('Conectá GitHub para usar los controles.','y');return}
+  if(manualActionBusy){document.getElementById('manualStatus').textContent='Ya hay una acción PAPER en proceso. Esperá la confirmación del backend.';return}
   if(action==='PARTIAL_CLOSE'&&partialCloseBusy){document.getElementById('manualStatus').textContent='Ya hay un cierre parcial en proceso. Esperá la confirmación del backend.';return}
 
   const symbol=document.getElementById('manualSymbol').value.replace('/','');
@@ -361,11 +383,19 @@ async function triggerManual(action,partialPct=''){
   const takeProfit=document.getElementById('manualTP').value.trim();
   const trailingPct=document.getElementById('manualTrailingPct').value.trim();
   const orderType=document.getElementById('manualOrderType').value;
+  const limitPrice=document.getElementById('manualLimitPrice').value.trim();
   const openingAction=action==='LONG'||action==='SHORT';
 
   if(openingAction){
-    if(orderType!=='MARKET'){document.getElementById('manualStatus').textContent='LIMIT todavía no está habilitado. Usá MARKET.';return}
     if(!capital||Number(capital)<=0){document.getElementById('manualStatus').textContent='Ingresá primero el capital en USDT.';return}
+    if(orderType==='LIMIT'){
+      const lp=Number(limitPrice);
+      if(!Number.isFinite(lp)||lp<=0){document.getElementById('manualStatus').textContent='Para LIMIT ingresá un precio LIMIT válido.';return}
+      if(Number.isFinite(liveLastPrice)&&liveSocketSymbol===symbol){
+        if(action==='LONG'&&lp>=liveLastPrice){document.getElementById('manualStatus').textContent='LONG LIMIT debe quedar debajo del precio actual.';return}
+        if(action==='SHORT'&&lp<=liveLastPrice){document.getElementById('manualStatus').textContent='SHORT LIMIT debe quedar encima del precio actual.';return}
+      }
+    }
   }
   if(action==='TRAILING_ON'){
     const p=Number(trailingPct);if(!Number.isFinite(p)||p<0.05||p>5){document.getElementById('manualStatus').textContent='Trailing permitido: 0,05% a 5,00%.';return}
@@ -373,7 +403,10 @@ async function triggerManual(action,partialPct=''){
   if(action==='PARTIAL_CLOSE'&&![25,50,75,100].includes(Number(partialPct))){document.getElementById('manualStatus').textContent='Cierre parcial permitido: 25%, 50%, 75% o 100%.';return}
 
   const inputs={
-    action,symbol,
+    action,
+    symbol,
+    order_type:openingAction?orderType:'MARKET',
+    limit_price:openingAction&&orderType==='LIMIT'?limitPrice:'',
     capital:openingAction?capital:'',
     leverage:openingAction?leverage:'1',
     stop_loss:action==='UPDATE_RISK'?stopLoss:(openingAction?stopLoss:''),
@@ -383,41 +416,49 @@ async function triggerManual(action,partialPct=''){
   };
 
   let label='CERRAR la posición PAPER';
-  if(action==='PARTIAL_CLOSE')label='CERRAR '+partialPct+'% de la cantidad PAPER que sigue abierta';
+  if(action==='CANCEL_LIMIT')label='CANCELAR la orden LIMIT PAPER pendiente';
+  else if(action==='PARTIAL_CLOSE')label='CERRAR '+partialPct+'% de la cantidad PAPER que sigue abierta';
   else if(action==='BREAK_EVEN')label='APLICAR BREAK-EVEN · mover SL al precio de entrada';
   else if(action==='UPDATE_RISK')label='ACTUALIZAR SL/TP'+(stopLoss?' · SL '+stopLoss:'')+(takeProfit?' · TP '+takeProfit:'');
   else if(action==='TRAILING_ON')label='ACTIVAR TRAILING · '+trailingPct+'%';
   else if(action==='TRAILING_OFF')label='DESACTIVAR TRAILING · conservar SL actual';
-  else if(openingAction)label=action+' '+symbol+' · '+capital+' USDT · x'+leverage+(stopLoss?' · SL '+stopLoss:' · SL automático')+(takeProfit?' · TP '+takeProfit:' · TP automático');
+  else if(openingAction)label=action+' '+symbol+' · '+orderType+(orderType==='LIMIT'?' @ '+limitPrice:'')+' · '+capital+' USDT · x'+leverage+(stopLoss?' · SL '+stopLoss:' · SL automático')+(takeProfit?' · TP '+takeProfit:' · TP automático');
 
   if(!confirm('Confirmar PAPER: '+label+'?'))return;
+
   const box=document.getElementById('manualStatus');
+  manualActionBusy=true;
 
   if(action==='PARTIAL_CLOSE'){
     partialCloseBusy=true;setPartialButtonsEnabled(false);
     box.textContent='CIERRE '+partialPct+'% EN PROCESO · Esperando confirmación del backend...';
-  }else if(action==='CLOSE')box.textContent='CIERRE EN PROCESO · Esperando confirmación del backend...';
+  }else if(action==='CANCEL_LIMIT')box.textContent='CANCELANDO LIMIT · Esperando confirmación del backend...';
+  else if(action==='CLOSE')box.textContent='CIERRE EN PROCESO · Esperando confirmación del backend...';
   else if(action==='UPDATE_RISK')box.textContent='ACTUALIZANDO SL/TP · Esperando confirmación del backend...';
   else if(action==='BREAK_EVEN')box.textContent='APLICANDO BREAK-EVEN · Esperando confirmación del backend...';
   else if(action==='TRAILING_ON')box.textContent='ACTIVANDO TRAILING · Esperando confirmación del backend...';
   else if(action==='TRAILING_OFF')box.textContent='DESACTIVANDO TRAILING · Esperando confirmación del backend...';
-  else box.textContent='ABRIENDO '+action+' · Esperando confirmación del backend...';
+  else if(orderType==='LIMIT')box.textContent='CREANDO '+action+' LIMIT · Esperando confirmación del backend...';
+  else box.textContent='ABRIENDO '+action+' MARKET · Esperando confirmación del backend...';
 
   try{
     const r=await githubRequest(GH_API+'/actions/workflows/'+MANUAL_WORKFLOW+'/dispatches',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ref:'main',inputs})});
     if(r.status!==204)throw new Error('GitHub respondió '+r.status);
 
     if(action==='PARTIAL_CLOSE')box.textContent='CIERRE '+partialPct+'% SOLICITADO · Esperando actualización de cantidad, capital y exposición...';
+    else if(action==='CANCEL_LIMIT')box.textContent='CANCELACIÓN LIMIT SOLICITADA · Esperando que desaparezca la orden pendiente...';
     else if(action==='CLOSE')box.textContent='CIERRE SOLICITADO · Esperando que el backend confirme...';
     else if(action==='UPDATE_RISK')box.textContent='CAMBIO DE SL/TP SOLICITADO · Esperando confirmación...';
     else if(action==='BREAK_EVEN')box.textContent='BREAK-EVEN SOLICITADO · Esperando confirmación...';
     else if(action==='TRAILING_ON')box.textContent='TRAILING SOLICITADO · Esperando activación...';
     else if(action==='TRAILING_OFF')box.textContent='DESACTIVACIÓN DE TRAILING SOLICITADA...';
-    else box.textContent='APERTURA '+action+' SOLICITADA · Esperando confirmación...';
+    else if(orderType==='LIMIT')box.textContent='LIMIT '+action+' SOLICITADA · Esperando que el backend registre la orden pendiente...';
+    else box.textContent='APERTURA '+action+' MARKET SOLICITADA · Esperando confirmación...';
 
     [5000,10000,20000,30000].forEach(ms=>setTimeout(loadData,ms));
-    if(action==='PARTIAL_CLOSE')setTimeout(()=>{partialCloseBusy=false;loadData()},30000);
+    setTimeout(()=>{manualActionBusy=false;if(action==='PARTIAL_CLOSE')partialCloseBusy=false;loadData()},30000);
   }catch(e){
+    manualActionBusy=false;
     if(action==='PARTIAL_CLOSE')partialCloseBusy=false;
     box.textContent='Error: '+e.message;loadData();
   }
@@ -439,6 +480,7 @@ function syncBreakEvenButton(price){
 }
 
 function updateLiveMarket(price,change24){
+  liveLastPrice=Number(price);
   const priceEl=document.getElementById('livePrice'),moveEl=document.getElementById('liveMove'),pnlEl=document.getElementById('livePnl'),symbolEl=document.getElementById('liveSymbol'),statusEl=document.getElementById('liveStatus');
   symbolEl.textContent=liveSocketSymbol.replace('USDT','/USDT');priceEl.textContent=fmt(price)+' USDT';priceEl.className=change24>=0?'g':'r';statusEl.textContent='● EN VIVO · Binance · 24h '+(change24>=0?'+':'')+change24.toFixed(2)+'%';
   if(!livePosition||livePosition.symbol!==liveSocketSymbol){moveEl.textContent='Sin posición';moveEl.className='';pnlEl.textContent='—';pnlEl.className='';document.getElementById('manualBreakEvenBtn').disabled=true;return}
@@ -452,7 +494,7 @@ function connectLiveMarket(symbol){
   symbol=(symbol||'BTCUSDT').replace('/','').toUpperCase();
   if(liveSocket&&liveSocketSymbol===symbol&&(liveSocket.readyState===0||liveSocket.readyState===1))return;
   if(liveSocket){liveSocket.onclose=null;liveSocket.close()}
-  clearTimeout(liveReconnectTimer);liveSocketSymbol=symbol;document.getElementById('liveStatus').textContent='Conectando con Binance en vivo...';
+  clearTimeout(liveReconnectTimer);liveSocketSymbol=symbol;liveLastPrice=null;document.getElementById('liveStatus').textContent='Conectando con Binance en vivo...';
   liveSocket=new WebSocket('wss://stream.binance.com:9443/ws/'+symbol.toLowerCase()+'@ticker');
   liveSocket.onopen=()=>document.getElementById('liveStatus').textContent='● CONECTADO EN VIVO · Binance';
   liveSocket.onmessage=event=>{const data=JSON.parse(event.data),price=Number(data.c),change24=Number(data.P);if(Number.isFinite(price))updateLiveMarket(price,change24)};
@@ -496,9 +538,15 @@ async function loadData(){
     document.getElementById('autoPerfTotal').textContent=autoPerf.total??0;document.getElementById('autoPerfWins').textContent=autoPerf.wins??0;document.getElementById('autoPerfLosses').textContent=autoPerf.losses??0;document.getElementById('autoPerfWinRate').textContent=Number(autoPerf.win_rate??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';document.getElementById('autoPerfPnl').textContent=(Number(autoPerf.pnl??0)>=0?'+':'')+fmt(autoPerf.pnl)+' USDT';
     setVal('balance',fmt(p.balance)+' USDT','BULL');document.getElementById('initialBalance').textContent=fmt(p.initial_balance)+' USDT';document.getElementById('opBalance').textContent=fmt(p.balance)+' USDT';document.getElementById('unrealized').textContent=(Number(p.unrealized_pnl)>=0?'+':'')+fmt(p.unrealized_pnl)+' USDT';document.getElementById('unrealized').className=Number(p.unrealized_pnl)>0?'g':Number(p.unrealized_pnl)<0?'r':'';
 
-    const pos=p.position;livePosition=pos||null;
-    const liveTargetSymbol=pos?.symbol||(document.getElementById('manualSymbol')?.value||'BTC/USDT').replace('/','');connectLiveMarket(liveTargetSymbol);
-    const box=document.getElementById('positionBox'),connected=!!getToken();
+    const pos=p.position;
+    const pending=p.pending_order;
+    livePosition=pos||null;
+    const liveTargetSymbol=pos?.symbol||pending?.symbol||(document.getElementById('manualSymbol')?.value||'BTC/USDT').replace('/','');
+    connectLiveMarket(liveTargetSymbol);
+
+    const box=document.getElementById('positionBox');
+    const pendingBox=document.getElementById('pendingOrderBox');
+    const connected=!!getToken();
 
     if(pos){
       const trailingEnabled=Boolean(pos.trailing_enabled),trailingPct=pos.trailing_pct,trailingAnchor=pos.trailing_anchor;
@@ -507,6 +555,7 @@ async function loadData(){
       box.innerHTML=`
         <div class="mini"><span class="mut">Activo</span><b>${(pos.symbol||'').replace('USDT','/USDT')}</b></div>
         <div class="mini"><span class="mut">Dirección</span><b class="${pos.direction==='LONG'?'g':'r'}">${pos.direction}</b></div>
+        <div class="mini"><span class="mut">Tipo</span><b>${pos.order_type||'MARKET'}</b></div>
         <div class="mini"><span class="mut">Entrada</span><b>${fmt(pos.entry_price)}</b></div>
         <div class="mini"><span class="mut">Cantidad restante</span><b>${currentQty.toLocaleString('es-AR',{maximumFractionDigits:8})} ${(pos.symbol||'BTCUSDT').replace('USDT','')}</b></div>
         <div class="mini"><span class="mut">Cantidad inicial</span><b>${initialQty.toLocaleString('es-AR',{maximumFractionDigits:8})}</b></div>
@@ -522,23 +571,63 @@ async function loadData(){
         <div class="mini"><span class="mut">Ancla Trailing</span><b>${trailingAnchor==null?'—':fmt(trailingAnchor)}</b></div>`;
 
       document.getElementById('manualSymbol').value=(pos.symbol||'BTCUSDT').replace('USDT','/USDT');document.getElementById('manualLeverage').value='x'+(pos.leverage||1);document.getElementById('manualCapital').value=pos.capital??'';
+      document.getElementById('manualOrderType').value=pos.order_type||'MARKET';document.getElementById('manualLimitPrice').value=pos.limit_price??'';
       const manualSL=document.getElementById('manualSL'),manualTP=document.getElementById('manualTP');
       if(manualSL.dataset.dirty!=='1')manualSL.value=pos.stop_loss??'';else if(Number(manualSL.value)===Number(pos.stop_loss))delete manualSL.dataset.dirty;
       if(manualTP.dataset.dirty!=='1')manualTP.value=pos.take_profit??'';else if(Number(manualTP.value)===Number(pos.take_profit))delete manualTP.dataset.dirty;
       if(trailingPct!=null)document.getElementById('manualTrailingPct').value=trailingPct;
       document.getElementById('trailingState').textContent=trailingEnabled?'ACTIVO':'DESACTIVADO';document.getElementById('trailingState').className=trailingEnabled?'g':'';document.getElementById('trailingInfo').textContent=trailingEnabled?`Ancla ${trailingAnchor==null?'—':fmt(trailingAnchor)} · distancia ${Number(trailingPct).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}%`:'Podés activarlo y elegir la distancia.';
 
-      document.getElementById('manualSymbol').disabled=true;document.getElementById('manualLeverage').disabled=true;document.getElementById('manualCapital').disabled=true;document.getElementById('manualSL').disabled=!connected;document.getElementById('manualTP').disabled=!connected;document.getElementById('manualTrailingPct').disabled=!connected||trailingEnabled;
-      document.getElementById('manualLongBtn').disabled=true;document.getElementById('manualShortBtn').disabled=true;document.getElementById('manualCloseBtn').disabled=!connected;document.getElementById('manualUpdateRiskBtn').disabled=!connected;document.getElementById('manualBreakEvenBtn').disabled=true;document.getElementById('manualTrailingOnBtn').disabled=!connected||trailingEnabled;document.getElementById('manualTrailingOffBtn').disabled=!connected||!trailingEnabled;
+      ['manualSymbol','manualLeverage','manualCapital','manualOrderType','manualLimitPrice'].forEach(id=>document.getElementById(id).disabled=true);
+      document.getElementById('manualSL').disabled=!connected;document.getElementById('manualTP').disabled=!connected;document.getElementById('manualTrailingPct').disabled=!connected||trailingEnabled;
+      document.getElementById('manualLongBtn').disabled=true;document.getElementById('manualShortBtn').disabled=true;document.getElementById('manualCancelLimitBtn').disabled=true;document.getElementById('manualCloseBtn').disabled=!connected;document.getElementById('manualUpdateRiskBtn').disabled=!connected;document.getElementById('manualBreakEvenBtn').disabled=true;document.getElementById('manualTrailingOnBtn').disabled=!connected||trailingEnabled;document.getElementById('manualTrailingOffBtn').disabled=!connected||!trailingEnabled;
       setPartialButtonsEnabled(connected&&!partialCloseBusy);
 
-      document.getElementById('manualStatus').textContent='POSICIÓN ABIERTA · '+(pos.symbol||'').replace('USDT','/USDT')+' · '+pos.direction+' · restante '+fmt(pos.capital)+' USDT · x'+(pos.leverage||1)+' · exposición '+fmt(pos.exposure)+' USDT'+(partialCount?' · '+partialCount+' parcial(es) · realizado '+(realized>=0?'+':'')+fmt(realized)+' USDT':'')+(trailingEnabled?' · TRAILING ACTIVO':'');
+      document.getElementById('manualStatus').textContent='POSICIÓN ABIERTA · '+(pos.symbol||'').replace('USDT','/USDT')+' · '+pos.direction+' · '+(pos.order_type||'MARKET')+' · restante '+fmt(pos.capital)+' USDT · x'+(pos.leverage||1)+' · exposición '+fmt(pos.exposure)+' USDT'+(partialCount?' · '+partialCount+' parcial(es) · realizado '+(realized>=0?'+':'')+fmt(realized)+' USDT':'')+(trailingEnabled?' · TRAILING ACTIVO':'');
     }else{
-      box.className='empty';box.textContent='No hay posición abierta. Podés preparar una nueva operación manual.';document.getElementById('manualStatus').textContent='SIN POSICIÓN · Elegí activo, capital y riesgo; después LONG o SHORT.';
-      document.getElementById('manualSymbol').disabled=!connected;document.getElementById('manualLeverage').disabled=!connected;document.getElementById('manualCapital').disabled=!connected;document.getElementById('manualSL').disabled=!connected;document.getElementById('manualTP').disabled=!connected;
-      delete document.getElementById('manualSL').dataset.dirty;delete document.getElementById('manualTP').dataset.dirty;
-      document.getElementById('manualLongBtn').disabled=!connected;document.getElementById('manualShortBtn').disabled=!connected;document.getElementById('manualCloseBtn').disabled=true;document.getElementById('manualUpdateRiskBtn').disabled=true;document.getElementById('manualBreakEvenBtn').disabled=true;document.getElementById('manualTrailingPct').disabled=true;document.getElementById('manualTrailingOnBtn').disabled=true;document.getElementById('manualTrailingOffBtn').disabled=true;setPartialButtonsEnabled(false);
+      box.className='empty';box.textContent='No hay posición abierta.';
       document.getElementById('trailingState').textContent='DESACTIVADO';document.getElementById('trailingState').className='';document.getElementById('trailingInfo').textContent='Sin posición abierta.';
+    }
+
+    if(pending){
+      const current=Number(pending.current_price??p.pending_order_price??0);
+      const distance=Number(pending.distance_pct??0);
+      pendingBox.className='pending';
+      pendingBox.innerHTML=`
+        <div class="mini"><span class="mut">Estado</span><b class="y">${pending.status||'PENDING'}</b></div>
+        <div class="mini"><span class="mut">Activo</span><b>${(pending.symbol||'').replace('USDT','/USDT')}</b></div>
+        <div class="mini"><span class="mut">Dirección</span><b class="${pending.direction==='LONG'?'g':'r'}">${pending.direction}</b></div>
+        <div class="mini"><span class="mut">Precio LIMIT</span><b class="y">${fmt(pending.limit_price)}</b></div>
+        <div class="mini"><span class="mut">Precio backend</span><b>${fmt(current)}</b></div>
+        <div class="mini"><span class="mut">Distancia al LIMIT</span><b>${(distance>=0?'+':'')+distance.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></div>
+        <div class="mini"><span class="mut">Capital</span><b>${fmt(pending.capital)} USDT</b></div>
+        <div class="mini"><span class="mut">Apalancamiento</span><b>x${pending.leverage||1}</b></div>
+        <div class="mini"><span class="mut">Exposición</span><b>${fmt(pending.exposure)} USDT</b></div>
+        <div class="mini"><span class="mut">Cantidad prevista</span><b>${Number(pending.quantity??0).toLocaleString('es-AR',{maximumFractionDigits:8})}</b></div>
+        <div class="mini"><span class="mut">Stop Loss</span><b class="r">${fmt(pending.stop_loss)}</b></div>
+        <div class="mini"><span class="mut">Take Profit</span><b class="g">${fmt(pending.take_profit)}</b></div>`;
+
+      document.getElementById('manualSymbol').value=(pending.symbol||'BTCUSDT').replace('USDT','/USDT');
+      document.getElementById('manualLeverage').value='x'+(pending.leverage||1);
+      document.getElementById('manualCapital').value=pending.capital??'';
+      document.getElementById('manualOrderType').value='LIMIT';
+      document.getElementById('manualLimitPrice').value=pending.limit_price??'';
+      document.getElementById('manualSL').value=pending.stop_loss??'';
+      document.getElementById('manualTP').value=pending.take_profit??'';
+
+      ['manualSymbol','manualLeverage','manualCapital','manualOrderType','manualLimitPrice','manualSL','manualTP','manualTrailingPct'].forEach(id=>document.getElementById(id).disabled=true);
+      document.getElementById('manualLongBtn').disabled=true;document.getElementById('manualShortBtn').disabled=true;document.getElementById('manualCancelLimitBtn').disabled=!connected;document.getElementById('manualCloseBtn').disabled=true;document.getElementById('manualUpdateRiskBtn').disabled=true;document.getElementById('manualBreakEvenBtn').disabled=true;document.getElementById('manualTrailingOnBtn').disabled=true;document.getElementById('manualTrailingOffBtn').disabled=true;setPartialButtonsEnabled(false);
+      document.getElementById('manualStatus').textContent='LIMIT PENDIENTE · '+(pending.symbol||'').replace('USDT','/USDT')+' · '+pending.direction+' @ '+fmt(pending.limit_price)+' · capital '+fmt(pending.capital)+' USDT · x'+(pending.leverage||1)+' · AUTO bloqueado hasta ejecutar o cancelar.';
+    }else{
+      pendingBox.className='empty';pendingBox.textContent='No hay orden LIMIT pendiente.';
+      document.getElementById('manualCancelLimitBtn').disabled=true;
+    }
+
+    if(!pos&&!pending){
+      document.getElementById('manualStatus').textContent='SIN POSICIÓN / SIN LIMIT · Elegí activo, MARKET o LIMIT, capital y riesgo; después LONG o SHORT.';
+      document.getElementById('manualSymbol').disabled=!connected;document.getElementById('manualLeverage').disabled=!connected;document.getElementById('manualCapital').disabled=!connected;document.getElementById('manualSL').disabled=!connected;document.getElementById('manualTP').disabled=!connected;document.getElementById('manualOrderType').disabled=!connected;
+      delete document.getElementById('manualSL').dataset.dirty;delete document.getElementById('manualTP').dataset.dirty;
+      document.getElementById('manualLongBtn').disabled=!connected;document.getElementById('manualShortBtn').disabled=!connected;document.getElementById('manualCloseBtn').disabled=true;document.getElementById('manualUpdateRiskBtn').disabled=true;document.getElementById('manualBreakEvenBtn').disabled=true;document.getElementById('manualTrailingPct').disabled=true;document.getElementById('manualTrailingOnBtn').disabled=true;document.getElementById('manualTrailingOffBtn').disabled=true;setPartialButtonsEnabled(false);syncOrderTypeInput();
     }
 
     const trades=p.closed_trades||[];document.getElementById('closedCount').textContent=trades.length;
@@ -553,6 +642,7 @@ document.getElementById('connectControlBtn').addEventListener('click',connectCon
 document.getElementById('disconnectControlBtn').addEventListener('click',disconnectControl);
 document.getElementById('manualLongBtn').addEventListener('click',()=>triggerManual('LONG'));
 document.getElementById('manualShortBtn').addEventListener('click',()=>triggerManual('SHORT'));
+document.getElementById('manualCancelLimitBtn').addEventListener('click',()=>triggerManual('CANCEL_LIMIT'));
 document.getElementById('manualCloseBtn').addEventListener('click',()=>triggerManual('CLOSE'));
 document.getElementById('manualUpdateRiskBtn').addEventListener('click',()=>triggerManual('UPDATE_RISK'));
 document.getElementById('manualBreakEvenBtn').addEventListener('click',()=>triggerManual('BREAK_EVEN'));
@@ -564,6 +654,7 @@ document.getElementById('manualPartial75Btn').addEventListener('click',()=>trigg
 document.getElementById('manualPartial100Btn').addEventListener('click',()=>triggerManual('PARTIAL_CLOSE',100));
 document.getElementById('manualSL').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualTP').addEventListener('input',e=>e.target.dataset.dirty='1');
+document.getElementById('manualOrderType').addEventListener('change',syncOrderTypeInput);
 document.getElementById('manualSymbol').addEventListener('change',e=>{if(!livePosition)connectLiveMarket(e.target.value.replace('/',''))});
 
 if(getToken()){setControlEnabled(true);setControlStatus('CONTROL CONECTADO · PAPER','g')}else{setControlEnabled(false)}
