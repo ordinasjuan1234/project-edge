@@ -275,7 +275,42 @@ def update_manual_risk(
     print(f"Nuevo SL:    {new_stop:.2f}")
     print(f"Nuevo TP:    {new_tp:.2f}")
 
+def set_break_even(state: PaperState) -> None:
+    if not state.has_open_position:
+        raise ValueError(
+            "No hay una posicion PAPER abierta para aplicar Break-even."
+        )
 
+    position = state.position
+    symbol = position["symbol"]
+    direction = position["direction"]
+    entry_price = float(position["entry_price"])
+    price = current_price(symbol)
+
+    if direction == "LONG" and price <= entry_price:
+        raise ValueError(
+            "Break-even LONG solo se habilita cuando el precio esta por encima de la entrada."
+        )
+
+    if direction == "SHORT" and price >= entry_price:
+        raise ValueError(
+            "Break-even SHORT solo se habilita cuando el precio esta por debajo de la entrada."
+        )
+
+    position["stop_loss"] = entry_price
+
+    state.data["position"] = position
+    state.save()
+
+    print("=" * 60)
+    print("PROJECT EDGE - BREAK EVEN PAPER")
+    print("=" * 60)
+    print(f"Activo:      {symbol}")
+    print(f"Direccion:   {direction}")
+    print(f"Entrada:     {entry_price:.2f}")
+    print(f"Precio:      {price:.2f}")
+    print(f"Nuevo SL:    {entry_price:.2f}")
+    print(f"TP actual:   {position['take_profit']:.2f}")
 def main() -> None:
     parser = argparse.ArgumentParser()
 
@@ -287,6 +322,7 @@ def main() -> None:
             "SHORT",
             "CLOSE",
             "UPDATE_RISK",
+            "BREAK_EVEN",
         ],
     )
 
@@ -338,7 +374,9 @@ def main() -> None:
             take_profit=args.take_profit,
         )
         return
-
+    if args.action == "BREAK_EVEN":
+        set_break_even(state)
+        return
     capital = (
         state.balance
         if args.capital is None
