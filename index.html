@@ -35,7 +35,7 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}
 .ctrl{padding:12px;border-radius:8px;border:1px solid var(--l);cursor:pointer;font-weight:800;background:#0a1724;color:var(--t)}
 .ctrl.long{border-color:#286b59;color:var(--g)}.ctrl.short{border-color:#7d3a42;color:var(--r)}.ctrl.close{border-color:#7b6730;color:var(--y)}
 .ctrl.auto{border-color:#315d86;color:var(--b)}.ctrl.trailing{border-color:#775aa6;color:#c59bff}.ctrl.partial{border-color:#5b7f93;color:#87d8ff}
-.ctrl.pause{border-color:#7b6730;color:var(--y)}.ctrl.resume{border-color:#286b59;color:var(--g)}.ctrl:disabled{opacity:.45;cursor:not-allowed}
+.ctrl.pause{border-color:#7b6730;color:var(--y)}.ctrl.resume{border-color:#286b59;color:var(--g)}.ctrl.emergency{border-color:#a83f4a;color:#ff8585;background:#241118}.ctrl:disabled{opacity:.45;cursor:not-allowed}
 .tokenrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:10px}.tokenrow input{width:100%;background:#07111d;border:1px solid var(--l);color:var(--t);padding:10px;border-radius:8px}
 .statusbox{margin-top:10px;padding:10px;border:1px solid var(--l);border-radius:8px;background:#091522;color:var(--m)}
 .position,.pending{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pending{padding:10px;border:1px solid #6d5d2f;border-radius:9px;background:#17170f}
@@ -247,11 +247,12 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">Reloj</span><b>cron-job.org · 5 min</b></div>
         </div>
 
-        <div class="controls" style="grid-template-columns:1fr">
+        <div class="controls" style="grid-template-columns:1fr 1fr">
           <button id="autoToggleBtn" class="ctrl pause" disabled>⏸ PAUSAR AUTO</button>
+          <button id="autoEmergencyBtn" class="ctrl emergency" disabled>⛔ EMERGENCY STOP AUTO</button>
         </div>
         <div id="autoControlStatus" class="statusbox">AUTO: esperando estado del backend.</div>
-        <div id="autoStatus" class="statusbox">El cron sigue ejecutando ciclos cada 5 minutos. PAUSE AUTO solo bloquea nuevas entradas automáticas; una posición abierta conserva SL / TP / Trailing y una LIMIT pendiente sigue gestionándose.</div>
+        <div id="autoStatus" class="statusbox">PAUSE AUTO bloquea nuevas entradas automáticas. EMERGENCY STOP AUTO deja un bloqueo de emergencia explícito. En ambos casos el cron sigue gestionando una posición abierta con SL / TP / Trailing y una LIMIT pendiente.</div>
       </section>
     </div>
 
@@ -277,7 +278,8 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
       <div class="rule"><span>Break-even</span><b class="g">OPERATIVO</b></div>
       <div class="rule"><span>Trailing Stop PAPER</span><b class="g">OPERATIVO</b></div>
       <div class="rule"><span>Cierre parcial 25/50/75/100</span><b class="g">OPERATIVO</b></div>
-      <div class="rule"><span>PAUSE / RESUME AUTO</span><b class="y">EN VALIDACIÓN</b></div>
+      <div class="rule"><span>PAUSE / RESUME AUTO</span><b class="g">OPERATIVO</b></div>
+      <div class="rule"><span>Emergency Stop AUTO</span><b class="y">EN VALIDACIÓN</b></div>
       <div class="rule"><span>Ejecución real</span><b class="r">DESHABILITADA</b></div>
       <div class="notice">Una LIMIT PAPER se revisa por ciclos del backend, aproximadamente cada 5 minutos. No es una orden de exchange ni una ejecución precio por precio.</div>
     </section>
@@ -344,6 +346,7 @@ function setControlEnabled(enabled){
   document.getElementById('manualShortBtn').disabled=!enabled;
   ['manualCancelLimitBtn','manualCloseBtn','manualUpdateRiskBtn','manualBreakEvenBtn','manualTrailingPct','manualTrailingOnBtn','manualTrailingOffBtn'].forEach(id=>document.getElementById(id).disabled=true);
   document.getElementById('autoToggleBtn').disabled=!enabled;
+  document.getElementById('autoEmergencyBtn').disabled=!enabled;
   setPartialButtonsEnabled(false);
   syncOrderTypeInput();
 }
@@ -384,7 +387,7 @@ async function triggerManual(action,partialPct=''){
   const orderType=document.getElementById('manualOrderType').value;
   const limitPrice=document.getElementById('manualLimitPrice').value.trim();
   const openingAction=action==='LONG'||action==='SHORT';
-  const autoAction=action==='PAUSE_AUTO'||action==='RESUME_AUTO';
+  const autoAction=action==='PAUSE_AUTO'||action==='RESUME_AUTO'||action==='EMERGENCY_STOP_AUTO';
 
   if(openingAction){
     if(!capital||Number(capital)<=0){document.getElementById('manualStatus').textContent='Ingresá primero el capital en USDT.';return}
@@ -416,7 +419,8 @@ async function triggerManual(action,partialPct=''){
   };
 
   let label='CERRAR la posición PAPER';
-  if(action==='PAUSE_AUTO')label='PAUSAR las NUEVAS entradas AUTO · la posición/SL/TP/Trailing y una LIMIT pendiente siguen gestionándose';
+  if(action==='EMERGENCY_STOP_AUTO')label='ACTIVAR EMERGENCY STOP AUTO · BLOQUEAR nuevas entradas automáticas con estado de EMERGENCIA · NO cierra la posición · NO cancela una LIMIT · SL/TP/Trailing siguen gestionándose';
+  else if(action==='PAUSE_AUTO')label='PAUSAR las NUEVAS entradas AUTO · la posición/SL/TP/Trailing y una LIMIT pendiente siguen gestionándose';
   else if(action==='RESUME_AUTO')label='REANUDAR las NUEVAS entradas AUTO · el bot seguirá esperando confirmaciones del motor';
   else if(action==='CANCEL_LIMIT')label='CANCELAR la orden LIMIT PAPER pendiente';
   else if(action==='PARTIAL_CLOSE')label='CERRAR '+partialPct+'% de la cantidad PAPER que sigue abierta';
@@ -429,9 +433,10 @@ async function triggerManual(action,partialPct=''){
   if(!confirm('Confirmar PAPER: '+label+'?'))return;
 
   const box=document.getElementById('manualStatus'),autoBox=document.getElementById('autoControlStatus');
-  manualActionBusy=true;document.getElementById('autoToggleBtn').disabled=true;
+  manualActionBusy=true;document.getElementById('autoToggleBtn').disabled=true;document.getElementById('autoEmergencyBtn').disabled=true;
 
   if(action==='PARTIAL_CLOSE'){partialCloseBusy=true;setPartialButtonsEnabled(false);box.textContent='CIERRE '+partialPct+'% EN PROCESO · Esperando backend...'}
+  else if(action==='EMERGENCY_STOP_AUTO'){autoBox.textContent='EMERGENCY STOP SOLICITADO · bloqueando nuevas entradas AUTO...'}
   else if(action==='PAUSE_AUTO'){autoBox.textContent='PAUSANDO AUTO · esperando confirmación del backend...'}
   else if(action==='RESUME_AUTO'){autoBox.textContent='REANUDANDO AUTO · esperando confirmación del backend...'}
   else if(action==='CANCEL_LIMIT')box.textContent='CANCELANDO LIMIT · Esperando backend...';
@@ -447,7 +452,8 @@ async function triggerManual(action,partialPct=''){
     const r=await githubRequest(GH_API+'/actions/workflows/'+MANUAL_WORKFLOW+'/dispatches',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ref:'main',inputs})});
     if(r.status!==204)throw new Error('GitHub respondió '+r.status);
 
-    if(action==='PAUSE_AUTO')autoBox.textContent='PAUSA SOLICITADA · esperando que el backend confirme AUTO PAUSADO...';
+    if(action==='EMERGENCY_STOP_AUTO')autoBox.textContent='EMERGENCY STOP ENVIADO · esperando confirmación del bloqueo de emergencia...';
+    else if(action==='PAUSE_AUTO')autoBox.textContent='PAUSA SOLICITADA · esperando que el backend confirme AUTO PAUSADO...';
     else if(action==='RESUME_AUTO')autoBox.textContent='REANUDACIÓN SOLICITADA · esperando que el backend confirme AUTO ACTIVO...';
     else if(action==='PARTIAL_CLOSE')box.textContent='CIERRE '+partialPct+'% SOLICITADO · esperando actualización...';
     else if(action==='CANCEL_LIMIT')box.textContent='CANCELACIÓN LIMIT SOLICITADA · esperando actualización...';
@@ -505,21 +511,31 @@ function decodeGithubBase64(content){const binary=atob(content.replace(/\n/g,'')
 
 function renderAutoState(p,ageMin,connected){
   autoEnabled=p.auto_enabled!==false;
-  const fresh=ageMin<=12;
-  const top=document.getElementById('topAutoMode'),stateEl=document.getElementById('autoState'),btn=document.getElementById('autoToggleBtn'),status=document.getElementById('autoControlStatus');
+  const pauseReason=String(p.auto_pause_reason||'');
+  const emergency=pauseReason==='EMERGENCY_STOP';
+  const top=document.getElementById('topAutoMode'),stateEl=document.getElementById('autoState'),btn=document.getElementById('autoToggleBtn'),emergencyBtn=document.getElementById('autoEmergencyBtn'),status=document.getElementById('autoControlStatus');
 
-  if(!autoEnabled){
+  if(emergency){
+    top.textContent='⛔ EMERGENCY STOP AUTO · BTCUSDT';top.className='mode r';
+    stateEl.textContent='EMERGENCY STOP';stateEl.className='r';
+    btn.textContent='▶ REANUDAR AUTO';btn.className='ctrl resume';btn.dataset.action='RESUME_AUTO';
+    emergencyBtn.textContent='⛔ EMERGENCY STOP ACTIVO';
+    status.textContent='EMERGENCY STOP ACTIVO · nuevas entradas automáticas bloqueadas con motivo de emergencia. Posiciones abiertas y LIMIT pendientes siguen siendo gestionadas.';
+  }else if(!autoEnabled){
     top.textContent='⏸ AUTO PAPER PAUSADO · BTCUSDT';top.className='mode y';
     stateEl.textContent='AUTO PAUSADO';stateEl.className='y';
     btn.textContent='▶ REANUDAR AUTO';btn.className='ctrl resume';btn.dataset.action='RESUME_AUTO';
+    emergencyBtn.textContent='⛔ EMERGENCY STOP AUTO';
     status.textContent='AUTO PAUSADO · nuevas entradas automáticas bloqueadas. Posiciones abiertas y LIMIT pendientes siguen gestionándose.';
   }else{
     top.textContent='● AUTO PAPER ACTIVO · BTCUSDT';top.className='mode g';
     stateEl.textContent=ageMin<=7?'AUTO ACTIVO':ageMin<=12?'AUTO CON DEMORA':'AUTO SIN CICLO';stateEl.className=ageMin<=7?'g':ageMin<=12?'y':'r';
     btn.textContent='⏸ PAUSAR AUTO';btn.className='ctrl pause';btn.dataset.action='PAUSE_AUTO';
+    emergencyBtn.textContent='⛔ EMERGENCY STOP AUTO';
     status.textContent='AUTO ACTIVO · nuevas entradas automáticas permitidas cuando el motor confirme una oportunidad.';
   }
   btn.disabled=!connected||manualActionBusy;
+  emergencyBtn.disabled=!connected||manualActionBusy||emergency;
 }
 
 async function loadData(){
@@ -626,6 +642,7 @@ async function loadData(){
     }
 
     document.getElementById('autoToggleBtn').disabled=!connected||manualActionBusy;
+    document.getElementById('autoEmergencyBtn').disabled=!connected||manualActionBusy||String(p.auto_pause_reason||'')==='EMERGENCY_STOP';
     const trades=p.closed_trades||[];document.getElementById('closedCount').textContent=trades.length;
     document.getElementById('tradesBody').innerHTML=trades.length?trades.slice().reverse().map(t=>`<tr><td>${(t.symbol||'').replace('USDT','/USDT')}</td><td class="${t.direction==='LONG'?'g':'r'}">${t.direction}</td><td>${fmt(t.entry_price)}</td><td>${fmt(t.exit_price)}</td><td class="${Number(t.pnl)>=0?'g':'r'}">${Number(t.pnl)>=0?'+':''}${fmt(t.pnl)}</td><td>${t.source==='MANUAL'?'MANUAL':t.source==='AUTO'?'AUTO':'SIN CLASIFICAR'}</td><td>${t.reason||'—'}${Number(t.partial_count||0)>0?' · '+t.partial_count+' parcial(es)':''}</td></tr>`).join(''):'<tr><td colspan="7" class="mut">Sin operaciones cerradas todavía.</td></tr>';
   }catch(e){
@@ -649,6 +666,7 @@ document.getElementById('manualPartial50Btn').addEventListener('click',()=>trigg
 document.getElementById('manualPartial75Btn').addEventListener('click',()=>triggerManual('PARTIAL_CLOSE',75));
 document.getElementById('manualPartial100Btn').addEventListener('click',()=>triggerManual('PARTIAL_CLOSE',100));
 document.getElementById('autoToggleBtn').addEventListener('click',e=>triggerManual(e.currentTarget.dataset.action||'PAUSE_AUTO'));
+document.getElementById('autoEmergencyBtn').addEventListener('click',()=>triggerManual('EMERGENCY_STOP_AUTO'));
 document.getElementById('manualSL').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualTP').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualOrderType').addEventListener('change',syncOrderTypeInput);
