@@ -1,17 +1,24 @@
 """
-PROJECT EDGE - Live Dashboard Builder v4
+PROJECT EDGE - Live Dashboard Builder v5
 
 Genera dashboard_data.json con:
 - datos reales de BTCUSDT
 - estado multitemporal
 - Fair Value Gaps activos por temporalidad
 - decisión del motor
+- scanner MANUAL para BTCUSDT y ETHUSDT
 - estado PAPER
 - posición abierta
 - orden LIMIT pendiente
-- estado AUTO activo / pausado
+- estado AUTO activo / pausado / emergencia
 - rendimiento MANUAL / AUTO
 - historial reciente
+
+El scanner MANUAL NO ejecuta órdenes.
+Solo traduce la lectura del motor a:
+- LONG
+- SHORT
+- WAIT
 
 No envía órdenes reales.
 """
@@ -31,9 +38,19 @@ from engine.decision.entry_readiness import EntryReadiness
 from paper_state import PaperState
 
 
-SYMBOL = "BTCUSDT"
+PRIMARY_SYMBOL = "BTCUSDT"
+SCANNER_SYMBOLS = ("BTCUSDT", "ETHUSDT")
 INITIAL_BALANCE = 10000.0
 OUTPUT_FILE = "dashboard_data.json"
+
+STRUCTURE_ENGINE_KWARGS = {
+    "pivot_left": 2,
+    "pivot_right": 2,
+    "atr_period": 14,
+    "atr_multiplier": 1.5,
+    "min_move_pct": 0.0025,
+    "max_move_pct": 0.05,
+}
 
 
 def calculate_unrealized_pnl(
@@ -291,22 +308,245 @@ def extract_fvg_by_timeframe(
     return result
 
 
-def fetch_symbol_price(
-    symbol,
-    btc_data,
-    btc_price,
+def extract_alignment_value(
+    mtf,
+):
+    alignment = mtf.get(
+        "alignment",
+        {},
+    )
+
+    if isinstance(
+        alignment,
+        dict,
+    ):
+        return alignment.get(
+            "alignment",
+            "UNKNOWN",
+        )
+
+    return str(
+        alignment
+    )
+
+
+def scanner_signal(
+    decision,
 ):
     """
-    Devuelve un precio de referencia backend
-    para la posición abierta o LIMIT pendiente.
+    Traduce la decisión técnica del motor
+    a una lectura simple para la mesa MANUAL.
 
-    BTC reutiliza los datos ya descargados.
-    ETH descarga solo lo necesario.
+    READY_LONG  -> LONG
+    READY_SHORT -> SHORT
+    Todo lo demás -> WAIT
+
+    Importante:
+    WATCH_LONG / WATCH_SHORT indican sesgo,
+    pero NO habilitan una entrada del scanner.
     """
 
-    if symbol == SYMBOL:
+    decision_name = str(
+        decision.get(
+            "decision",
+            "WAIT",
+        )
+    ).upper()
+
+    if (
+        decision_name == "READY_LONG"
+        and bool(
+            decision.get(
+                "can_execute",
+                False,
+            )
+        )
+    ):
+        return "LONG"
+
+    if (
+        decision_name == "READY_SHORT"
+        and bool(
+            decision.get(
+                "can_execute",
+                False,
+            )
+        )
+    ):
+        return "SHORT"
+
+    return "WAIT"
+
+
+def analyze_symbol(
+    symbol,
+):
+    """
+    Ejecuta el mismo motor estructural para un símbolo
+    sin abrir ni cerrar ninguna operación.
+    """
+
+    data = (
+        BinanceHistoricalData()
+        .fetch_project_edge_timeframes(
+            symbol,
+            limit=500,
+        )
+    )
+
+    price = float(
+        data[
+            "5M"
+        ][
+            "close"
+        ].iloc[-1]
+    )
+
+    mtf = (
+        MultiTimeframeStructureEngine(
+            structure_engine_kwargs=(
+                STRUCTURE_ENGINE_KWARGS
+            )
+        )
+        .analyze(
+            data
+        )
+    )
+
+    decision = (
+        DecisionEngine()
+        .decide(
+            mtf
+        )
+    )
+
+    readiness = (
+        EntryReadiness()
+        .evaluate(
+            mtf_result=mtf,
+            decision_result=decision,
+        )
+    )
+
+    alignment_value = (
+        extract_alignment_value(
+            mtf
+        )
+    )
+
+    return {
+        "symbol": symbol,
+        "price": price,
+        "timeframes": mtf.get(
+            "states",
+            {},
+        ),
+        "fvg": (
+            extract_fvg_by_timeframe(
+                mtf
+            )
+        ),
+        "alignment": (
+            alignment_value
+        ),
+        "decision": {
+            "action": (
+                decision.get(
+                    "decision"
+                )
+            ),
+            "direction": (
+                decision.get(
+                    "direction"
+                )
+            ),
+            "can_execute": bool(
+                decision.get(
+                    "can_execute",
+                    False,
+                )
+            ),
+            "reason": (
+                decision.get(
+                    "reason",
+                    "",
+                )
+            ),
+            "fvg_required": bool(
+                decision.get(
+                    "fvg_required",
+                    False,
+                )
+            ),
+            "fvg_confirmed": (
+                decision.get(
+                    "fvg_confirmed"
+                )
+            ),
+            "fvg_expected_type": (
+                decision.get(
+                    "fvg_expected_type"
+                )
+            ),
+            "fvg_timeframes": (
+                decision.get(
+                    "fvg_timeframes",
+                    [],
+                )
+            ),
+        },
+        "readiness": {
+            "status": (
+                readiness.get(
+                    "status"
+                )
+            ),
+            "bias": (
+                readiness.get(
+                    "bias"
+                )
+            ),
+            "message": (
+                readiness.get(
+                    "message",
+                    "",
+                )
+            ),
+            "missing_conditions": (
+                readiness.get(
+                    "missing_conditions",
+                    [],
+                )
+            ),
+        },
+        "scanner_signal": (
+            scanner_signal(
+                decision
+            )
+        ),
+    }
+
+
+def fetch_symbol_price(
+    symbol,
+    scanner_data,
+):
+    """
+    Reutiliza el precio ya calculado por el scanner.
+    Si el símbolo no está dentro del scanner,
+    descarga solamente los datos necesarios.
+    """
+
+    if (
+        symbol
+        in scanner_data
+    ):
         return float(
-            btc_price
+            scanner_data[
+                symbol
+            ][
+                "price"
+            ]
         )
 
     symbol_data = (
@@ -390,48 +630,91 @@ def pending_order_snapshot(
     return order
 
 
+def build_manual_scanner():
+    """
+    Analiza BTC y ETH con el mismo motor.
+    Un error en un símbolo no debe impedir
+    que el dashboard completo se genere.
+    """
+
+    result = {}
+
+    for symbol in SCANNER_SYMBOLS:
+        try:
+            result[
+                symbol
+            ] = analyze_symbol(
+                symbol
+            )
+        except Exception as exc:
+            result[
+                symbol
+            ] = {
+                "symbol": symbol,
+                "price": None,
+                "timeframes": {},
+                "fvg": {},
+                "alignment": "ERROR",
+                "decision": {
+                    "action": "WAIT",
+                    "direction": None,
+                    "can_execute": False,
+                    "reason": (
+                        "No se pudo completar "
+                        "la lectura del scanner."
+                    ),
+                    "fvg_required": False,
+                    "fvg_confirmed": None,
+                    "fvg_expected_type": None,
+                    "fvg_timeframes": [],
+                },
+                "readiness": {
+                    "status": "NOT_READY",
+                    "bias": None,
+                    "message": str(
+                        exc
+                    ),
+                    "missing_conditions": [
+                        (
+                            "Reintentar la lectura "
+                            "en el próximo ciclo."
+                        )
+                    ],
+                },
+                "scanner_signal": "WAIT",
+                "error": str(
+                    exc
+                ),
+            }
+
+    return result
+
+
 def main():
-    data = (
-        BinanceHistoricalData()
-        .fetch_project_edge_timeframes(
-            SYMBOL,
-            limit=500,
-        )
+    scanner_data = (
+        build_manual_scanner()
     )
+
+    primary = scanner_data.get(
+        PRIMARY_SYMBOL,
+        {},
+    )
+
+    if (
+        primary.get(
+            "price"
+        )
+        is None
+    ):
+        raise RuntimeError(
+            "No se pudo construir "
+            "la lectura principal BTCUSDT."
+        )
 
     btc_price = float(
-        data[
-            "5M"
-        ][
-            "close"
-        ].iloc[-1]
-    )
-
-    mtf = (
-        MultiTimeframeStructureEngine(
-            structure_engine_kwargs={
-                "pivot_left": 2,
-                "pivot_right": 2,
-                "atr_period": 14,
-                "atr_multiplier": 1.5,
-                "min_move_pct": 0.0025,
-                "max_move_pct": 0.05,
-            }
-        )
-        .analyze(data)
-    )
-
-    decision = (
-        DecisionEngine()
-        .decide(mtf)
-    )
-
-    readiness = (
-        EntryReadiness()
-        .evaluate(
-            mtf_result=mtf,
-            decision_result=decision,
-        )
+        primary[
+            "price"
+        ]
     )
 
     state = PaperState(
@@ -468,11 +751,22 @@ def main():
         )
     )
 
-    auto_status = (
-        "ACTIVE"
-        if auto_enabled
-        else "PAUSED"
-    )
+    if (
+        not auto_enabled
+        and auto_pause_reason
+        == "EMERGENCY_STOP"
+    ):
+        auto_status = (
+            "EMERGENCY_STOP"
+        )
+    elif auto_enabled:
+        auto_status = (
+            "ACTIVE"
+        )
+    else:
+        auto_status = (
+            "PAUSED"
+        )
 
     position_price = (
         btc_price
@@ -484,8 +778,9 @@ def main():
                 symbol=position[
                     "symbol"
                 ],
-                btc_data=data,
-                btc_price=btc_price,
+                scanner_data=(
+                    scanner_data
+                ),
             )
         )
 
@@ -505,8 +800,9 @@ def main():
                 symbol=pending_order[
                     "symbol"
                 ],
-                btc_data=data,
-                btc_price=btc_price,
+                scanner_data=(
+                    scanner_data
+                ),
             )
         )
 
@@ -538,26 +834,8 @@ def main():
         )
     )
 
-    alignment = mtf.get(
-        "alignment",
-        {},
-    )
-
-    if isinstance(
-        alignment,
-        dict,
-    ):
-        alignment_value = (
-            alignment.get(
-                "alignment",
-                "UNKNOWN",
-            )
-        )
-    else:
-        alignment_value = str(
-            alignment
-        )
-
+    # Conservamos las claves antiguas de BTC
+    # para no romper el dashboard actual.
     payload = {
         "timestamp": (
             datetime.now(
@@ -566,62 +844,44 @@ def main():
                 timespec="seconds"
             )
         ),
-        "symbol": SYMBOL,
+        "symbol": PRIMARY_SYMBOL,
         "price": btc_price,
-        "timeframes": mtf.get(
-            "states",
-            {},
+        "timeframes": (
+            primary.get(
+                "timeframes",
+                {},
+            )
         ),
         "fvg": (
-            extract_fvg_by_timeframe(
-                mtf
+            primary.get(
+                "fvg",
+                {},
             )
         ),
         "alignment": (
-            alignment_value
+            primary.get(
+                "alignment",
+                "UNKNOWN",
+            )
         ),
-        "decision": {
-            "action": (
-                decision.get(
-                    "decision"
-                )
-            ),
-            "direction": (
-                decision.get(
-                    "direction"
-                )
-            ),
-            "can_execute": bool(
-                decision.get(
-                    "can_execute",
-                    False,
-                )
-            ),
-        },
-        "readiness": {
-            "status": (
-                readiness.get(
-                    "status"
-                )
-            ),
-            "bias": (
-                readiness.get(
-                    "bias"
-                )
-            ),
-            "message": (
-                readiness.get(
-                    "message",
-                    "",
-                )
-            ),
-            "missing_conditions": (
-                readiness.get(
-                    "missing_conditions",
-                    [],
-                )
-            ),
-        },
+        "decision": (
+            primary.get(
+                "decision",
+                {}
+            )
+        ),
+        "readiness": (
+            primary.get(
+                "readiness",
+                {}
+            )
+        ),
+
+        # Nuevo bloque para puntos 39 y 40.
+        "manual_scanner": (
+            scanner_data
+        ),
+
         "paper": {
             "initial_balance": float(
                 state.data.get(
@@ -705,16 +965,39 @@ def main():
 
     print(
         f"BTC: {btc_price:.2f} | "
-        f"Decision: "
-        f"{payload['decision']['action']}"
+        f"Scanner: "
+        f"{primary.get('scanner_signal', 'WAIT')}"
     )
+
+    eth = scanner_data.get(
+        "ETHUSDT",
+        {},
+    )
+
+    if (
+        eth.get(
+            "price"
+        )
+        is not None
+    ):
+        print(
+            f"ETH: "
+            f"{float(eth['price']):.2f} | "
+            f"Scanner: "
+            f"{eth.get('scanner_signal', 'WAIT')}"
+        )
 
     print(
         "AUTO: "
         + (
-            "ACTIVO"
-            if auto_enabled
-            else "PAUSADO"
+            "EMERGENCY STOP"
+            if auto_status
+            == "EMERGENCY_STOP"
+            else (
+                "ACTIVO"
+                if auto_enabled
+                else "PAUSADO"
+            )
         )
     )
 
@@ -730,7 +1013,8 @@ def main():
             "PAPER: LIMIT pendiente "
             f"{pending_snapshot['symbol']} "
             f"{pending_snapshot['direction']} "
-            f"@ {float(pending_snapshot['limit_price']):.2f}"
+            f"@ "
+            f"{float(pending_snapshot['limit_price']):.2f}"
         )
 
     else:
