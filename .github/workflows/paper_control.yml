@@ -11,6 +11,7 @@ on:
           - LONG
           - SHORT
           - CLOSE
+          - PARTIAL_CLOSE
           - UPDATE_RISK
           - BREAK_EVEN
           - TRAILING_ON
@@ -59,6 +60,12 @@ on:
         default: ""
         type: string
 
+      partial_pct:
+        description: "Cierre parcial %: 25, 50, 75 o 100"
+        required: false
+        default: ""
+        type: string
+
 
 permissions:
   contents: write
@@ -99,6 +106,7 @@ jobs:
           STOP_LOSS: ${{ inputs.stop_loss }}
           TAKE_PROFIT: ${{ inputs.take_profit }}
           TRAILING_PCT: ${{ inputs.trailing_pct }}
+          PARTIAL_PCT: ${{ inputs.partial_pct }}
 
         run: |
           ARGS=(
@@ -121,6 +129,10 @@ jobs:
 
           if [ -n "$TRAILING_PCT" ]; then
             ARGS+=(--trailing-pct "$TRAILING_PCT")
+          fi
+
+          if [ -n "$PARTIAL_PCT" ]; then
+            ARGS+=(--partial-pct "$PARTIAL_PCT")
           fi
 
           python manual_paper_control.py "${ARGS[@]}"
