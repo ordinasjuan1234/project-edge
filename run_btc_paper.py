@@ -1,23 +1,28 @@
 """
 PROJECT EDGE
-BTC Paper Trading v3
+BTC Paper Trading v4
 
 Paper Trading con estado persistente.
 
 Funciones:
 - Lee datos reales de BTCUSDT.
 - Usa el motor multi-timeframe de PROJECT EDGE.
-- Solo abre una operacion cuando hay confirmacion real.
+- Solo abre una operacion AUTO cuando hay confirmacion real.
 - Recuerda una posicion PAPER abierta.
 - Controla Stop Loss y Take Profit.
 - Gestiona Trailing Stop persistente.
 - Puede gestionar una posicion manual BTC o ETH.
+- Gestiona una orden LIMIT PAPER pendiente.
+- Mientras haya una LIMIT pendiente, bloquea nuevas entradas AUTO.
+- Convierte la LIMIT en posicion cuando el precio muestreado
+  alcanza o cruza el precio LIMIT.
 - Actualiza el saldo demo al cerrar.
 
 IMPORTANTE:
 - NO ejecuta ordenes reales.
 - NO usa API key privada.
 - NO mueve dinero real.
+- El control de precio se realiza por ciclos, no tick a tick.
 """
 
 from engine.data.binance_historical_data import (
@@ -39,30 +44,73 @@ STOP_PCT = 0.005
 TAKE_PROFIT_PCT = 0.01
 
 
+def fetch_symbol_data(
+    symbol,
+    limit=100,
+):
+    return (
+        BinanceHistoricalData()
+        .fetch_project_edge_timeframes(
+            symbol,
+            limit=limit,
+        )
+    )
+
+
+def latest_price(
+    data,
+):
+    return float(
+        data["5M"]["close"].iloc[-1]
+    )
+
+
+def current_price_for_symbol(
+    symbol,
+    btc_data=None,
+):
+    if (
+        symbol == SYMBOL
+        and btc_data is not None
+    ):
+        return latest_price(
+            btc_data
+        )
+
+    data = fetch_symbol_data(
+        symbol,
+        limit=100,
+    )
+
+    return latest_price(
+        data
+    )
+
+
 def calculate_levels(
     direction,
     entry_price,
 ):
     if direction == "LONG":
         stop_loss = (
-            entry_price *
-            (1.0 - STOP_PCT)
+            entry_price
+            * (1.0 - STOP_PCT)
         )
 
         take_profit = (
-            entry_price *
-            (1.0 + TAKE_PROFIT_PCT)
+            entry_price
+            * (1.0 + TAKE_PROFIT_PCT)
         )
 
     elif direction == "SHORT":
         stop_loss = (
-            entry_price *
-            (1.0 + STOP_PCT)
+            entry_price
+            * (1.0 + STOP_PCT)
         )
 
         take_profit = (
-            entry_price *
-            (1.0 - TAKE_PROFIT_PCT)
+            entry_price
+            * (1.0 - TAKE_PROFIT_PCT)
         )
 
     else:
@@ -88,18 +136,232 @@ def calculate_unrealized_pnl(
         position["quantity"]
     )
 
-    direction = position["direction"]
+    direction = position[
+        "direction"
+    ]
 
     if direction == "LONG":
         return (
-            current_price -
-            entry_price
+            current_price
+            - entry_price
         ) * quantity
 
     return (
-        entry_price -
-        current_price
+        entry_price
+        - current_price
     ) * quantity
+
+
+def manage_pending_order(
+    state,
+    current_price,
+):
+    """
+    Gestiona una orden LIMIT PAPER pendiente.
+
+    Primera version:
+    - LONG LIMIT se ejecuta si el precio
+      muestreado es <= precio LIMIT.
+    - SHORT LIMIT se ejecuta si el precio
+      muestreado es >= precio LIMIT.
+
+    El fill se registra al precio LIMIT.
+    Mientras la orden siga pendiente,
+    no se permite una nueva entrada AUTO.
+    """
+
+    order = state.pending_order
+
+    if order is None:
+        return False
+
+    direction = order[
+        "direction"
+    ]
+
+    limit_price = float(
+        order["limit_price"]
+    )
+
+    current_price = float(
+        current_price
+    )
+
+    if direction == "LONG":
+        triggered = (
+            current_price
+            <= limit_price
+        )
+
+    elif direction == "SHORT":
+        triggered = (
+            current_price
+            >= limit_price
+        )
+
+    else:
+        raise ValueError(
+            "Direccion invalida "
+            "en orden LIMIT."
+        )
+
+    print("")
+    print("=" * 60)
+    print(
+        "PAPER LIMIT - PENDIENTE"
+    )
+    print("=" * 60)
+
+    print(
+        f"Order ID:     "
+        f"{order.get('order_id', '—')}"
+    )
+
+    print(
+        f"Activo:       "
+        f"{order['symbol']}"
+    )
+
+    print(
+        f"Origen:       "
+        f"{order.get('source', 'MANUAL')}"
+    )
+
+    print(
+        f"Direccion:    "
+        f"{direction}"
+    )
+
+    print(
+        f"Precio LIMIT: "
+        f"{limit_price:.2f}"
+    )
+
+    print(
+        f"Precio actual:"
+        f"{current_price:.2f}"
+    )
+
+    print(
+        f"Capital:      "
+        f"{float(order['capital']):.2f} USDT"
+    )
+
+    print(
+        f"Apalancamiento: "
+        f"x{int(order['leverage'])}"
+    )
+
+    print(
+        f"Exposicion:   "
+        f"{float(order['exposure']):.2f} USDT"
+    )
+
+    if not triggered:
+        print("")
+        print(
+            "LIMIT todavia NO ejecutada."
+        )
+
+        print(
+            "La orden queda pendiente "
+            "para el proximo ciclo."
+        )
+
+        print(
+            "AUTO bloqueado mientras "
+            "exista esta LIMIT."
+        )
+
+        print("=" * 60)
+
+        return True
+
+    position = (
+        state.fill_pending_order(
+            fill_price=limit_price,
+        )
+    )
+
+    print("")
+    print(
+        "PAPER LIMIT - EJECUTADA"
+    )
+    print("-" * 60)
+
+    print(
+        f"Trade ID:     "
+        f"{position['trade_id']}"
+    )
+
+    print(
+        f"Order ID:     "
+        f"{position.get('order_id', '—')}"
+    )
+
+    print(
+        f"Activo:       "
+        f"{position['symbol']}"
+    )
+
+    print(
+        f"Direccion:    "
+        f"{position['direction']}"
+    )
+
+    print(
+        f"Entrada LIMIT:"
+        f"{float(position['entry_price']):.2f}"
+    )
+
+    print(
+        f"Cantidad:     "
+        f"{float(position['quantity']):.8f}"
+    )
+
+    print(
+        f"Stop Loss:    "
+        f"{float(position['stop_loss']):.2f}"
+    )
+
+    print(
+        f"Take Profit:  "
+        f"{float(position['take_profit']):.2f}"
+    )
+
+    print(
+        f"Capital:      "
+        f"{float(position['capital']):.2f} USDT"
+    )
+
+    print(
+        f"Exposicion:   "
+        f"{float(position['exposure']):.2f} USDT"
+    )
+
+    print(
+        "Trailing:     DESACTIVADO"
+    )
+
+    print("")
+    print(
+        "La LIMIT ya se convirtio "
+        "en posicion PAPER abierta."
+    )
+
+    print(
+        "SL / TP se controlaran "
+        "desde el proximo ciclo."
+    )
+
+    print(
+        "NO se envio ninguna "
+        "orden real."
+    )
+
+    print("=" * 60)
+
+    return True
 
 
 def update_trailing_stop(
@@ -179,8 +441,8 @@ def update_trailing_stop(
         )
 
     distance = (
-        trailing_pct /
-        100.0
+        trailing_pct
+        / 100.0
     )
 
     if direction == "LONG":
@@ -190,8 +452,8 @@ def update_trailing_stop(
         )
 
         candidate_stop = (
-            new_anchor *
-            (1.0 - distance)
+            new_anchor
+            * (1.0 - distance)
         )
 
         new_stop = max(
@@ -206,8 +468,8 @@ def update_trailing_stop(
         )
 
         candidate_stop = (
-            new_anchor *
-            (1.0 + distance)
+            new_anchor
+            * (1.0 + distance)
         )
 
         new_stop = min(
@@ -223,31 +485,33 @@ def update_trailing_stop(
 
     anchor_changed = (
         abs(
-            new_anchor -
-            old_anchor
+            new_anchor
+            - old_anchor
         ) > 0.00000001
     )
 
     stop_changed = (
         abs(
-            new_stop -
-            current_stop
+            new_stop
+            - current_stop
         ) > 0.00000001
     )
 
     if not (
-        anchor_changed or
-        stop_changed
+        anchor_changed
+        or stop_changed
     ):
         print("")
         print(
             "TRAILING STOP: "
             "sin nuevo avance."
         )
+
         print(
             f"Ancla:        "
             f"{old_anchor:.2f}"
         )
+
         print(
             f"Stop actual:  "
             f"{current_stop:.2f}"
@@ -273,9 +537,11 @@ def update_trailing_stop(
     print(
         "-" * 60
     )
+
     print(
         "TRAILING STOP - ACTUALIZADO"
     )
+
     print(
         "-" * 60
     )
@@ -383,6 +649,11 @@ def manage_open_position(
     print(
         f"Origen:       "
         f"{position.get('source', 'UNCLASSIFIED')}"
+    )
+
+    print(
+        f"Tipo:         "
+        f"{position.get('order_type', 'MARKET')}"
     )
 
     print(
@@ -733,7 +1004,7 @@ def analyze_market(
 def main():
     print("=" * 60)
     print(
-        "PROJECT EDGE - BTC PAPER TRADING v3"
+        "PROJECT EDGE - BTC PAPER TRADING v4"
     )
     print("=" * 60)
 
@@ -753,16 +1024,13 @@ def main():
         "de BTCUSDT..."
     )
 
-    data = (
-        BinanceHistoricalData()
-        .fetch_project_edge_timeframes(
-            SYMBOL,
-            limit=500,
-        )
+    data = fetch_symbol_data(
+        SYMBOL,
+        limit=500,
     )
 
-    btc_price = float(
-        data["5M"]["close"].iloc[-1]
+    btc_price = latest_price(
+        data
     )
 
     print(
@@ -770,34 +1038,56 @@ def main():
         f"{btc_price:.2f}"
     )
 
+    # PRIORIDAD 1:
+    # Si hay una LIMIT pendiente, se controla.
+    # Mientras exista, no se analiza una
+    # nueva entrada AUTO.
+    if state.has_pending_order:
+
+        pending_symbol = (
+            state.pending_order[
+                "symbol"
+            ]
+        )
+
+        pending_price = (
+            current_price_for_symbol(
+                pending_symbol,
+                btc_data=data,
+            )
+        )
+
+        print(
+            f"Precio actual de "
+            f"{pending_symbol}: "
+            f"{pending_price:.2f}"
+        )
+
+        manage_pending_order(
+            state,
+            pending_price,
+        )
+
+        return
+
+    # PRIORIDAD 2:
     # Si hay cualquier posicion abierta
     # (AUTO o MANUAL, BTC o ETH),
     # primero se gestiona esa posicion.
     if state.has_open_position:
 
         position_symbol = (
-            state.position["symbol"]
+            state.position[
+                "symbol"
+            ]
         )
 
-        if position_symbol == SYMBOL:
-            position_price = (
-                btc_price
+        position_price = (
+            current_price_for_symbol(
+                position_symbol,
+                btc_data=data,
             )
-
-        else:
-            position_data = (
-                BinanceHistoricalData()
-                .fetch_project_edge_timeframes(
-                    position_symbol,
-                    limit=100,
-                )
-            )
-
-            position_price = float(
-                position_data[
-                    "5M"
-                ]["close"].iloc[-1]
-            )
+        )
 
         print(
             f"Precio actual de "
@@ -812,6 +1102,10 @@ def main():
 
         return
 
+    # PRIORIDAD 3:
+    # Solo sin posicion y sin LIMIT
+    # pendiente, el motor AUTO puede
+    # analizar una entrada nueva.
     decision, readiness = (
         analyze_market(
             data,
@@ -886,8 +1180,8 @@ def main():
     )
 
     quantity = (
-        state.balance /
-        entry_price
+        state.balance
+        / entry_price
     )
 
     position = (
@@ -915,6 +1209,10 @@ def main():
     position[
         "trailing_anchor"
     ] = None
+
+    position[
+        "order_type"
+    ] = "MARKET"
 
     state.data[
         "position"
@@ -953,6 +1251,10 @@ def main():
     print(
         f"Direccion:    "
         f"{position['direction']}"
+    )
+
+    print(
+        "Tipo:         MARKET"
     )
 
     print(
