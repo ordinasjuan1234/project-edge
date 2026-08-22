@@ -1,5 +1,5 @@
 """
-PROJECT EDGE - Manual PAPER Control v6
+PROJECT EDGE - Manual PAPER Control v7
 
 Control manual simulado para BTC/USDT y ETH/USDT.
 
@@ -15,6 +15,8 @@ Permite:
 - Modificar SL / TP
 - Break-even
 - Activar / desactivar Trailing Stop
+- PAUSE AUTO
+- RESUME AUTO
 
 NO envia ordenes reales.
 NO usa API privada de Binance.
@@ -137,6 +139,68 @@ def validate_capital_and_leverage(
         )
 
     return capital, leverage
+
+
+def pause_auto(
+    state: PaperState,
+) -> None:
+    """
+    Pausa solamente NUEVAS entradas AUTO.
+
+    No cierra posiciones.
+    No cancela LIMIT pendientes.
+    No cambia el saldo.
+    """
+    result = state.set_auto_enabled(
+        False,
+        reason="MANUAL_PAUSE",
+    )
+
+    print("=" * 60)
+    print("PROJECT EDGE - AUTO PAPER PAUSADO")
+    print("=" * 60)
+    print("Estado AUTO:      PAUSADO")
+    print("Nuevas entradas:  BLOQUEADAS")
+    print(
+        "Posiciones abiertas: SIGUEN protegidas por SL / TP / Trailing."
+    )
+    print(
+        "LIMIT pendientes:    SIGUEN siendo gestionadas."
+    )
+    print(f"Saldo PAPER:      {state.balance:.2f} USDT")
+    print(
+        f"Actualizado:       {result.get('auto_updated_at') or '—'}"
+    )
+    print("NO se cerro ninguna posicion.")
+
+
+def resume_auto(
+    state: PaperState,
+) -> None:
+    """
+    Reactiva las NUEVAS entradas AUTO.
+
+    No abre una operacion inmediatamente.
+    El runner decidira en cada ciclo si hay
+    confirmacion suficiente para entrar.
+    """
+    result = state.set_auto_enabled(
+        True
+    )
+
+    print("=" * 60)
+    print("PROJECT EDGE - AUTO PAPER REANUDADO")
+    print("=" * 60)
+    print("Estado AUTO:      ACTIVO")
+    print("Nuevas entradas:  PERMITIDAS")
+    print(
+        "El bot solo entrara si el motor confirma una oportunidad."
+    )
+    print(f"Saldo PAPER:      {state.balance:.2f} USDT")
+    print(
+        f"Actualizado:       {result.get('auto_updated_at') or '—'}"
+    )
+    print("NO se abrio ninguna posicion por reanudar.")
 
 
 def open_market_manual(
@@ -267,9 +331,6 @@ def create_limit_manual(
             "El precio LIMIT debe ser mayor que 0."
         )
 
-    # Primera version PAPER:
-    # LONG LIMIT debajo del mercado.
-    # SHORT LIMIT encima del mercado.
     if direction == "LONG" and limit_price >= market_price:
         raise ValueError(
             "Para dejar una LONG LIMIT pendiente, el precio LIMIT "
@@ -653,8 +714,6 @@ def enable_trailing(
     position["trailing_enabled"] = True
     position["trailing_pct"] = pct
     position["trailing_anchor"] = price
-
-    # Nunca afloja un SL que ya estaba mejor.
     position["stop_loss"] = new_stop
 
     state.data["position"] = position
@@ -717,6 +776,8 @@ def main() -> None:
             "BREAK_EVEN",
             "TRAILING_ON",
             "TRAILING_OFF",
+            "PAUSE_AUTO",
+            "RESUME_AUTO",
         ],
     )
 
@@ -788,6 +849,15 @@ def main() -> None:
     state = PaperState(
         initial_balance=INITIAL_BALANCE
     )
+
+    # Estas acciones no necesitan consultar el mercado.
+    if args.action == "PAUSE_AUTO":
+        pause_auto(state)
+        return
+
+    if args.action == "RESUME_AUTO":
+        resume_auto(state)
+        return
 
     if args.action == "CLOSE":
         close_manual(state)
