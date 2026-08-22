@@ -13,6 +13,8 @@ on:
           - CLOSE
           - UPDATE_RISK
           - BREAK_EVEN
+          - TRAILING_ON
+          - TRAILING_OFF
 
       symbol:
         description: "Activo"
@@ -51,12 +53,21 @@ on:
         default: ""
         type: string
 
+      trailing_pct:
+        description: "Trailing Stop % (ej: 0.30 = 0.30%)"
+        required: false
+        default: ""
+        type: string
+
+
 permissions:
   contents: write
+
 
 concurrency:
   group: project-edge-btc-paper
   cancel-in-progress: false
+
 
 jobs:
   paper-control:
@@ -87,6 +98,8 @@ jobs:
           LEVERAGE: ${{ inputs.leverage }}
           STOP_LOSS: ${{ inputs.stop_loss }}
           TAKE_PROFIT: ${{ inputs.take_profit }}
+          TRAILING_PCT: ${{ inputs.trailing_pct }}
+
         run: |
           ARGS=(
             --action "$ACTION"
@@ -104,6 +117,10 @@ jobs:
 
           if [ -n "$TAKE_PROFIT" ]; then
             ARGS+=(--take-profit "$TAKE_PROFIT")
+          fi
+
+          if [ -n "$TRAILING_PCT" ]; then
+            ARGS+=(--trailing-pct "$TRAILING_PCT")
           fi
 
           python manual_paper_control.py "${ARGS[@]}"
@@ -124,5 +141,7 @@ jobs:
           fi
 
           git commit -m "Manual PAPER action: ${{ inputs.action }}"
+
           git pull --rebase origin main
+
           git push origin HEAD:main
