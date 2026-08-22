@@ -11,6 +11,7 @@ on:
           - LONG
           - SHORT
           - CLOSE
+          - CANCEL_LIMIT
           - PARTIAL_CLOSE
           - UPDATE_RISK
           - BREAK_EVEN
@@ -25,6 +26,21 @@ on:
         options:
           - BTCUSDT
           - ETHUSDT
+
+      order_type:
+        description: "Tipo de orden"
+        required: true
+        default: "MARKET"
+        type: choice
+        options:
+          - MARKET
+          - LIMIT
+
+      limit_price:
+        description: "Precio LIMIT (solo si order_type = LIMIT)"
+        required: false
+        default: ""
+        type: string
 
       capital:
         description: "Capital en USDT"
@@ -101,6 +117,8 @@ jobs:
         env:
           ACTION: ${{ inputs.action }}
           SYMBOL: ${{ inputs.symbol }}
+          ORDER_TYPE: ${{ inputs.order_type }}
+          LIMIT_PRICE: ${{ inputs.limit_price }}
           CAPITAL: ${{ inputs.capital }}
           LEVERAGE: ${{ inputs.leverage }}
           STOP_LOSS: ${{ inputs.stop_loss }}
@@ -112,8 +130,13 @@ jobs:
           ARGS=(
             --action "$ACTION"
             --symbol "$SYMBOL"
+            --order-type "$ORDER_TYPE"
             --leverage "$LEVERAGE"
           )
+
+          if [ -n "$LIMIT_PRICE" ]; then
+            ARGS+=(--limit-price "$LIMIT_PRICE")
+          fi
 
           if [ -n "$CAPITAL" ]; then
             ARGS+=(--capital "$CAPITAL")
