@@ -1,9 +1,17 @@
 """
-PROJECT EDGE - Manual PAPER Control v3
+PROJECT EDGE - Manual PAPER Control v4
 
 Control manual simulado para BTC/USDT y ETH/USDT.
-Permite elegir capital, apalancamiento x1/x2/x3, SL/TP
-y modificar SL/TP de una posicion abierta.
+
+Permite:
+- LONG / SHORT
+- Cierre manual
+- Capital configurable
+- Apalancamiento x1/x2/x3
+- SL / TP personalizados
+- Modificar SL / TP
+- Break-even
+- Activar / desactivar Trailing Stop
 
 NO envia ordenes reales.
 NO usa API privada de Binance.
@@ -18,10 +26,26 @@ from paper_state import PaperState
 
 
 INITIAL_BALANCE = 10000.0
+
 DEFAULT_STOP_PCT = 0.005
 DEFAULT_TAKE_PROFIT_PCT = 0.01
-ALLOWED_SYMBOLS = {"BTCUSDT", "ETHUSDT"}
-ALLOWED_LEVERAGE = {1, 2, 3}
+
+# El valor se expresa como porcentaje.
+# 0.30 significa 0.30%.
+DEFAULT_TRAILING_PCT = 0.30
+MIN_TRAILING_PCT = 0.05
+MAX_TRAILING_PCT = 5.00
+
+ALLOWED_SYMBOLS = {
+    "BTCUSDT",
+    "ETHUSDT",
+}
+
+ALLOWED_LEVERAGE = {
+    1,
+    2,
+    3,
+}
 
 
 def current_price(symbol: str) -> float:
@@ -29,13 +53,17 @@ def current_price(symbol: str) -> float:
         symbol,
         limit=100,
     )
-    return float(data["5M"]["close"].iloc[-1])
+
+    return float(
+        data["5M"]["close"].iloc[-1]
+    )
 
 
 def default_levels(
     direction: str,
     entry_price: float,
 ) -> tuple[float, float]:
+
     if direction == "LONG":
         return (
             entry_price * (1.0 - DEFAULT_STOP_PCT),
@@ -54,6 +82,7 @@ def resolve_levels(
     stop_loss: float | None,
     take_profit: float | None,
 ) -> tuple[float, float]:
+
     default_stop, default_tp = default_levels(
         direction,
         entry_price,
@@ -72,25 +101,31 @@ def resolve_levels(
     )
 
     if direction == "LONG":
+
         if stop >= entry_price:
             raise ValueError(
-                "En LONG, el Stop Loss debe estar debajo de la entrada."
+                "En LONG, el Stop Loss debe estar debajo "
+                "de la entrada."
             )
 
         if tp <= entry_price:
             raise ValueError(
-                "En LONG, el Take Profit debe estar encima de la entrada."
+                "En LONG, el Take Profit debe estar encima "
+                "de la entrada."
             )
 
     else:
+
         if stop <= entry_price:
             raise ValueError(
-                "En SHORT, el Stop Loss debe estar encima de la entrada."
+                "En SHORT, el Stop Loss debe estar encima "
+                "de la entrada."
             )
 
         if tp >= entry_price:
             raise ValueError(
-                "En SHORT, el Take Profit debe estar debajo de la entrada."
+                "En SHORT, el Take Profit debe estar debajo "
+                "de la entrada."
             )
 
     return stop, tp
@@ -106,20 +141,26 @@ def open_manual(
     stop_loss: float | None,
     take_profit: float | None,
 ) -> None:
+
     if state.has_open_position:
         pos = state.position
+
         print(
             "NO SE ABRE OTRA POSICION: ya existe una "
             f"{pos['direction']} en {pos['entry_price']:.2f}."
         )
+
         return
 
     if symbol not in ALLOWED_SYMBOLS:
-        raise ValueError("Activo no permitido.")
+        raise ValueError(
+            "Activo no permitido."
+        )
 
     if leverage not in ALLOWED_LEVERAGE:
         raise ValueError(
-            "El apalancamiento PAPER permitido es x1, x2 o x3."
+            "El apalancamiento PAPER permitido es "
+            "x1, x2 o x3."
         )
 
     capital = float(capital)
@@ -131,7 +172,8 @@ def open_manual(
 
     if capital > state.balance:
         raise ValueError(
-            f"Capital insuficiente. Saldo PAPER disponible: "
+            "Capital insuficiente. "
+            f"Saldo PAPER disponible: "
             f"{state.balance:.2f} USDT."
         )
 
@@ -160,12 +202,18 @@ def open_manual(
     position["exposure"] = exposure
     position["order_type"] = "MARKET"
 
+    # Trailing inicialmente desactivado.
+    position["trailing_enabled"] = False
+    position["trailing_pct"] = None
+    position["trailing_anchor"] = None
+
     state.data["position"] = position
     state.save()
 
     print("=" * 60)
     print("PROJECT EDGE - ENTRADA MANUAL PAPER")
     print("=" * 60)
+
     print(f"Activo:          {position['symbol']}")
     print(f"Direccion:       {position['direction']}")
     print(f"Entrada:         {position['entry_price']:.2f}")
@@ -175,11 +223,18 @@ def open_manual(
     print(f"Cantidad:        {position['quantity']:.8f}")
     print(f"Stop Loss:       {position['stop_loss']:.2f}")
     print(f"Take Profit:     {position['take_profit']:.2f}")
+    print("Trailing Stop:   DESACTIVADO")
     print(f"Saldo PAPER:     {state.balance:.2f} USDT")
-    print("NO se envio ninguna orden real.")
+
+    print(
+        "NO se envio ninguna orden real."
+    )
 
 
-def close_manual(state: PaperState) -> None:
+def close_manual(
+    state: PaperState,
+) -> None:
+
     if not state.has_open_position:
         print(
             "NO HAY POSICION PAPER ABIERTA PARA CERRAR."
@@ -197,13 +252,17 @@ def close_manual(state: PaperState) -> None:
     print("=" * 60)
     print("PROJECT EDGE - CIERRE MANUAL PAPER")
     print("=" * 60)
+
     print(f"Activo:      {trade['symbol']}")
     print(f"Direccion:   {trade['direction']}")
     print(f"Entrada:     {trade['entry_price']:.2f}")
     print(f"Salida:      {trade['exit_price']:.2f}")
     print(f"PnL:         {trade['pnl']:.2f} USDT")
     print(f"Saldo PAPER: {trade['balance']:.2f} USDT")
-    print("NO se envio ninguna orden real.")
+
+    print(
+        "NO se envio ninguna orden real."
+    )
 
 
 def update_manual_risk(
@@ -211,19 +270,23 @@ def update_manual_risk(
     stop_loss: float | None,
     take_profit: float | None,
 ) -> None:
+
     if not state.has_open_position:
         raise ValueError(
-            "No hay una posicion PAPER abierta para modificar."
+            "No hay una posicion PAPER abierta "
+            "para modificar."
         )
 
     if stop_loss is None and take_profit is None:
         raise ValueError(
-            "Ingresa un nuevo Stop Loss, Take Profit o ambos."
+            "Ingresa un nuevo Stop Loss, "
+            "Take Profit o ambos."
         )
 
     position = state.position
     symbol = position["symbol"]
     direction = position["direction"]
+
     price = current_price(symbol)
 
     new_stop = (
@@ -239,25 +302,31 @@ def update_manual_risk(
     )
 
     if direction == "LONG":
+
         if new_stop >= price:
             raise ValueError(
-                "En LONG, el Stop Loss debe estar debajo del precio actual."
+                "En LONG, el Stop Loss debe estar "
+                "debajo del precio actual."
             )
 
         if new_tp <= price:
             raise ValueError(
-                "En LONG, el Take Profit debe estar encima del precio actual."
+                "En LONG, el Take Profit debe estar "
+                "encima del precio actual."
             )
 
     else:
+
         if new_stop <= price:
             raise ValueError(
-                "En SHORT, el Stop Loss debe estar encima del precio actual."
+                "En SHORT, el Stop Loss debe estar "
+                "encima del precio actual."
             )
 
         if new_tp >= price:
             raise ValueError(
-                "En SHORT, el Take Profit debe estar debajo del precio actual."
+                "En SHORT, el Take Profit debe estar "
+                "debajo del precio actual."
             )
 
     position["stop_loss"] = new_stop
@@ -269,32 +338,53 @@ def update_manual_risk(
     print("=" * 60)
     print("PROJECT EDGE - MODIFICAR SL/TP PAPER")
     print("=" * 60)
+
     print(f"Activo:      {symbol}")
     print(f"Direccion:   {direction}")
     print(f"Precio:      {price:.2f}")
     print(f"Nuevo SL:    {new_stop:.2f}")
     print(f"Nuevo TP:    {new_tp:.2f}")
 
-def set_break_even(state: PaperState) -> None:
+
+def set_break_even(
+    state: PaperState,
+) -> None:
+
     if not state.has_open_position:
         raise ValueError(
-            "No hay una posicion PAPER abierta para aplicar Break-even."
+            "No hay una posicion PAPER abierta "
+            "para aplicar Break-even."
         )
 
     position = state.position
+
     symbol = position["symbol"]
     direction = position["direction"]
-    entry_price = float(position["entry_price"])
+
+    entry_price = float(
+        position["entry_price"]
+    )
+
     price = current_price(symbol)
 
-    if direction == "LONG" and price <= entry_price:
+    if (
+        direction == "LONG"
+        and price <= entry_price
+    ):
         raise ValueError(
-            "Break-even LONG solo se habilita cuando el precio esta por encima de la entrada."
+            "Break-even LONG solo se habilita "
+            "cuando el precio esta por encima "
+            "de la entrada."
         )
 
-    if direction == "SHORT" and price >= entry_price:
+    if (
+        direction == "SHORT"
+        and price >= entry_price
+    ):
         raise ValueError(
-            "Break-even SHORT solo se habilita cuando el precio esta por debajo de la entrada."
+            "Break-even SHORT solo se habilita "
+            "cuando el precio esta por debajo "
+            "de la entrada."
         )
 
     position["stop_loss"] = entry_price
@@ -305,12 +395,140 @@ def set_break_even(state: PaperState) -> None:
     print("=" * 60)
     print("PROJECT EDGE - BREAK EVEN PAPER")
     print("=" * 60)
+
     print(f"Activo:      {symbol}")
     print(f"Direccion:   {direction}")
     print(f"Entrada:     {entry_price:.2f}")
     print(f"Precio:      {price:.2f}")
     print(f"Nuevo SL:    {entry_price:.2f}")
-    print(f"TP actual:   {position['take_profit']:.2f}")
+    print(
+        f"TP actual:   "
+        f"{position['take_profit']:.2f}"
+    )
+
+
+def enable_trailing(
+    state: PaperState,
+    trailing_pct: float | None,
+) -> None:
+
+    if not state.has_open_position:
+        raise ValueError(
+            "No hay una posicion PAPER abierta "
+            "para activar Trailing Stop."
+        )
+
+    pct = (
+        DEFAULT_TRAILING_PCT
+        if trailing_pct is None
+        else float(trailing_pct)
+    )
+
+    if (
+        pct < MIN_TRAILING_PCT
+        or pct > MAX_TRAILING_PCT
+    ):
+        raise ValueError(
+            "Trailing Stop permitido: "
+            f"{MIN_TRAILING_PCT:.2f}% a "
+            f"{MAX_TRAILING_PCT:.2f}%."
+        )
+
+    position = state.position
+
+    symbol = position["symbol"]
+    direction = position["direction"]
+
+    price = current_price(symbol)
+
+    current_stop = float(
+        position["stop_loss"]
+    )
+
+    distance = pct / 100.0
+
+    if direction == "LONG":
+
+        candidate_stop = (
+            price * (1.0 - distance)
+        )
+
+        new_stop = max(
+            current_stop,
+            candidate_stop,
+        )
+
+    else:
+
+        candidate_stop = (
+            price * (1.0 + distance)
+        )
+
+        new_stop = min(
+            current_stop,
+            candidate_stop,
+        )
+
+    position["trailing_enabled"] = True
+    position["trailing_pct"] = pct
+    position["trailing_anchor"] = price
+
+    # Nunca afloja un SL que ya estaba mejor.
+    position["stop_loss"] = new_stop
+
+    state.data["position"] = position
+    state.save()
+
+    print("=" * 60)
+    print("PROJECT EDGE - TRAILING STOP ACTIVADO")
+    print("=" * 60)
+
+    print(f"Activo:       {symbol}")
+    print(f"Direccion:    {direction}")
+    print(f"Precio:       {price:.2f}")
+    print(f"Trailing:     {pct:.2f}%")
+    print(f"Ancla:        {price:.2f}")
+    print(f"Stop actual:  {new_stop:.2f}")
+
+
+def disable_trailing(
+    state: PaperState,
+) -> None:
+
+    if not state.has_open_position:
+        raise ValueError(
+            "No hay una posicion PAPER abierta "
+            "para desactivar Trailing Stop."
+        )
+
+    position = state.position
+
+    position["trailing_enabled"] = False
+    position["trailing_pct"] = None
+    position["trailing_anchor"] = None
+
+    state.data["position"] = position
+    state.save()
+
+    print("=" * 60)
+    print("PROJECT EDGE - TRAILING STOP DESACTIVADO")
+    print("=" * 60)
+
+    print(
+        f"Activo:       "
+        f"{position['symbol']}"
+    )
+
+    print(
+        f"Stop actual:  "
+        f"{float(position['stop_loss']):.2f}"
+    )
+
+    print(
+        "El Stop Loss actual se conserva."
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
 
@@ -323,13 +541,17 @@ def main() -> None:
             "CLOSE",
             "UPDATE_RISK",
             "BREAK_EVEN",
+            "TRAILING_ON",
+            "TRAILING_OFF",
         ],
     )
 
     parser.add_argument(
         "--symbol",
         default="BTCUSDT",
-        choices=sorted(ALLOWED_SYMBOLS),
+        choices=sorted(
+            ALLOWED_SYMBOLS
+        ),
     )
 
     parser.add_argument(
@@ -342,7 +564,9 @@ def main() -> None:
         "--leverage",
         type=int,
         default=1,
-        choices=sorted(ALLOWED_LEVERAGE),
+        choices=sorted(
+            ALLOWED_LEVERAGE
+        ),
     )
 
     parser.add_argument(
@@ -355,6 +579,17 @@ def main() -> None:
         "--take-profit",
         type=float,
         default=None,
+    )
+
+    parser.add_argument(
+        "--trailing-pct",
+        type=float,
+        default=None,
+        help=(
+            "Distancia del Trailing Stop "
+            "en porcentaje. "
+            "Ejemplo: 0.30 = 0.30%%."
+        ),
     )
 
     args = parser.parse_args()
@@ -374,19 +609,35 @@ def main() -> None:
             take_profit=args.take_profit,
         )
         return
+
     if args.action == "BREAK_EVEN":
         set_break_even(state)
         return
+
+    if args.action == "TRAILING_ON":
+        enable_trailing(
+            state=state,
+            trailing_pct=args.trailing_pct,
+        )
+        return
+
+    if args.action == "TRAILING_OFF":
+        disable_trailing(state)
+        return
+
     capital = (
         state.balance
         if args.capital is None
         else args.capital
     )
 
-    price = current_price(args.symbol)
+    price = current_price(
+        args.symbol
+    )
 
     print(
-        f"{args.symbol} actual: {price:.2f}"
+        f"{args.symbol} actual: "
+        f"{price:.2f}"
     )
 
     open_manual(
