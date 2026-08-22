@@ -635,6 +635,8 @@ document.getElementById('manualLongBtn').addEventListener('click',()=>triggerMan
 document.getElementById('manualShortBtn').addEventListener('click',()=>triggerManual('SHORT'));
 document.getElementById('manualCloseBtn').addEventListener('click',()=>triggerManual('CLOSE'));
 document.getElementById('manualUpdateRiskBtn').addEventListener('click',()=>triggerManual('UPDATE_RISK'));
+document.getElementById('manualSL').addEventListener('input',e=>e.target.dataset.dirty='1');
+document.getElementById('manualTP').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualSymbol').addEventListener('change',()=>{if(!livePosition)connectLiveMarket(document.getElementById('manualSymbol').value.replace('/',''));});
 document.getElementById('autoEnableBtn').addEventListener('click',()=>setAuto(true));
 document.getElementById('autoDisableBtn').addEventListener('click',()=>setAuto(false));
@@ -796,15 +798,26 @@ if(pos){
   document.getElementById('manualSymbol').value=(pos.symbol||'BTCUSDT').replace('USDT','/USDT');
   document.getElementById('manualLeverage').value='x'+(pos.leverage||1);
   document.getElementById('manualCapital').value=pos.capital??'';
-  document.getElementById('manualSL').value=pos.stop_loss??'';
-  document.getElementById('manualTP').value=pos.take_profit??'';
+  const manualSL=document.getElementById('manualSL');
+  const manualTP=document.getElementById('manualTP');
+
+if(manualSL.dataset.dirty!=='1'){
+  manualSL.value=pos.stop_loss??'';
+}else if(Number(manualSL.value)===Number(pos.stop_loss)){
+  delete manualSL.dataset.dirty;
+}
+
+if(manualTP.dataset.dirty!=='1'){
+  manualTP.value=pos.take_profit??'';
+}else if(Number(manualTP.value)===Number(pos.take_profit)){
+  delete manualTP.dataset.dirty;
+}
 
   document.getElementById('manualSymbol').disabled=true;
   document.getElementById('manualLeverage').disabled=true;
   document.getElementById('manualCapital').disabled=true;
   document.getElementById('manualSL').disabled=!connected;
   document.getElementById('manualTP').disabled=!connected;
-
   document.getElementById('manualLongBtn').disabled=true;
   document.getElementById('manualShortBtn').disabled=true;
   document.getElementById('manualCloseBtn').disabled=!connected;
@@ -825,7 +838,8 @@ if(pos){
   document.getElementById('manualCapital').disabled=!connected;
   document.getElementById('manualSL').disabled=!connected;
   document.getElementById('manualTP').disabled=!connected;
-
+  delete document.getElementById('manualSL').dataset.dirty;
+  delete document.getElementById('manualTP').dataset.dirty;
   document.getElementById('manualLongBtn').disabled=!connected;
   document.getElementById('manualShortBtn').disabled=!connected;
   document.getElementById('manualCloseBtn').disabled=true;
