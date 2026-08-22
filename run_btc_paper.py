@@ -1,6 +1,6 @@
 """
 PROJECT EDGE
-BTC Paper Trading v4
+BTC Paper Trading v5
 
 Paper Trading con estado persistente.
 
@@ -16,6 +16,9 @@ Funciones:
 - Mientras haya una LIMIT pendiente, bloquea nuevas entradas AUTO.
 - Convierte la LIMIT en posicion cuando el precio muestreado
   alcanza o cruza el precio LIMIT.
+- Respeta PAUSE AUTO para impedir NUEVAS entradas automaticas.
+- Aunque AUTO este pausado, sigue protegiendo posiciones abiertas.
+- Aunque AUTO este pausado, sigue gestionando una LIMIT pendiente.
 - Actualiza el saldo demo al cerrar.
 
 IMPORTANTE:
@@ -146,10 +149,42 @@ def calculate_unrealized_pnl(
             - entry_price
         ) * quantity
 
-    return (
-        entry_price
-        - current_price
-    ) * quantity
+    if direction == "SHORT":
+        return (
+            entry_price
+            - current_price
+        ) * quantity
+
+    raise ValueError(
+        "Direccion invalida."
+    )
+
+
+def print_auto_state(
+    state,
+):
+    print("")
+    print("-" * 60)
+
+    if state.auto_enabled:
+        print(
+            "AUTO: ACTIVO - nuevas entradas permitidas."
+        )
+    else:
+        print(
+            "AUTO: PAUSADO - nuevas entradas bloqueadas."
+        )
+
+        reason = state.data.get(
+            "auto_pause_reason"
+        )
+
+        if reason:
+            print(
+                f"Motivo pausa: {reason}"
+            )
+
+    print("-" * 60)
 
 
 def manage_pending_order(
@@ -159,17 +194,19 @@ def manage_pending_order(
     """
     Gestiona una orden LIMIT PAPER pendiente.
 
-    Primera version:
-    - LONG LIMIT se ejecuta si el precio
-      muestreado es <= precio LIMIT.
-    - SHORT LIMIT se ejecuta si el precio
-      muestreado es >= precio LIMIT.
+    LONG LIMIT:
+    se ejecuta si el precio muestreado
+    es <= al precio LIMIT.
 
-    El fill se registra al precio LIMIT.
-    Mientras la orden siga pendiente,
-    no se permite una nueva entrada AUTO.
+    SHORT LIMIT:
+    se ejecuta si el precio muestreado
+    es >= al precio LIMIT.
+
+    IMPORTANTE:
+    una LIMIT pendiente sigue gestionandose
+    aunque AUTO este pausado, porque no es
+    una NUEVA decision automatica del motor.
     """
-
     order = state.pending_order
 
     if order is None:
@@ -213,37 +250,37 @@ def manage_pending_order(
     print("=" * 60)
 
     print(
-        f"Order ID:     "
+        f"Order ID:       "
         f"{order.get('order_id', '—')}"
     )
 
     print(
-        f"Activo:       "
+        f"Activo:         "
         f"{order['symbol']}"
     )
 
     print(
-        f"Origen:       "
+        f"Origen:         "
         f"{order.get('source', 'MANUAL')}"
     )
 
     print(
-        f"Direccion:    "
+        f"Direccion:      "
         f"{direction}"
     )
 
     print(
-        f"Precio LIMIT: "
+        f"Precio LIMIT:   "
         f"{limit_price:.2f}"
     )
 
     print(
-        f"Precio actual:"
+        f"Precio actual:  "
         f"{current_price:.2f}"
     )
 
     print(
-        f"Capital:      "
+        f"Capital:        "
         f"{float(order['capital']):.2f} USDT"
     )
 
@@ -253,7 +290,7 @@ def manage_pending_order(
     )
 
     print(
-        f"Exposicion:   "
+        f"Exposicion:     "
         f"{float(order['exposure']):.2f} USDT"
     )
 
@@ -269,12 +306,11 @@ def manage_pending_order(
         )
 
         print(
-            "AUTO bloqueado mientras "
-            "exista esta LIMIT."
+            "No se abre otra operacion "
+            "mientras exista esta LIMIT."
         )
 
         print("=" * 60)
-
         return True
 
     position = (
@@ -290,57 +326,57 @@ def manage_pending_order(
     print("-" * 60)
 
     print(
-        f"Trade ID:     "
+        f"Trade ID:       "
         f"{position['trade_id']}"
     )
 
     print(
-        f"Order ID:     "
+        f"Order ID:       "
         f"{position.get('order_id', '—')}"
     )
 
     print(
-        f"Activo:       "
+        f"Activo:         "
         f"{position['symbol']}"
     )
 
     print(
-        f"Direccion:    "
+        f"Direccion:      "
         f"{position['direction']}"
     )
 
     print(
-        f"Entrada LIMIT:"
+        f"Entrada LIMIT:  "
         f"{float(position['entry_price']):.2f}"
     )
 
     print(
-        f"Cantidad:     "
+        f"Cantidad:       "
         f"{float(position['quantity']):.8f}"
     )
 
     print(
-        f"Stop Loss:    "
+        f"Stop Loss:      "
         f"{float(position['stop_loss']):.2f}"
     )
 
     print(
-        f"Take Profit:  "
+        f"Take Profit:    "
         f"{float(position['take_profit']):.2f}"
     )
 
     print(
-        f"Capital:      "
+        f"Capital:        "
         f"{float(position['capital']):.2f} USDT"
     )
 
     print(
-        f"Exposicion:   "
+        f"Exposicion:     "
         f"{float(position['exposure']):.2f} USDT"
     )
 
     print(
-        "Trailing:     DESACTIVADO"
+        "Trailing:       DESACTIVADO"
     )
 
     print("")
@@ -360,7 +396,6 @@ def manage_pending_order(
     )
 
     print("=" * 60)
-
     return True
 
 
@@ -381,7 +416,6 @@ def update_trailing_stop(
 
     Nunca afloja un Stop Loss existente.
     """
-
     position = state.position
 
     if position is None:
@@ -534,17 +568,11 @@ def update_trailing_stop(
     state.save()
 
     print("")
-    print(
-        "-" * 60
-    )
-
+    print("-" * 60)
     print(
         "TRAILING STOP - ACTUALIZADO"
     )
-
-    print(
-        "-" * 60
-    )
+    print("-" * 60)
 
     print(
         f"Direccion:    "
@@ -588,20 +616,29 @@ def manage_open_position(
     state,
     current_price,
 ):
+    """
+    Gestiona una posicion ya abierta.
+
+    Esta funcion SIEMPRE sigue funcionando
+    aunque AUTO este pausado.
+
+    Eso permite que:
+    - SL siga protegiendo;
+    - TP siga protegiendo;
+    - Trailing siga funcionando;
+    - una posicion MANUAL no dependa de
+      que las nuevas entradas AUTO esten activas.
+    """
     position = state.position
 
     if position is None:
         return False
 
-    # Primero actualiza el Trailing,
-    # si la posicion lo tiene activado.
     update_trailing_stop(
         state,
         current_price,
     )
 
-    # Volvemos a leer la posicion
-    # porque el Trailing pudo mover el SL.
     position = state.position
 
     if position is None:
@@ -726,7 +763,6 @@ def manage_open_position(
     )
 
     if direction == "LONG":
-
         if current_price <= stop_loss:
             reason = (
                 "TRAILING_STOP"
@@ -804,7 +840,6 @@ def manage_open_position(
             return True
 
     if direction == "SHORT":
-
         if current_price >= stop_loss:
             reason = (
                 "TRAILING_STOP"
@@ -1004,7 +1039,7 @@ def analyze_market(
 def main():
     print("=" * 60)
     print(
-        "PROJECT EDGE - BTC PAPER TRADING v4"
+        "PROJECT EDGE - BTC PAPER TRADING v5"
     )
     print("=" * 60)
 
@@ -1016,6 +1051,10 @@ def main():
     print(
         f"Saldo paper: "
         f"{state.balance:.2f} USDT"
+    )
+
+    print_auto_state(
+        state
     )
 
     print("")
@@ -1039,9 +1078,12 @@ def main():
     )
 
     # PRIORIDAD 1:
-    # Si hay una LIMIT pendiente, se controla.
-    # Mientras exista, no se analiza una
-    # nueva entrada AUTO.
+    # Si hay una LIMIT pendiente, se controla
+    # incluso cuando AUTO esta pausado.
+    #
+    # PAUSE AUTO bloquea nuevas DECISIONES
+    # automaticas; no abandona compromisos
+    # ya creados.
     if state.has_pending_order:
 
         pending_symbol = (
@@ -1074,6 +1116,10 @@ def main():
     # Si hay cualquier posicion abierta
     # (AUTO o MANUAL, BTC o ETH),
     # primero se gestiona esa posicion.
+    #
+    # Esto sigue activo aunque AUTO este
+    # PAUSADO: SL / TP / Trailing NO se
+    # desprotegen por pausar nuevas entradas.
     if state.has_open_position:
 
         position_symbol = (
@@ -1103,8 +1149,43 @@ def main():
         return
 
     # PRIORIDAD 3:
-    # Solo sin posicion y sin LIMIT
-    # pendiente, el motor AUTO puede
+    # Ya no hay posicion ni LIMIT.
+    # Antes de analizar una NUEVA entrada
+    # automatica, se respeta PAUSE AUTO.
+    if not state.auto_enabled:
+        print("")
+        print("=" * 60)
+        print(
+            "PAPER AUTO - PAUSADO"
+        )
+        print("=" * 60)
+
+        print(
+            "No hay posicion abierta "
+            "ni LIMIT pendiente."
+        )
+
+        print(
+            "Las NUEVAS entradas AUTO "
+            "estan bloqueadas."
+        )
+
+        print(
+            "El estado PAPER se conserva "
+            "sin cambios."
+        )
+
+        print(
+            f"Saldo paper: "
+            f"{state.balance:.2f} USDT"
+        )
+
+        print("=" * 60)
+        return
+
+    # PRIORIDAD 4:
+    # Solo con AUTO activo y sin posicion
+    # ni LIMIT pendiente, el motor puede
     # analizar una entrada nueva.
     decision, readiness = (
         analyze_market(
@@ -1167,7 +1248,6 @@ def main():
         )
 
         print("=" * 60)
-
         return
 
     entry_price = btc_price
