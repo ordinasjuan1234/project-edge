@@ -778,7 +778,7 @@ def manage_open_position(
             )
             notify_auto_exit(result)
             
-          print("")
+            print("")
             print(
                 "PAPER POSITION - CERRADA"
             )
@@ -814,7 +814,7 @@ def manage_open_position(
             )
 
             notify_auto_exit(result)
-          print("")
+            print("")
             print(
                 "PAPER POSITION - CERRADA"
             )
