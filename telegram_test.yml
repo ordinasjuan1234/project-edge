@@ -1,0 +1,19 @@
+name: PROJECT EDGE - Prueba Telegram
+
+on:
+  workflow_dispatch:
+
+jobs:
+  telegram-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Enviar mensaje de prueba
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -c "from telegram_notifier import send_telegram_message; assert send_telegram_message('✅ PROJECT EDGE: conexión con Telegram verificada correctamente. Modo PAPER activo. No se abrió ninguna operación.')"
