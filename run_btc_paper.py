@@ -38,7 +38,7 @@ from engine.decision.decision_engine import DecisionEngine
 from engine.decision.entry_readiness import EntryReadiness
 
 from paper_state import PaperState
-
+from telegram_notifier import notify_auto_entry, notify_auto_exit
 
 SYMBOL = "BTCUSDT"
 INITIAL_BALANCE = 10000.0
@@ -776,8 +776,9 @@ def manage_open_position(
                     reason=reason,
                 )
             )
-
-            print("")
+            notify_auto_exit(result)
+            
+          print("")
             print(
                 "PAPER POSITION - CERRADA"
             )
@@ -812,7 +813,8 @@ def manage_open_position(
                 )
             )
 
-            print("")
+            notify_auto_exit(result)
+          print("")
             print(
                 "PAPER POSITION - CERRADA"
             )
@@ -853,7 +855,7 @@ def manage_open_position(
                     reason=reason,
                 )
             )
-
+            notify_auto_exit(result)
             print("")
             print(
                 "PAPER POSITION - CERRADA"
@@ -888,7 +890,7 @@ def manage_open_position(
                     reason="TAKE_PROFIT",
                 )
             )
-
+            notify_auto_exit(result)
             print("")
             print(
                 "PAPER POSITION - CERRADA"
@@ -1300,6 +1302,7 @@ def main():
 
     state.save()
 
+    notify_auto_entry(position, balance=state.balance)
     risk_usdt = (
         abs(
             position["entry_price"]
