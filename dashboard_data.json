@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-08-24T11:26:02+00:00",
+  "timestamp": "2026-08-24T11:31:20+00:00",
   "symbol": "BTCUSDT",
-  "price": 77816.78,
+  "price": 77900.0,
   "timeframes": {
     "4H": "TRANSITION",
     "1H": "TRANSITION",
     "30M": "BULLISH",
-    "15M": "TRANSITION",
+    "15M": "BULLISH",
     "5M": "TRANSITION"
   },
   "fvg": {
@@ -16,7 +16,7 @@
       "upper": 74510.77,
       "mid": 73955.38500000001,
       "state": "ACTIVE",
-      "distance_pct": 0.04248453868175983,
+      "distance_pct": 0.04335320303247864,
       "created_index": 480
     },
     "1H": {
@@ -35,7 +35,7 @@
       "mid": 78013.64499999999,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 392
+      "created_index": 391
     },
     "15M": {
       "type": "BEARISH",
@@ -44,7 +44,7 @@
       "mid": 78002.76000000001,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 283
+      "created_index": 282
     },
     "5M": {
       "type": "BULLISH",
@@ -52,8 +52,8 @@
       "upper": 77694.0,
       "mid": 77663.755,
       "state": "ACTIVE",
-      "distance_pct": 0.0015778087965089129,
-      "created_index": 496
+      "distance_pct": 0.0026444159178433888,
+      "created_index": 495
     }
   },
   "alignment": "NO_DIRECTION",
@@ -78,12 +78,12 @@
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 77816.78,
+      "price": 77900.0,
       "timeframes": {
         "4H": "TRANSITION",
         "1H": "TRANSITION",
         "30M": "BULLISH",
-        "15M": "TRANSITION",
+        "15M": "BULLISH",
         "5M": "TRANSITION"
       },
       "fvg": {
@@ -93,7 +93,7 @@
           "upper": 74510.77,
           "mid": 73955.38500000001,
           "state": "ACTIVE",
-          "distance_pct": 0.04248453868175983,
+          "distance_pct": 0.04335320303247864,
           "created_index": 480
         },
         "1H": {
@@ -112,7 +112,7 @@
           "mid": 78013.64499999999,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 392
+          "created_index": 391
         },
         "15M": {
           "type": "BEARISH",
@@ -121,7 +121,7 @@
           "mid": 78002.76000000001,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 283
+          "created_index": 282
         },
         "5M": {
           "type": "BULLISH",
@@ -129,8 +129,8 @@
           "upper": 77694.0,
           "mid": 77663.755,
           "state": "ACTIVE",
-          "distance_pct": 0.0015778087965089129,
-          "created_index": 496
+          "distance_pct": 0.0026444159178433888,
+          "created_index": 495
         }
       },
       "alignment": "NO_DIRECTION",
@@ -156,12 +156,12 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2470.48,
+      "price": 2475.75,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "BULLISH",
         "30M": "BULLISH",
-        "15M": "TRANSITION",
+        "15M": "BULLISH",
         "5M": "BULLISH"
       },
       "fvg": {
@@ -190,7 +190,7 @@
           "mid": 2481.725,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 392
+          "created_index": 391
         },
         "15M": {
           "type": "BEARISH",
@@ -199,38 +199,38 @@
           "mid": 2483.785,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 283
+          "created_index": 282
         },
         "5M": {
           "type": "BULLISH",
-          "lower": 2469.72,
-          "upper": 2469.91,
-          "mid": 2469.8149999999996,
-          "state": "ACTIVE",
-          "distance_pct": 0.00023072439364016858,
-          "created_index": 499
+          "lower": 2465.61,
+          "upper": 2466.75,
+          "mid": 2466.1800000000003,
+          "state": "PARTIAL",
+          "distance_pct": 0.0036352620418055137,
+          "created_index": 495
         }
       },
-      "alignment": "PULLBACK_OR_WAIT",
+      "alignment": "FULL_ALIGNMENT",
       "decision": {
-        "action": "WATCH_LONG",
+        "action": "READY_LONG",
         "direction": "LONG",
-        "can_execute": false,
-        "reason": "Hay direccion macro, pero falta confirmacion completa en temporalidades bajas.",
-        "fvg_required": false,
-        "fvg_confirmed": null,
-        "fvg_expected_type": null,
-        "fvg_timeframes": []
-      },
-      "readiness": {
-        "status": "NOT_READY",
-        "bias": "LONG",
-        "message": "Sesgo macro LONG, pero faltan confirmaciones en temporalidades inferiores.",
-        "missing_conditions": [
-          "15M debe confirmar BULLISH."
+        "can_execute": true,
+        "reason": "Estructura completamente alineada y FVG BULLISH confirmado en 5M.",
+        "fvg_required": true,
+        "fvg_confirmed": true,
+        "fvg_expected_type": "BULLISH",
+        "fvg_timeframes": [
+          "5M"
         ]
       },
-      "scanner_signal": "WAIT"
+      "readiness": {
+        "status": "READY",
+        "bias": "LONG",
+        "message": "La estructura está alineada para evaluación de riesgo.",
+        "missing_conditions": []
+      },
+      "scanner_signal": "LONG"
     }
   },
   "paper": {
