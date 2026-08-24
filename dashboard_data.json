@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-24T06:36:02+00:00",
+  "timestamp": "2026-08-24T06:41:04+00:00",
   "symbol": "BTCUSDT",
-  "price": 77289.13,
+  "price": 77236.0,
   "timeframes": {
     "4H": "TRANSITION",
     "1H": "TRANSITION",
@@ -16,7 +16,7 @@
       "upper": 74510.77,
       "mid": 73955.38500000001,
       "state": "ACTIVE",
-      "distance_pct": 0.03620923576489539,
+      "distance_pct": 0.03528445284582314,
       "created_index": 481
     },
     "1H": {
@@ -25,16 +25,16 @@
       "upper": 78207.61,
       "mid": 77889.88500000001,
       "state": "PARTIAL",
-      "distance_pct": 0.0035613339115369057,
+      "distance_pct": 0.004352374540369821,
       "created_index": 451
     },
     "30M": {
       "type": "BULLISH",
       "lower": 77181.72,
-      "upper": 77270.0,
-      "mid": 77225.86,
+      "upper": 77232.0,
+      "mid": 77206.86,
       "state": "ACTIVE",
-      "distance_pct": 0.00024790022300673846,
+      "distance_pct": 5.178932104200114e-05,
       "created_index": 499
     },
     "15M": {
@@ -53,7 +53,7 @@
       "mid": 77278.55,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 495
+      "created_index": 494
     }
   },
   "alignment": "NO_DIRECTION",
@@ -78,7 +78,7 @@
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 77289.13,
+      "price": 77236.0,
       "timeframes": {
         "4H": "TRANSITION",
         "1H": "TRANSITION",
@@ -93,7 +93,7 @@
           "upper": 74510.77,
           "mid": 73955.38500000001,
           "state": "ACTIVE",
-          "distance_pct": 0.03620923576489539,
+          "distance_pct": 0.03528445284582314,
           "created_index": 481
         },
         "1H": {
@@ -102,16 +102,16 @@
           "upper": 78207.61,
           "mid": 77889.88500000001,
           "state": "PARTIAL",
-          "distance_pct": 0.0035613339115369057,
+          "distance_pct": 0.004352374540369821,
           "created_index": 451
         },
         "30M": {
           "type": "BULLISH",
           "lower": 77181.72,
-          "upper": 77270.0,
-          "mid": 77225.86,
+          "upper": 77232.0,
+          "mid": 77206.86,
           "state": "ACTIVE",
-          "distance_pct": 0.00024790022300673846,
+          "distance_pct": 5.178932104200114e-05,
           "created_index": 499
         },
         "15M": {
@@ -130,7 +130,7 @@
           "mid": 77278.55,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 495
+          "created_index": 494
         }
       },
       "alignment": "NO_DIRECTION",
@@ -156,13 +156,13 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2447.89,
+      "price": 2445.65,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "TRANSITION",
         "30M": "BULLISH",
         "15M": "BULLISH",
-        "5M": "BULLISH"
+        "5M": "TRANSITION"
       },
       "fvg": {
         "4H": {
@@ -189,7 +189,7 @@
           "upper": 2514.23,
           "mid": 2481.725,
           "state": "PARTIAL",
-          "distance_pct": 0.0004370647223412409,
+          "distance_pct": 0.0014597346308751083,
           "created_index": 401
         },
         "15M": {
@@ -198,16 +198,16 @@
           "upper": 2514.23,
           "mid": 2483.785,
           "state": "PARTIAL",
-          "distance_pct": 0.0021199681392071786,
+          "distance_pct": 0.003144358350540778,
           "created_index": 302
         },
         "5M": {
           "type": "BEARISH",
-          "lower": 2449.68,
-          "upper": 2453.71,
-          "mid": 2451.6949999999997,
+          "lower": 2446.68,
+          "upper": 2449.2,
+          "mid": 2447.9399999999996,
           "state": "ACTIVE",
-          "distance_pct": 0.0007312420084235663,
+          "distance_pct": 0.00042115592991627803,
           "created_index": 499
         }
       },
@@ -227,7 +227,8 @@
         "bias": "LONG",
         "message": "Sesgo macro LONG, pero faltan confirmaciones en temporalidades inferiores.",
         "missing_conditions": [
-          "1H debe volver a BULLISH."
+          "1H debe volver a BULLISH.",
+          "5M debe confirmar BULLISH."
         ]
       },
       "scanner_signal": "WAIT"
