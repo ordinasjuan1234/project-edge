@@ -1,5 +1,5 @@
 """
-PROJECT EDGE - Backtest histórico BTC/ETH
+PROJECT EDGE - Backtest histórico de la estrategia propia v3
 
 Descarga velas públicas 5M, construye temporalidades cerradas y ejecuta
 un backtest walk-forward de las señales AUTO. Genera JSON y CSV.
@@ -28,7 +28,7 @@ from engine.execution.historical_backtest import (
 from trading_mode import require_paper_mode
 
 
-DEFAULT_SYMBOLS = ("BTCUSDT", "ETHUSDT")
+DEFAULT_SYMBOLS = ("ETHUSDT",)
 
 
 def _json_safe(value: Any) -> Any:
@@ -126,6 +126,11 @@ def write_outputs(
         "stop_price",
         "target_price",
         "position_size",
+        "strategy",
+        "risk_budget",
+        "estimated_risk",
+        "estimated_net_reward_risk",
+        "leverage",
         "close_reason",
         "gross_pnl",
         "fees",
@@ -189,11 +194,13 @@ def main() -> None:
     results: dict[str, HistoricalBacktestResult] = {}
 
     print("=" * 68)
-    print("PROJECT EDGE - BACKTEST HISTÓRICO AUTO PAPER")
+    print("PROJECT EDGE v3 - BACKTEST HISTÓRICO AUTO PAPER")
     print("=" * 68)
     print(f"Período solicitado: {args.days} días")
     print("Metodología: walk-forward, entrada en vela siguiente, sin look-ahead")
     print("Costos: comisión 0.10% y deslizamiento 0.02% por lado")
+    print("Riesgo: 0.50% por trade, sin apalancamiento, SL por ATR")
+    print("Protecciones: cooldown 30m y pausa 4h tras 3 pérdidas")
     print("Operaciones MANUALES: excluidas")
 
     for raw_symbol in args.symbols:
@@ -223,7 +230,7 @@ def main() -> None:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "requested_days": args.days,
         "methodology": {
-            "type": "walk_forward_fixed_rules",
+            "type": "walk_forward_project_edge_v3",
             "signal_time": "cierre de vela 5M",
             "entry_time": "apertura de la siguiente vela 5M",
             "intrabar_policy": "STOP primero si STOP y TARGET coinciden",
@@ -231,6 +238,9 @@ def main() -> None:
             "slippage_rate_per_side": 0.0002,
             "manual_trades_included": False,
             "real_orders": False,
+            "auto_symbol": "ETHUSDT",
+            "risk_pct": 0.005,
+            "leverage": 1,
         },
         "symbols": {
             symbol: result.report

@@ -12,6 +12,7 @@ Este modulo:
 - Guarda una orden LIMIT pendiente.
 - Permite cierres parciales sin inflar el numero de trades.
 - Guarda si el modo AUTO esta habilitado o pausado.
+- Puede descontar comision y deslizamiento simulados en operaciones AUTO.
 
 IMPORTANTE:
 Pausar AUTO NO cierra posiciones y NO cancela LIMIT pendientes.
@@ -239,6 +240,8 @@ class PaperState:
         stop_loss: float,
         take_profit: float,
         source: str = "UNCLASSIFIED",
+        fee_rate: float = 0.0,
+        slippage_rate: float = 0.0,
     ) -> dict[str, Any]:
         if self.has_open_position:
             raise ValueError(
@@ -257,23 +260,40 @@ class PaperState:
         )
         source = self._validate_source(source)
         quantity = float(quantity)
+        raw_entry_price = float(entry_price)
+        fee_rate = float(fee_rate)
+        slippage_rate = float(slippage_rate)
 
         if quantity <= 0:
             raise ValueError(
                 "La cantidad debe ser mayor que 0."
             )
+        if raw_entry_price <= 0:
+            raise ValueError("El precio de entrada debe ser mayor que 0.")
+        if not 0 <= fee_rate < 0.1 or not 0 <= slippage_rate < 0.1:
+            raise ValueError("Las tasas de costo PAPER son invalidas.")
+
+        if direction == "LONG":
+            executed_entry_price = raw_entry_price * (1.0 + slippage_rate)
+        else:
+            executed_entry_price = raw_entry_price * (1.0 - slippage_rate)
 
         position = {
             "trade_id": uuid4().hex,
             "symbol": symbol,
             "direction": direction,
-            "entry_price": float(entry_price),
+            "signal_entry_price": raw_entry_price,
+            "entry_price": executed_entry_price,
             "quantity": quantity,
             "initial_quantity": quantity,
             "stop_loss": float(stop_loss),
             "take_profit": float(take_profit),
             "source": source,
+            "fee_rate": fee_rate,
+            "slippage_rate": slippage_rate,
             "realized_pnl": 0.0,
+            "realized_gross_pnl": 0.0,
+            "realized_fees": 0.0,
             "partial_closes": [],
             "opened_at": utc_now(),
         }
@@ -541,8 +561,14 @@ class PaperState:
         entry_price = float(
             position["entry_price"]
         )
-        exit_price = float(exit_price)
+        raw_exit_price = float(exit_price)
         direction = position["direction"]
+        fee_rate = float(position.get("fee_rate", 0.0))
+        slippage_rate = float(position.get("slippage_rate", 0.0))
+        if direction == "LONG":
+            exit_price = raw_exit_price * (1.0 - slippage_rate)
+        else:
+            exit_price = raw_exit_price * (1.0 + slippage_rate)
 
         closed_quantity = (
             current_quantity
@@ -560,12 +586,16 @@ class PaperState:
                 "demasiado pequena."
             )
 
-        pnl = self._calculate_pnl(
+        gross_pnl = self._calculate_pnl(
             direction=direction,
             entry_price=entry_price,
             exit_price=exit_price,
             quantity=closed_quantity,
         )
+        entry_fee = entry_price * closed_quantity * fee_rate
+        exit_fee = exit_price * closed_quantity * fee_rate
+        fees = entry_fee + exit_fee
+        pnl = gross_pnl - fees
 
         self.data["balance"] = (
             float(self.data["balance"])
@@ -582,6 +612,12 @@ class PaperState:
         position["realized_pnl"] = (
             previous_realized + pnl
         )
+        position["realized_gross_pnl"] = float(
+            position.get("realized_gross_pnl", 0.0)
+        ) + gross_pnl
+        position["realized_fees"] = float(
+            position.get("realized_fees", 0.0)
+        ) + fees
 
         initial_quantity = float(
             position.get(
@@ -595,8 +631,11 @@ class PaperState:
 
         partial = {
             "percent_of_remaining": percent,
+            "raw_exit_price": raw_exit_price,
             "exit_price": exit_price,
             "quantity": closed_quantity,
+            "gross_pnl": float(gross_pnl),
+            "fees": float(fees),
             "pnl": float(pnl),
             "balance": float(
                 self.data["balance"]
@@ -664,6 +703,7 @@ class PaperState:
             "symbol": position["symbol"],
             "direction": direction,
             "entry_price": entry_price,
+            "raw_exit_price": raw_exit_price,
             "exit_price": exit_price,
             "percent": percent,
             "closed_quantity": closed_quantity,
@@ -671,6 +711,8 @@ class PaperState:
                 remaining_quantity
             ),
             "pnl": float(pnl),
+            "gross_pnl": float(gross_pnl),
+            "fees": float(fees),
             "realized_pnl_total": float(
                 position["realized_pnl"]
             ),
@@ -705,15 +747,26 @@ class PaperState:
                 remaining_quantity,
             )
         )
-        exit_price = float(exit_price)
+        raw_exit_price = float(exit_price)
         direction = position["direction"]
+        fee_rate = float(position.get("fee_rate", 0.0))
+        slippage_rate = float(position.get("slippage_rate", 0.0))
+        if direction == "LONG":
+            exit_price = raw_exit_price * (1.0 - slippage_rate)
+        else:
+            exit_price = raw_exit_price * (1.0 + slippage_rate)
 
-        final_leg_pnl = self._calculate_pnl(
+        final_leg_gross_pnl = self._calculate_pnl(
             direction=direction,
             entry_price=entry_price,
             exit_price=exit_price,
             quantity=remaining_quantity,
         )
+        final_leg_fees = (
+            entry_price * remaining_quantity * fee_rate
+            + exit_price * remaining_quantity * fee_rate
+        )
+        final_leg_pnl = final_leg_gross_pnl - final_leg_fees
 
         realized_before_final = float(
             position.get(
@@ -725,6 +778,12 @@ class PaperState:
             realized_before_final
             + final_leg_pnl
         )
+        total_gross_pnl = float(
+            position.get("realized_gross_pnl", 0.0)
+        ) + final_leg_gross_pnl
+        total_fees = float(
+            position.get("realized_fees", 0.0)
+        ) + final_leg_fees
 
         # Los parciales ya fueron acreditados antes.
         self.data["balance"] = (
@@ -739,6 +798,10 @@ class PaperState:
             "symbol": position["symbol"],
             "direction": direction,
             "entry_price": entry_price,
+            "signal_entry_price": float(
+                position.get("signal_entry_price", entry_price)
+            ),
+            "raw_exit_price": raw_exit_price,
             "exit_price": exit_price,
             "quantity": initial_quantity,
             "final_leg_quantity": (
@@ -772,6 +835,8 @@ class PaperState:
             "final_leg_pnl": float(
                 final_leg_pnl
             ),
+            "gross_pnl": float(total_gross_pnl),
+            "fees": float(total_fees),
             "pnl": float(
                 total_trade_pnl
             ),
@@ -839,6 +904,17 @@ class PaperState:
                     "pending_created_at"
                 ]
             )
+
+        for field in (
+            "strategy",
+            "risk_pct",
+            "risk_budget",
+            "estimated_risk",
+            "estimated_cost",
+            "estimated_net_reward_risk",
+        ):
+            if field in position:
+                trade[field] = position[field]
 
         self.data["closed_trades"].append(
             trade

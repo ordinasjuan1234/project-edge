@@ -24,6 +24,10 @@ from typing import Any
 import pandas as pd
 
 from engine.decision.decision_engine import DecisionEngine
+from engine.decision.project_edge_v3 import (
+    ProjectEdgeV3,
+    ProjectEdgeV3Config,
+)
 from engine.execution.backtest_report import BacktestReport
 from engine.multitimeframe.multi_timeframe_engine import MultiTimeframeEngine
 from engine.structure.structure_engine import StructureEngine
@@ -38,6 +42,11 @@ class HistoricalBacktestConfig:
     fee_rate: float = 0.001
     slippage_rate: float = 0.0002
     cooldown_minutes: int = 30
+    strategy: str = "PROJECT_EDGE_V3"
+    risk_pct: float = 0.005
+    max_exposure_pct: float = 1.0
+    loss_guard_losses: int = 3
+    loss_guard_minutes: int = 240
 
     def __post_init__(self) -> None:
         if not str(self.symbol).strip():
@@ -54,6 +63,14 @@ class HistoricalBacktestConfig:
             raise ValueError("slippage_rate debe estar entre 0 y 0.1.")
         if self.cooldown_minutes < 0:
             raise ValueError("cooldown_minutes no puede ser negativo.")
+        if str(self.strategy).upper() not in {"PROJECT_EDGE_V2", "PROJECT_EDGE_V3"}:
+            raise ValueError("strategy debe ser PROJECT_EDGE_V2 o PROJECT_EDGE_V3.")
+        if not 0 < self.risk_pct <= 0.05:
+            raise ValueError("risk_pct debe estar entre 0 y 0.05.")
+        if not 0 < self.max_exposure_pct <= 1:
+            raise ValueError("max_exposure_pct debe estar entre 0 y 1.")
+        if self.loss_guard_losses < 1 or self.loss_guard_minutes < 0:
+            raise ValueError("La proteccion por perdidas es invalida.")
 
 
 @dataclass
@@ -91,6 +108,17 @@ class HistoricalBacktester:
         }
         self.decision_engine = DecisionEngine()
         self.mtf_engine = MultiTimeframeEngine()
+        self.strategy_v3 = ProjectEdgeV3(
+            ProjectEdgeV3Config(
+                risk_pct=config.risk_pct,
+                max_exposure_pct=config.max_exposure_pct,
+                fee_rate=config.fee_rate,
+                slippage_rate=config.slippage_rate,
+                cooldown_minutes=config.cooldown_minutes,
+                loss_guard_losses=config.loss_guard_losses,
+                loss_guard_minutes=config.loss_guard_minutes,
+            )
+        )
 
     @staticmethod
     def _state_from_labels(labels: list[tuple[int, str]]) -> str:
@@ -198,6 +226,8 @@ class HistoricalBacktester:
             analysis["causal_market_structure"] = self.causal_market_states(
                 analysis
             )
+            if str(self.config.strategy).upper() == "PROJECT_EDGE_V3":
+                analysis = self.strategy_v3.add_features(analysis)
             analyses[timeframe] = analysis
 
         timeline = analyses["5M"][
@@ -208,6 +238,9 @@ class HistoricalBacktester:
         for timeframe in self.REQUIRED_TIMEFRAMES:
             analysis = analyses[timeframe]
             columns = ["close_time", "causal_market_structure"]
+
+            if str(self.config.strategy).upper() == "PROJECT_EDGE_V3":
+                columns.extend(self.strategy_v3.FEATURE_FIELDS)
 
             if timeframe in {"15M", "5M"}:
                 columns.extend(self.FVG_FIELDS)
@@ -220,6 +253,10 @@ class HistoricalBacktester:
                     **{
                         field: f"{field}_{timeframe}"
                         for field in self.FVG_FIELDS
+                    },
+                    **{
+                        field: f"{field}_{timeframe}"
+                        for field in self.strategy_v3.FEATURE_FIELDS
                     },
                 }
             ).sort_values("available_at")
@@ -235,6 +272,9 @@ class HistoricalBacktester:
         return timeline.reset_index(drop=True)
 
     def _decision_for_row(self, row: pd.Series) -> dict[str, Any]:
+        if str(self.config.strategy).upper() == "PROJECT_EDGE_V3":
+            return self.strategy_v3.decide_snapshot(row)
+
         states = {
             timeframe: str(row.get(f"state_{timeframe}", "UNDEFINED")).upper()
             for timeframe in self.REQUIRED_TIMEFRAMES
@@ -375,6 +415,8 @@ class HistoricalBacktester:
         ready_signals = 0
         evaluated_bars = 0
         cooldown_until: pd.Timestamp | None = None
+        loss_guard_until: pd.Timestamp | None = None
+        consecutive_losses = 0
 
         for candle_index in range(len(timeline)):
             candle = timeline.iloc[candle_index]
@@ -398,12 +440,28 @@ class HistoricalBacktester:
                         pd.Timestamp(candle["close_time"])
                         + pd.Timedelta(minutes=self.config.cooldown_minutes)
                     )
+                    if float(closed["pnl"]) < 0:
+                        consecutive_losses += 1
+                    else:
+                        consecutive_losses = 0
+                    if consecutive_losses >= self.config.loss_guard_losses:
+                        loss_guard_until = (
+                            pd.Timestamp(candle["close_time"])
+                            + pd.Timedelta(minutes=self.config.loss_guard_minutes)
+                        )
+                        consecutive_losses = 0
 
             if position is not None or candle_index + 1 >= len(timeline):
                 continue
 
             evaluated_bars += 1
             candle_close = pd.Timestamp(candle["close_time"])
+            if (
+                loss_guard_until is not None
+                and candle_close < loss_guard_until
+            ):
+                decision_counts["LOSS_GUARD"] += 1
+                continue
             if (
                 cooldown_until is not None
                 and candle_close < cooldown_until
@@ -430,14 +488,27 @@ class HistoricalBacktester:
             raw_entry = float(entry_candle["open"])
             entry_price = self._entry_price(raw_entry, str(direction))
 
-            if direction == "LONG":
+            if decision.get("strategy") == "PROJECT_EDGE_V3":
+                trade_plan = self.strategy_v3.build_trade_plan(
+                    decision=decision,
+                    entry_price=entry_price,
+                    account_equity=balance,
+                )
+                if not trade_plan.get("approved"):
+                    decision_counts["RISK_REJECTED"] += 1
+                    continue
+                stop_price = float(trade_plan["stop_price"])
+                target_price = float(trade_plan["target_price"])
+                position_size = float(trade_plan["quantity"])
+            elif direction == "LONG":
                 stop_price = entry_price * (1.0 - self.config.stop_pct)
                 target_price = entry_price * (1.0 + self.config.target_pct)
+                position_size = balance / entry_price
             else:
                 stop_price = entry_price * (1.0 + self.config.stop_pct)
                 target_price = entry_price * (1.0 - self.config.target_pct)
+                position_size = balance / entry_price
 
-            position_size = balance / entry_price
             entry_fee = entry_price * position_size * self.config.fee_rate
             position = {
                 "symbol": self.config.symbol.upper(),
@@ -455,8 +526,20 @@ class HistoricalBacktester:
                 "target_price": target_price,
                 "position_size": position_size,
                 "entry_fee": entry_fee,
+                "strategy": decision.get("strategy", "PROJECT_EDGE_V2"),
                 "real_order_sent": False,
             }
+            if decision.get("strategy") == "PROJECT_EDGE_V3":
+                position.update(
+                    {
+                        "risk_budget": float(trade_plan["risk_budget"]),
+                        "estimated_risk": float(trade_plan["estimated_risk"]),
+                        "estimated_net_reward_risk": float(
+                            trade_plan["estimated_net_reward_risk"]
+                        ),
+                        "leverage": 1,
+                    }
+                )
 
         if position is not None:
             last_index = len(timeline) - 1
@@ -490,6 +573,9 @@ class HistoricalBacktester:
             "ready_signals": ready_signals,
             "cooldown_blocked_bars": int(
                 decision_counts["COOLDOWN"]
+            ),
+            "loss_guard_blocked_bars": int(
+                decision_counts["LOSS_GUARD"]
             ),
             "decision_counts": dict(decision_counts),
             "initial_balance": self.config.initial_balance,

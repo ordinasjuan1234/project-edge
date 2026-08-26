@@ -77,7 +77,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
 
   <section id="view-cerebro" class="view active">
     <div class="cards">
-      <div class="card"><div class="lab">Activo</div><div id="symbol" class="val">BTC/USDT</div></div>
+      <div class="card"><div class="lab">Activo AUTO v3</div><div id="symbol" class="val">ETH/USDT</div></div>
       <div class="card"><div class="lab">Precio</div><div id="price" class="val b">—</div></div>
       <div class="card"><div class="lab">Contexto 4H</div><div id="tf4h" class="val">—</div></div>
       <div class="card"><div class="lab">Decisión</div><div id="decisionCard" class="val y">—</div></div>
@@ -107,7 +107,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
     <section class="panel">
       <h2>Mercado</h2>
       <div class="cards">
-        <div class="card"><div class="lab">BTC/USDT</div><div id="marketPrice" class="val b">—</div></div>
+        <div class="card"><div class="lab">ETH/USDT · AUTO v3</div><div id="marketPrice" class="val b">—</div></div>
         <div class="card"><div class="lab">4H</div><div id="m4h" class="val">—</div></div>
         <div class="card"><div class="lab">1H</div><div id="m1h" class="val">—</div></div>
         <div class="card"><div class="lab">30M</div><div id="m30m" class="val">—</div></div>
@@ -125,7 +125,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
       <section class="panel">
         <h2>Fair Value Gap activo</h2>
         <table class="matrix"><thead><tr><th>TF</th><th>Tipo</th><th>Zona</th><th>Estado</th></tr></thead><tbody id="fvgBody"><tr><td colspan="4" class="mut">Esperando datos FVG...</td></tr></tbody></table>
-        <div class="notice">El FVG está integrado al motor estructural y participa como confirmación en la lógica de entrada.</div>
+        <div class="notice">El FVG se muestra como confluencia; por sí solo nunca crea ni bloquea una entrada v3.</div>
       </section>
     </div>
   </section>
@@ -501,7 +501,7 @@ async function triggerManual(action,partialPct=''){
   }
 }
 
-let liveSocket=null,liveSocketSymbol='BTCUSDT',livePosition=null,liveReconnectTimer=null;
+let liveSocket=null,liveSocketSymbol='ETHUSDT',livePosition=null,liveReconnectTimer=null;
 function syncBreakEvenButton(price){
   const btn=document.getElementById('manualBreakEvenBtn');if(!btn)return;
   if(!getToken()||!livePosition||livePosition.symbol!==liveSocketSymbol||!Number.isFinite(Number(price))){btn.disabled=true;btn.title='BREAK-EVEN requiere una posición abierta.';return}
@@ -520,7 +520,7 @@ function updateLiveMarket(price,change24){
   moveEl.textContent=(movePct>=0?'▲ +':'▼ ')+movePct.toFixed(2)+'%';moveEl.className=movePct>=0?'g':'r';pnlEl.textContent=(pnl>=0?'+':'')+fmt(pnl)+' USDT';pnlEl.className=pnl>=0?'g':'r';syncBreakEvenButton(price);
 }
 function connectLiveMarket(symbol){
-  symbol=(symbol||'BTCUSDT').replace('/','').toUpperCase();
+  symbol=(symbol||'ETHUSDT').replace('/','').toUpperCase();
   if(liveSocket&&liveSocketSymbol===symbol&&(liveSocket.readyState===0||liveSocket.readyState===1))return;
   if(liveSocket){liveSocket.onclose=null;liveSocket.close()}
   clearTimeout(liveReconnectTimer);liveSocketSymbol=symbol;liveLastPrice=null;document.getElementById('liveStatus').textContent='Conectando con Binance en vivo...';
@@ -616,19 +616,19 @@ function renderAutoState(p,ageMin,connected){
   const top=document.getElementById('topAutoMode'),stateEl=document.getElementById('autoState'),btn=document.getElementById('autoToggleBtn'),emergencyBtn=document.getElementById('autoEmergencyBtn'),status=document.getElementById('autoControlStatus');
 
   if(emergency){
-    top.textContent='⛔ EMERGENCY STOP AUTO · BTCUSDT';top.className='mode r';
+    top.textContent='⛔ EMERGENCY STOP AUTO · ETHUSDT v3';top.className='mode r';
     stateEl.textContent='EMERGENCY STOP';stateEl.className='r';
     btn.textContent='▶ REANUDAR AUTO';btn.className='ctrl resume';btn.dataset.action='RESUME_AUTO';
     emergencyBtn.textContent='⛔ EMERGENCY STOP ACTIVO';
     status.textContent='EMERGENCY STOP ACTIVO · nuevas entradas automáticas bloqueadas con motivo de emergencia. Posiciones abiertas y LIMIT pendientes siguen siendo gestionadas.';
   }else if(!autoEnabled){
-    top.textContent='⏸ AUTO PAPER PAUSADO · BTCUSDT';top.className='mode y';
+    top.textContent='⏸ AUTO PAPER PAUSADO · ETHUSDT v3';top.className='mode y';
     stateEl.textContent='AUTO PAUSADO';stateEl.className='y';
     btn.textContent='▶ REANUDAR AUTO';btn.className='ctrl resume';btn.dataset.action='RESUME_AUTO';
     emergencyBtn.textContent='⛔ EMERGENCY STOP AUTO';
     status.textContent='AUTO PAUSADO · nuevas entradas automáticas bloqueadas. Posiciones abiertas y LIMIT pendientes siguen gestionándose.';
   }else{
-    top.textContent='● AUTO PAPER ACTIVO · BTCUSDT';top.className='mode g';
+    top.textContent='● AUTO PAPER ACTIVO · ETHUSDT v3';top.className='mode g';
     stateEl.textContent=ageMin<=7?'AUTO ACTIVO':ageMin<=12?'AUTO CON DEMORA':'AUTO SIN CICLO';stateEl.className=ageMin<=7?'g':ageMin<=12?'y':'r';
     btn.textContent='⏸ PAUSAR AUTO';btn.className='ctrl pause';btn.dataset.action='PAUSE_AUTO';
     emergencyBtn.textContent='⛔ EMERGENCY STOP AUTO';
@@ -652,7 +652,7 @@ async function loadData(){
     document.getElementById('updated').textContent='Última actualización: '+localTime;document.getElementById('sysTimestamp').textContent=localTime;
     document.getElementById('autoAge').textContent=ageMin+' min';document.getElementById('autoFresh').textContent=ageMin<=12?'DATOS FRESCOS':'SIN ACTUALIZAR';document.getElementById('autoFresh').className=ageMin<=12?'g':'r';
 
-    setVal('symbol',(d.symbol||'BTCUSDT').replace('USDT','/USDT'));setVal('price',fmt(d.price)+' USDT','BULL');setVal('marketPrice',fmt(d.price)+' USDT','BULL');
+    setVal('symbol',(d.symbol||'ETHUSDT').replace('USDT','/USDT'));setVal('price',fmt(d.price)+' USDT','BULL');setVal('marketPrice',fmt(d.price)+' USDT','BULL');
     const tfs=d.timeframes||{};setVal('tf4h',tfs['4H']||'UNKNOWN',tfs['4H']);setVal('m4h',tfs['4H']||'UNKNOWN',tfs['4H']);setVal('m1h',tfs['1H']||'UNKNOWN',tfs['1H']);setVal('m30m',tfs['30M']||'UNKNOWN',tfs['30M']);setVal('m15m5m',(tfs['15M']||'—')+' / '+(tfs['5M']||'—'),tfs['15M']);
 
     const action=d.decision?.action||'WAIT',msg=d.readiness?.message||'El motor sigue evaluando las confirmaciones.';
@@ -674,7 +674,7 @@ async function loadData(){
     setVal('balance',fmt(p.balance)+' USDT','BULL');document.getElementById('initialBalance').textContent=fmt(p.initial_balance)+' USDT';document.getElementById('opBalance').textContent=fmt(p.balance)+' USDT';document.getElementById('unrealized').textContent=(Number(p.unrealized_pnl)>=0?'+':'')+fmt(p.unrealized_pnl)+' USDT';document.getElementById('unrealized').className=Number(p.unrealized_pnl)>0?'g':Number(p.unrealized_pnl)<0?'r':'';
 
     const pos=p.position,pending=p.pending_order;livePosition=pos||null;
-    const liveTargetSymbol=pos?.symbol||pending?.symbol||(document.getElementById('manualSymbol')?.value||'BTC/USDT').replace('/','');connectLiveMarket(liveTargetSymbol);
+    const liveTargetSymbol=pos?.symbol||pending?.symbol||d.symbol||(document.getElementById('manualSymbol')?.value||'ETH/USDT').replace('/','');connectLiveMarket(liveTargetSymbol);
 
     const box=document.getElementById('positionBox'),pendingBox=document.getElementById('pendingOrderBox');
     if(pos){

@@ -1,4 +1,4 @@
-name: PROJECT EDGE - BTC Paper Trading
+name: PROJECT EDGE v3 - ETH Auto Paper
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  btc-paper:
+  eth-paper:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,8 +31,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run BTC paper trading
+      - name: Run ETH auto paper v3
         env:
+          PROJECT_EDGE_MODE: PAPER
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python run_btc_paper.py

@@ -85,6 +85,32 @@ def test_stop_wins_when_stop_and_target_share_a_candle():
     assert result.trades[0]["pnl"] < 0
 
 
+def test_v3_backtest_uses_atr_and_half_percent_risk_plan():
+    backtester = HistoricalBacktester(
+        HistoricalBacktestConfig(symbol="ETHUSDT")
+    )
+    backtester._decision_for_row = lambda row: (
+        {
+            "strategy": "PROJECT_EDGE_V3",
+            "decision": "READY_LONG",
+            "direction": "LONG",
+            "can_execute": True,
+            "atr_15m": 0.2,
+        }
+        if row.name == 0
+        else {"decision": "WAIT", "direction": None, "can_execute": False}
+    )
+
+    result = backtester.run_prepared(prepared_timeline())
+    trade = result.trades[0]
+
+    assert trade["strategy"] == "PROJECT_EDGE_V3"
+    assert trade["risk_budget"] == pytest.approx(50.0)
+    assert trade["estimated_risk"] <= 50.0 + 1e-9
+    assert trade["position_size"] * trade["entry_price"] <= 10000.0 + 1e-9
+    assert trade["estimated_net_reward_risk"] >= 1.5
+
+
 def test_realistic_cost_parameters_are_validated():
     try:
         HistoricalBacktestConfig(symbol="BTCUSDT", fee_rate=-0.1)

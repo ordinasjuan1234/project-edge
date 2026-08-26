@@ -114,6 +114,37 @@ def test_short_take_profit_updates_balance(tmp_path):
     assert state.has_open_position is False
 
 
+def test_auto_v3_paper_trade_deducts_fees_and_slippage(tmp_path):
+    state = PaperState(
+        file_path=tmp_path / "paper_state.json",
+        initial_balance=10000.0,
+    )
+    position = state.open_position(
+        symbol="ETHUSDT",
+        direction="LONG",
+        entry_price=100.0,
+        quantity=1.0,
+        stop_loss=97.0,
+        take_profit=110.0,
+        source="AUTO",
+        fee_rate=0.001,
+        slippage_rate=0.001,
+    )
+
+    result = state.close_position(
+        exit_price=110.0,
+        reason="TAKE_PROFIT",
+    )
+
+    assert position["entry_price"] == pytest.approx(100.1)
+    assert result["raw_exit_price"] == pytest.approx(110.0)
+    assert result["exit_price"] == pytest.approx(109.89)
+    assert result["gross_pnl"] == pytest.approx(9.79)
+    assert result["fees"] == pytest.approx(0.20999)
+    assert result["pnl"] == pytest.approx(9.58001)
+    assert result["balance"] == pytest.approx(10009.58001)
+
+
 def test_second_position_is_blocked(tmp_path):
     state_file = tmp_path / "paper_state.json"
 

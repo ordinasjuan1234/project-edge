@@ -2,7 +2,7 @@
 PROJECT EDGE - Live Dashboard Builder v5
 
 Genera dashboard_data.json con:
-- datos reales de BTCUSDT
+- datos publicos reales de ETHUSDT para AUTO v3
 - estado multitemporal
 - Fair Value Gaps activos por temporalidad
 - decisión del motor
@@ -33,12 +33,11 @@ from engine.data.binance_historical_data import BinanceHistoricalData
 from engine.multitimeframe.multi_timeframe_structure_engine import (
     MultiTimeframeStructureEngine,
 )
-from engine.decision.decision_engine import DecisionEngine
-from engine.decision.entry_readiness import EntryReadiness
+from engine.decision.project_edge_v3 import ProjectEdgeV3
 from paper_state import PaperState
 
 
-PRIMARY_SYMBOL = "BTCUSDT"
+PRIMARY_SYMBOL = "ETHUSDT"
 SCANNER_SYMBOLS = ("BTCUSDT", "ETHUSDT")
 INITIAL_BALANCE = 10000.0
 OUTPUT_FILE = "dashboard_data.json"
@@ -413,20 +412,18 @@ def analyze_symbol(
         )
     )
 
-    decision = (
-        DecisionEngine()
-        .decide(
-            mtf
-        )
-    )
-
-    readiness = (
-        EntryReadiness()
-        .evaluate(
-            mtf_result=mtf,
-            decision_result=decision,
-        )
-    )
+    decision = ProjectEdgeV3().decide_mtf(mtf)
+    missing = [
+        name
+        for name, passed in decision.get("checks", {}).items()
+        if name != "fvg_confluence" and not passed
+    ]
+    readiness = {
+        "status": "READY" if decision.get("can_execute") else "NOT_READY",
+        "bias": decision.get("direction"),
+        "message": decision.get("reason", ""),
+        "missing_conditions": missing,
+    }
 
     alignment_value = (
         extract_alignment_value(
@@ -708,10 +705,10 @@ def main():
     ):
         raise RuntimeError(
             "No se pudo construir "
-            "la lectura principal BTCUSDT."
+            f"la lectura principal {PRIMARY_SYMBOL}."
         )
 
-    btc_price = float(
+    primary_price = float(
         primary[
             "price"
         ]
@@ -769,7 +766,7 @@ def main():
         )
 
     position_price = (
-        btc_price
+        primary_price
     )
 
     if position:
@@ -834,8 +831,6 @@ def main():
         )
     )
 
-    # Conservamos las claves antiguas de BTC
-    # para no romper el dashboard actual.
     payload = {
         "timestamp": (
             datetime.now(
@@ -845,7 +840,7 @@ def main():
             )
         ),
         "symbol": PRIMARY_SYMBOL,
-        "price": btc_price,
+        "price": primary_price,
         "timeframes": (
             primary.get(
                 "timeframes",
@@ -964,27 +959,28 @@ def main():
     )
 
     print(
-        f"BTC: {btc_price:.2f} | "
+        f"{PRIMARY_SYMBOL}: {primary_price:.2f} | "
         f"Scanner: "
         f"{primary.get('scanner_signal', 'WAIT')}"
     )
 
-    eth = scanner_data.get(
-        "ETHUSDT",
+    secondary_symbol = "BTCUSDT" if PRIMARY_SYMBOL == "ETHUSDT" else "ETHUSDT"
+    secondary = scanner_data.get(
+        secondary_symbol,
         {},
     )
 
     if (
-        eth.get(
+        secondary.get(
             "price"
         )
         is not None
     ):
         print(
-            f"ETH: "
-            f"{float(eth['price']):.2f} | "
+            f"{secondary_symbol}: "
+            f"{float(secondary['price']):.2f} | "
             f"Scanner: "
-            f"{eth.get('scanner_signal', 'WAIT')}"
+            f"{secondary.get('scanner_signal', 'WAIT')}"
         )
 
     print(

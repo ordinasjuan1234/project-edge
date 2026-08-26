@@ -10,19 +10,18 @@ Detectar estructuras de mercado, tendencias, impulsos, correcciones,
 soportes, resistencias y cambios de estructura mediante análisis
 multitemporal.
 
-### Modos previstos
+### Modos disponibles
 
 - Solo señales
-- Manual
-- Demo
-- Testnet
-- Real
+- Manual PAPER
+- AUTO PAPER
 
-### Activos iniciales
+El modo REAL está bloqueado por código y no hay claves privadas de Binance.
 
-- BTC/USDT
-- ETH/USDT
-- SOL/USDT
+### Activos
+
+- AUTO v3: ETH/USDT
+- Manual y scanner: BTC/USDT y ETH/USDT
 
 ### Arquitectura
 
@@ -48,12 +47,16 @@ Proyecto independiente de SIGNAL BOT.
 
 ## Backtest histórico AUTO PAPER
 
-El proyecto incluye un backtest walk-forward para BTCUSDT y ETHUSDT que:
+El proyecto incluye un backtest walk-forward para la estrategia propia v3 que:
 
 - utiliza únicamente velas cerradas y confirma los swings sin mirar el futuro;
 - entra en la apertura 5M posterior a la señal;
-- conserva las reglas estructurales y la confirmación FVG actuales;
-- aplica STOP 0,5%, objetivo 1%, comisión y deslizamiento;
+- exige tendencia 4H/1H, EMA 20/50, ADX 14, retroceso 15M y gatillo 5M;
+- usa ETHUSDT como activo AUTO inicial;
+- arriesga como máximo 0,5% por operación y no usa apalancamiento;
+- calcula el STOP con ATR 15M y el objetivo con costos y riesgo/beneficio;
+- aplica cooldown de 30 minutos y pausa de 4 horas tras 3 pérdidas seguidas;
+- incluye comisión de 0,10% y deslizamiento de 0,02% por lado tanto en el backtest como en el saldo AUTO PAPER;
 - evalúa exclusivamente señales AUTO y excluye operaciones MANUALES;
 - informa operaciones, PnL neto, win rate, drawdown máximo y profit factor.
 
@@ -64,5 +67,11 @@ python run_historical_backtest.py --days 90
 ```
 
 También puede ejecutarse manualmente desde el workflow
-`PROJECT EDGE - Backtest histórico BTC ETH`. El resultado queda disponible
+`PROJECT EDGE v3 - Backtest histórico ETH`. El resultado queda disponible
 como un artefacto descargable con un resumen JSON y el detalle CSV.
+
+Para una comparación investigativa opcional, sin cambiar el activo AUTO:
+
+```bash
+python run_historical_backtest.py --days 90 --symbols BTCUSDT ETHUSDT
+```

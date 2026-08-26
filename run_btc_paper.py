@@ -1,11 +1,11 @@
 """
 PROJECT EDGE
-BTC Paper Trading v6
+AUTO Paper Trading v7 - estrategia propia v3
 
 Paper Trading con estado persistente.
 
 Funciones:
-- Lee datos reales de BTCUSDT.
+- Lee datos publicos reales de ETHUSDT.
 - Usa el motor multi-timeframe de PROJECT EDGE.
 - Solo abre una operacion AUTO cuando hay confirmacion real.
 - Recuerda una posicion PAPER abierta.
@@ -38,19 +38,34 @@ from engine.data.binance_historical_data import (
 from engine.multitimeframe.multi_timeframe_structure_engine import (
     MultiTimeframeStructureEngine,
 )
-from engine.decision.decision_engine import DecisionEngine
-from engine.decision.entry_readiness import EntryReadiness
+from engine.decision.project_edge_v3 import (
+    ProjectEdgeV3,
+    ProjectEdgeV3Config,
+    loss_guard_remaining_minutes,
+)
 
 from paper_state import PaperState
 from telegram_notifier import notify_auto_entry, notify_auto_exit
 from trading_mode import require_paper_mode
 
-SYMBOL = "BTCUSDT"
+SYMBOL = "ETHUSDT"
 INITIAL_BALANCE = 10000.0
 
 STOP_PCT = 0.005
 TAKE_PROFIT_PCT = 0.01
 AUTO_COOLDOWN_MINUTES = 30
+AUTO_LOSS_GUARD_LOSSES = 3
+AUTO_LOSS_GUARD_MINUTES = 240
+
+STRATEGY = ProjectEdgeV3(
+    ProjectEdgeV3Config(
+        risk_pct=0.005,
+        max_exposure_pct=1.0,
+        cooldown_minutes=AUTO_COOLDOWN_MINUTES,
+        loss_guard_losses=AUTO_LOSS_GUARD_LOSSES,
+        loss_guard_minutes=AUTO_LOSS_GUARD_MINUTES,
+    )
+)
 
 
 def auto_cooldown_remaining_minutes(
@@ -121,14 +136,14 @@ def latest_price(
 
 def current_price_for_symbol(
     symbol,
-    btc_data=None,
+    auto_data=None,
 ):
     if (
         symbol == SYMBOL
-        and btc_data is not None
+        and auto_data is not None
     ):
         return latest_price(
-            btc_data
+            auto_data
         )
 
     data = fetch_symbol_data(
@@ -985,7 +1000,7 @@ def manage_open_position(
 
 def analyze_market(
     data,
-    btc_price,
+    market_price,
 ):
     mtf = (
         MultiTimeframeStructureEngine(
@@ -1001,18 +1016,18 @@ def analyze_market(
         .analyze(data)
     )
 
-    decision = (
-        DecisionEngine()
-        .decide(mtf)
-    )
-
-    readiness = (
-        EntryReadiness()
-        .evaluate(
-            mtf_result=mtf,
-            decision_result=decision,
-        )
-    )
+    decision = STRATEGY.decide_mtf(mtf)
+    missing = [
+        name
+        for name, passed in decision.get("checks", {}).items()
+        if name != "fvg_confluence" and not passed
+    ]
+    readiness = {
+        "status": "READY" if decision.get("can_execute") else "NOT_READY",
+        "bias": decision.get("direction"),
+        "missing_conditions": missing,
+        "message": decision.get("reason"),
+    }
 
     print("")
     print(
@@ -1033,8 +1048,8 @@ def analyze_market(
     print("-" * 60)
 
     print(
-        f"BTC price:   "
-        f"{btc_price:.2f}"
+        f"{SYMBOL} price: "
+        f"{market_price:.2f}"
     )
 
     print(
@@ -1096,7 +1111,7 @@ def main():
 
     print("=" * 60)
     print(
-        "PROJECT EDGE - BTC PAPER TRADING v5"
+        "PROJECT EDGE - ETH AUTO PAPER v3"
     )
     print("=" * 60)
 
@@ -1117,7 +1132,7 @@ def main():
     print("")
     print(
         "Descargando datos reales "
-        "de BTCUSDT..."
+        f"de {SYMBOL}..."
     )
 
     data = fetch_symbol_data(
@@ -1125,13 +1140,13 @@ def main():
         limit=500,
     )
 
-    btc_price = latest_price(
+    auto_price = latest_price(
         data
     )
 
     print(
-        f"BTC actual: "
-        f"{btc_price:.2f}"
+        f"{SYMBOL} actual: "
+        f"{auto_price:.2f}"
     )
 
     # PRIORIDAD 1:
@@ -1152,7 +1167,7 @@ def main():
         pending_price = (
             current_price_for_symbol(
                 pending_symbol,
-                btc_data=data,
+                auto_data=data,
             )
         )
 
@@ -1188,7 +1203,7 @@ def main():
         position_price = (
             current_price_for_symbol(
                 position_symbol,
-                btc_data=data,
+                auto_data=data,
             )
         )
 
@@ -1273,13 +1288,37 @@ def main():
         return
 
     # PRIORIDAD 5:
+    # Tres perdidas AUTO consecutivas pausan nuevas entradas por cuatro horas.
+    # Las posiciones abiertas siempre se protegen antes de llegar a este punto.
+    loss_guard_remaining = loss_guard_remaining_minutes(
+        state.data.get("closed_trades", []),
+        consecutive_losses=AUTO_LOSS_GUARD_LOSSES,
+        guard_minutes=AUTO_LOSS_GUARD_MINUTES,
+    )
+    if loss_guard_remaining > 0:
+        print("")
+        print("=" * 60)
+        print("PAPER AUTO - PROTECCION POR PERDIDAS")
+        print("=" * 60)
+        print(
+            f"Se detectaron {AUTO_LOSS_GUARD_LOSSES} perdidas AUTO consecutivas."
+        )
+        print(
+            "Tiempo restante aproximado: "
+            f"{ceil(loss_guard_remaining)} minutos."
+        )
+        print("REAL continua bloqueado.")
+        print("=" * 60)
+        return
+
+    # PRIORIDAD 6:
     # Solo con AUTO activo y sin posicion
     # ni LIMIT pendiente, el motor puede
     # analizar una entrada nueva.
     decision, readiness = (
         analyze_market(
             data,
-            btc_price,
+            auto_price,
         )
     )
 
@@ -1339,19 +1378,22 @@ def main():
         print("=" * 60)
         return
 
-    entry_price = btc_price
-
-    stop_loss, take_profit = (
-        calculate_levels(
-            direction,
-            entry_price,
-        )
+    entry_price = auto_price
+    trade_plan = STRATEGY.build_trade_plan(
+        decision=decision,
+        entry_price=entry_price,
+        account_equity=state.balance,
     )
+    if not trade_plan.get("approved"):
+        print("PAPER TRADE: RECHAZADA POR RIESGO")
+        print(trade_plan.get("reason"))
+        print("REAL continua bloqueado.")
+        print("=" * 60)
+        return
 
-    quantity = (
-        state.balance
-        / entry_price
-    )
+    stop_loss = float(trade_plan["stop_price"])
+    take_profit = float(trade_plan["target_price"])
+    quantity = float(trade_plan["quantity"])
 
     position = (
         state.open_position(
@@ -1362,6 +1404,8 @@ def main():
             stop_loss=stop_loss,
             take_profit=take_profit,
             source="AUTO",
+            fee_rate=STRATEGY.config.fee_rate,
+            slippage_rate=STRATEGY.config.slippage_rate,
         )
     )
 
@@ -1383,6 +1427,16 @@ def main():
         "order_type"
     ] = "MARKET"
 
+    position["strategy"] = "PROJECT_EDGE_V3"
+    position["risk_pct"] = STRATEGY.config.risk_pct
+    position["risk_budget"] = float(trade_plan["risk_budget"])
+    position["estimated_risk"] = float(trade_plan["estimated_risk"])
+    position["estimated_cost"] = float(trade_plan["estimated_cost"])
+    position["estimated_net_reward_risk"] = float(
+        trade_plan["estimated_net_reward_risk"]
+    )
+    position["leverage"] = 1
+
     state.data[
         "position"
     ] = position
@@ -1390,13 +1444,7 @@ def main():
     state.save()
 
     notify_auto_entry(position, balance=state.balance)
-    risk_usdt = (
-        abs(
-            position["entry_price"]
-            - position["stop_loss"]
-        )
-        * position["quantity"]
-    )
+    risk_usdt = float(trade_plan["estimated_risk"])
 
     target_usdt = (
         abs(
@@ -1459,6 +1507,11 @@ def main():
     print(
         f"Objetivo:     "
         f"{target_usdt:.2f} USDT"
+    )
+
+    print(
+        f"Costo estim.: "
+        f"{float(trade_plan['estimated_cost']):.2f} USDT"
     )
 
     print(
