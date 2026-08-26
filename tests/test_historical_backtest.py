@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from engine.execution.historical_backtest import (
     HistoricalBacktestConfig,
@@ -91,3 +92,48 @@ def test_realistic_cost_parameters_are_validated():
         assert "fee_rate" in str(exc)
     else:
         raise AssertionError("Se esperaba ValueError")
+
+
+def test_cooldown_blocks_immediate_reentry_after_close():
+    open_time = pd.date_range(
+        "2026-01-01T00:00:00Z",
+        periods=10,
+        freq="5min",
+    )
+    data = {
+        "open_time": open_time,
+        "close_time": open_time + pd.Timedelta(minutes=5),
+        "open": [100.0] * 10,
+        "high": [102.0] * 10,
+        "low": [99.8] * 10,
+        "close": [101.0] * 10,
+    }
+    for timeframe in ("4H", "1H", "30M", "15M", "5M"):
+        data[f"state_{timeframe}"] = ["BULLISH"] * 10
+
+    backtester = HistoricalBacktester(
+        HistoricalBacktestConfig(
+            symbol="BTCUSDT",
+            cooldown_minutes=30,
+        )
+    )
+    backtester._decision_for_row = lambda row: {
+        "decision": "READY_LONG",
+        "direction": "LONG",
+        "can_execute": True,
+    }
+
+    result = backtester.run_prepared(pd.DataFrame(data))
+
+    assert len(result.trades) == 2
+    assert result.trades[0]["exit_time"] == "2026-01-01T00:10:00+00:00"
+    assert result.trades[1]["entry_time"] == "2026-01-01T00:40:00+00:00"
+    assert result.report["cooldown_blocked_bars"] == 7
+
+
+def test_negative_cooldown_is_rejected():
+    with pytest.raises(ValueError, match="cooldown_minutes"):
+        HistoricalBacktestConfig(
+            symbol="BTCUSDT",
+            cooldown_minutes=-1,
+        )

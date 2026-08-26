@@ -37,6 +37,7 @@ class HistoricalBacktestConfig:
     target_pct: float = 0.01
     fee_rate: float = 0.001
     slippage_rate: float = 0.0002
+    cooldown_minutes: int = 30
 
     def __post_init__(self) -> None:
         if not str(self.symbol).strip():
@@ -51,6 +52,8 @@ class HistoricalBacktestConfig:
             raise ValueError("fee_rate debe estar entre 0 y 0.1.")
         if not 0 <= self.slippage_rate < 0.1:
             raise ValueError("slippage_rate debe estar entre 0 y 0.1.")
+        if self.cooldown_minutes < 0:
+            raise ValueError("cooldown_minutes no puede ser negativo.")
 
 
 @dataclass
@@ -371,6 +374,7 @@ class HistoricalBacktester:
         decision_counts: Counter[str] = Counter()
         ready_signals = 0
         evaluated_bars = 0
+        cooldown_until: pd.Timestamp | None = None
 
         for candle_index in range(len(timeline)):
             candle = timeline.iloc[candle_index]
@@ -390,11 +394,23 @@ class HistoricalBacktester:
                     closed["balance"] = balance
                     trades.append(closed)
                     position = None
+                    cooldown_until = (
+                        pd.Timestamp(candle["close_time"])
+                        + pd.Timedelta(minutes=self.config.cooldown_minutes)
+                    )
 
             if position is not None or candle_index + 1 >= len(timeline):
                 continue
 
             evaluated_bars += 1
+            candle_close = pd.Timestamp(candle["close_time"])
+            if (
+                cooldown_until is not None
+                and candle_close < cooldown_until
+            ):
+                decision_counts["COOLDOWN"] += 1
+                continue
+
             decision = self._decision_for_row(candle)
             decision_name = str(decision.get("decision", "WAIT"))
             decision_counts[decision_name] += 1
@@ -472,6 +488,9 @@ class HistoricalBacktester:
             "five_minute_candles": int(len(timeline)),
             "evaluated_bars": evaluated_bars,
             "ready_signals": ready_signals,
+            "cooldown_blocked_bars": int(
+                decision_counts["COOLDOWN"]
+            ),
             "decision_counts": dict(decision_counts),
             "initial_balance": self.config.initial_balance,
             "final_balance": balance,

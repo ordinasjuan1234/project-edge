@@ -65,6 +65,17 @@ Validacion historica realista del motor antes de considerar Testnet o REAL:
 
 Pendiente para cerrar el hito: ejecutar el workflow con 90 dias de datos publicos reales, descargar el reporte y registrar el veredicto de BTCUSDT y ETHUSDT sin modificar las reglas para forzar entradas.
 
+### Hallazgo del backtest de 90 dias
+
+- El workflow historico completo correctamente con 87 operaciones AUTO simuladas.
+- Resultado conjunto: -8,53%, win rate 34,48% y profit factor 0,58.
+- El bruto antes de comisiones quedo practicamente neutro (+3,83 USDT), pero las comisiones sumaron 1710,28 USDT.
+- Se detectaron 42 reentradas en el mismo simbolo y direccion dentro de los cinco minutos posteriores a un cierre.
+- El enfriamiento AUTO de 30 minutos solicitado no estaba implementado en el runner ni en el backtest.
+- Se agrego el mismo bloqueo persistente al AUTO PAPER y al backtest para evitar reentradas inmediatas. REAL continua bloqueado.
+- Verificacion local de la correccion: 125 tests superados, demostracion PAPER completada y rechazo directo de REAL confirmado antes de consultar precios.
+- Pendiente: volver a ejecutar el backtest real de 90 dias con el enfriamiento activo y comparar el resultado sin flexibilizar las reglas de entrada.
+
 ## Verificacion obligatoria
 
 ```bash

@@ -1,6 +1,6 @@
 """
 PROJECT EDGE
-BTC Paper Trading v5
+BTC Paper Trading v6
 
 Paper Trading con estado persistente.
 
@@ -17,6 +17,7 @@ Funciones:
 - Convierte la LIMIT en posicion cuando el precio muestreado
   alcanza o cruza el precio LIMIT.
 - Respeta PAUSE AUTO para impedir NUEVAS entradas automaticas.
+- Respeta 30 minutos de enfriamiento despues de cerrar una operacion AUTO.
 - Aunque AUTO este pausado, sigue protegiendo posiciones abiertas.
 - Aunque AUTO este pausado, sigue gestionando una LIMIT pendiente.
 - Actualiza el saldo demo al cerrar.
@@ -27,6 +28,9 @@ IMPORTANTE:
 - NO mueve dinero real.
 - El control de precio se realiza por ciclos, no tick a tick.
 """
+
+from datetime import datetime, timedelta, timezone
+from math import ceil
 
 from engine.data.binance_historical_data import (
     BinanceHistoricalData,
@@ -46,6 +50,52 @@ INITIAL_BALANCE = 10000.0
 
 STOP_PCT = 0.005
 TAKE_PROFIT_PCT = 0.01
+AUTO_COOLDOWN_MINUTES = 30
+
+
+def auto_cooldown_remaining_minutes(
+    state,
+    now=None,
+    cooldown_minutes=AUTO_COOLDOWN_MINUTES,
+):
+    """Devuelve los minutos restantes desde el ultimo cierre AUTO."""
+    cooldown_minutes = int(cooldown_minutes)
+    if cooldown_minutes <= 0:
+        return 0.0
+
+    current_time = now or datetime.now(timezone.utc)
+    if current_time.tzinfo is None:
+        current_time = current_time.replace(tzinfo=timezone.utc)
+
+    for trade in reversed(
+        state.data.get("closed_trades", [])
+    ):
+        if str(trade.get("source", "")).upper() != "AUTO":
+            continue
+
+        closed_at = trade.get("closed_at")
+        if not closed_at:
+            continue
+
+        try:
+            closed_time = datetime.fromisoformat(
+                str(closed_at).replace("Z", "+00:00")
+            )
+        except ValueError:
+            continue
+
+        if closed_time.tzinfo is None:
+            closed_time = closed_time.replace(tzinfo=timezone.utc)
+
+        cooldown_end = closed_time + timedelta(
+            minutes=cooldown_minutes
+        )
+        remaining = (
+            cooldown_end - current_time
+        ).total_seconds() / 60.0
+        return max(0.0, remaining)
+
+    return 0.0
 
 
 def fetch_symbol_data(
@@ -1191,6 +1241,38 @@ def main():
         return
 
     # PRIORIDAD 4:
+    # Despues de cerrar una operacion AUTO,
+    # espera 30 minutos antes de permitir
+    # otra entrada automatica.
+    cooldown_remaining = (
+        auto_cooldown_remaining_minutes(
+            state
+        )
+    )
+
+    if cooldown_remaining > 0:
+        print("")
+        print("=" * 60)
+        print(
+            "PAPER AUTO - ENFRIAMIENTO"
+        )
+        print("=" * 60)
+        print(
+            "No se permiten nuevas entradas "
+            "automaticas todavia."
+        )
+        print(
+            "Tiempo restante aproximado: "
+            f"{ceil(cooldown_remaining)} minutos."
+        )
+        print(
+            f"Saldo paper: "
+            f"{state.balance:.2f} USDT"
+        )
+        print("=" * 60)
+        return
+
+    # PRIORIDAD 5:
     # Solo con AUTO activo y sin posicion
     # ni LIMIT pendiente, el motor puede
     # analizar una entrada nueva.
