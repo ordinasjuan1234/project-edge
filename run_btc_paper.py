@@ -39,6 +39,7 @@ from engine.decision.entry_readiness import EntryReadiness
 
 from paper_state import PaperState
 from telegram_notifier import notify_auto_entry, notify_auto_exit
+from trading_mode import require_paper_mode
 
 SYMBOL = "BTCUSDT"
 INITIAL_BALANCE = 10000.0
@@ -1039,6 +1040,10 @@ def analyze_market(
 
 
 def main():
+    # Barrera de seguridad central: ninguna ejecucion de trading puede
+    # continuar si el entorno intenta habilitar el modo REAL.
+    require_paper_mode()
+
     print("=" * 60)
     print(
         "PROJECT EDGE - BTC PAPER TRADING v5"

@@ -38,8 +38,10 @@ Finalmente, y solo si los resultados lo justifican, operar en real.
 
 ## Estado
 
-Fase: Diseño y construcción inicial
+Fase: PAPER integrado y en validacion.
 
-Versión: 0.1
+El AUTO PAPER, el control manual, el dashboard y las protecciones de riesgo ya estan construidos. El modo REAL permanece bloqueado.
+
+Consultar [PROJECT_STATUS.md](PROJECT_STATUS.md) para ver el ultimo punto verificado, las funciones terminadas y el proximo hito.
 
 Proyecto independiente de SIGNAL BOT.

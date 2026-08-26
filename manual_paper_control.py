@@ -29,6 +29,7 @@ import argparse
 
 from engine.data.binance_historical_data import BinanceHistoricalData
 from paper_state import PaperState
+from trading_mode import require_paper_mode
 
 
 INITIAL_BALANCE = 10000.0
@@ -800,6 +801,10 @@ def disable_trailing(
 
 
 def main() -> None:
+    # Debe ejecutarse antes de leer una accion o consultar precios.
+    # PROJECT EDGE permanece exclusivamente en PAPER.
+    require_paper_mode()
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
