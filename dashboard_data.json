@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-08-26T18:41:13+00:00",
+  "timestamp": "2026-08-26T18:46:08+00:00",
   "symbol": "BTCUSDT",
-  "price": 78314.0,
+  "price": 78306.92,
   "timeframes": {
     "4H": "BULLISH",
     "1H": "BEARISH",
     "30M": "TRANSITION",
-    "15M": "TRANSITION",
+    "15M": "BULLISH",
     "5M": "BULLISH"
   },
   "fvg": {
@@ -16,16 +16,16 @@
       "upper": 74510.77,
       "mid": 73955.38500000001,
       "state": "ACTIVE",
-      "distance_pct": 0.04856397980386895,
+      "distance_pct": 0.04846653493557774,
       "created_index": 466
     },
     "1H": {
       "type": "BULLISH",
       "lower": 78161.73,
-      "upper": 78314.0,
-      "mid": 78237.86499999999,
+      "upper": 78280.01,
+      "mid": 78220.87,
       "state": "ACTIVE",
-      "distance_pct": 1.2769107334385395e-07,
+      "distance_pct": 0.0003436477900037888,
       "created_index": 499
     },
     "30M": {
@@ -44,16 +44,16 @@
       "mid": 78311.225,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 495
+      "created_index": 494
     },
     "5M": {
-      "type": "BULLISH",
-      "lower": 78284.13,
-      "upper": 78340.15,
-      "mid": 78312.14,
-      "state": "PARTIAL",
-      "distance_pct": 0.0,
-      "created_index": 484
+      "type": "BEARISH",
+      "lower": 78323.49,
+      "upper": 78362.01,
+      "mid": 78342.75,
+      "state": "ACTIVE",
+      "distance_pct": 0.0002116032657140261,
+      "created_index": 499
     }
   },
   "alignment": "MACRO_CONTEXT_CONFLICT",
@@ -73,19 +73,18 @@
     "message": "Sesgo macro LONG, pero faltan confirmaciones en temporalidades inferiores.",
     "missing_conditions": [
       "1H debe volver a BULLISH.",
-      "30M debe recuperar estructura BULLISH.",
-      "15M debe confirmar BULLISH."
+      "30M debe recuperar estructura BULLISH."
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 78314.0,
+      "price": 78306.92,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "BEARISH",
         "30M": "TRANSITION",
-        "15M": "TRANSITION",
+        "15M": "BULLISH",
         "5M": "BULLISH"
       },
       "fvg": {
@@ -95,16 +94,16 @@
           "upper": 74510.77,
           "mid": 73955.38500000001,
           "state": "ACTIVE",
-          "distance_pct": 0.04856397980386895,
+          "distance_pct": 0.04846653493557774,
           "created_index": 466
         },
         "1H": {
           "type": "BULLISH",
           "lower": 78161.73,
-          "upper": 78314.0,
-          "mid": 78237.86499999999,
+          "upper": 78280.01,
+          "mid": 78220.87,
           "state": "ACTIVE",
-          "distance_pct": 1.2769107334385395e-07,
+          "distance_pct": 0.0003436477900037888,
           "created_index": 499
         },
         "30M": {
@@ -123,16 +122,16 @@
           "mid": 78311.225,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 495
+          "created_index": 494
         },
         "5M": {
-          "type": "BULLISH",
-          "lower": 78284.13,
-          "upper": 78340.15,
-          "mid": 78312.14,
-          "state": "PARTIAL",
-          "distance_pct": 0.0,
-          "created_index": 484
+          "type": "BEARISH",
+          "lower": 78323.49,
+          "upper": 78362.01,
+          "mid": 78342.75,
+          "state": "ACTIVE",
+          "distance_pct": 0.0002116032657140261,
+          "created_index": 499
         }
       },
       "alignment": "MACRO_CONTEXT_CONFLICT",
@@ -152,15 +151,14 @@
         "message": "Sesgo macro LONG, pero faltan confirmaciones en temporalidades inferiores.",
         "missing_conditions": [
           "1H debe volver a BULLISH.",
-          "30M debe recuperar estructura BULLISH.",
-          "15M debe confirmar BULLISH."
+          "30M debe recuperar estructura BULLISH."
         ]
       },
       "scanner_signal": "WAIT"
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2463.26,
+      "price": 2465.21,
       "timeframes": {
         "4H": "TRANSITION",
         "1H": "TRANSITION",
@@ -175,7 +173,7 @@
           "upper": 2341.05,
           "mid": 2340.525,
           "state": "ACTIVE",
-          "distance_pct": 0.04956295445226193,
+          "distance_pct": 0.050364877637199205,
           "created_index": 466
         },
         "1H": {
@@ -184,7 +182,7 @@
           "upper": 2458.85,
           "mid": 2457.105,
           "state": "ACTIVE",
-          "distance_pct": 0.0017903104016629625,
+          "distance_pct": 0.002579901915049885,
           "created_index": 499
         },
         "30M": {
@@ -193,7 +191,7 @@
           "upper": 2455.72,
           "mid": 2454.74,
           "state": "ACTIVE",
-          "distance_pct": 0.003060984224158399,
+          "distance_pct": 0.0038495706248150205,
           "created_index": 497
         },
         "15M": {
@@ -202,8 +200,8 @@
           "upper": 2461.05,
           "mid": 2454.7200000000003,
           "state": "PARTIAL",
-          "distance_pct": 0.0008971850312188061,
-          "created_index": 495
+          "distance_pct": 0.0016915326015526477,
+          "created_index": 494
         },
         "5M": {
           "type": "BULLISH",
@@ -211,8 +209,8 @@
           "upper": 2456.72,
           "mid": 2454.705,
           "state": "PARTIAL",
-          "distance_pct": 0.002655018146683833,
-          "created_index": 484
+          "distance_pct": 0.0034439256696185056,
+          "created_index": 483
         }
       },
       "alignment": "NO_DIRECTION",
