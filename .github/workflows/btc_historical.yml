@@ -1,11 +1,26 @@
-name: BTC Historical Analysis
+name: PROJECT EDGE - Backtest histórico BTC ETH
 
 on:
   workflow_dispatch:
+    inputs:
+      days:
+        description: "Días históricos a evaluar"
+        required: true
+        default: "90"
+        type: choice
+        options:
+          - "30"
+          - "60"
+          - "90"
+          - "180"
+
+permissions:
+  contents: read
 
 jobs:
-  analyze:
+  backtest:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -21,7 +36,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run BTC historical analysis
+      - name: Ejecutar backtest BTC y ETH
         env:
           PYTHONPATH: ${{ github.workspace }}
-        run: python run_btc_historical.py
+          PROJECT_EDGE_MODE: PAPER
+        run: python run_historical_backtest.py --days "${{ inputs.days }}"
+
+      - name: Guardar reporte descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-edge-backtest-${{ inputs.days }}-days
+          path: artifacts/backtest/
+          if-no-files-found: error
+          retention-days: 30

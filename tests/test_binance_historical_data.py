@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from datetime import datetime, timezone
 
 from engine.data.binance_historical_data import BinanceHistoricalData
 
@@ -73,3 +74,42 @@ def test_project_edge_timeframe_mapping(monkeypatch):
         ("BTCUSDT", "15m", 500),
         ("BTCUSDT", "5m", 500),
     ]
+
+
+def test_fetch_recent_requests_only_closed_candles(monkeypatch):
+    loader = BinanceHistoricalData()
+    captured = {}
+
+    def fake_fetch_range(symbol, interval, start_time_ms, end_time_ms):
+        captured.update(
+            symbol=symbol,
+            interval=interval,
+            start=start_time_ms,
+            end=end_time_ms,
+        )
+        return pd.DataFrame()
+
+    monkeypatch.setattr(loader, "fetch_range", fake_fetch_range)
+    loader.fetch_recent(
+        symbol="BTCUSDT",
+        interval="5m",
+        days=1,
+        now=datetime(2026, 1, 1, 12, 7, tzinfo=timezone.utc),
+    )
+
+    expected_last_open = int(
+        datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc).timestamp()
+        * 1000
+    )
+    assert captured["end"] == expected_last_open
+    assert captured["end"] - captured["start"] == 24 * 60 * 60 * 1000
+
+
+def test_fetch_range_rejects_inverted_times():
+    with pytest.raises(ValueError):
+        BinanceHistoricalData().fetch_range(
+            symbol="BTCUSDT",
+            interval="5m",
+            start_time_ms=200,
+            end_time_ms=100,
+        )

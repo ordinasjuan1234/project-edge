@@ -45,3 +45,24 @@ El AUTO PAPER, el control manual, el dashboard y las protecciones de riesgo ya e
 Consultar [PROJECT_STATUS.md](PROJECT_STATUS.md) para ver el ultimo punto verificado, las funciones terminadas y el proximo hito.
 
 Proyecto independiente de SIGNAL BOT.
+
+## Backtest histórico AUTO PAPER
+
+El proyecto incluye un backtest walk-forward para BTCUSDT y ETHUSDT que:
+
+- utiliza únicamente velas cerradas y confirma los swings sin mirar el futuro;
+- entra en la apertura 5M posterior a la señal;
+- conserva las reglas estructurales y la confirmación FVG actuales;
+- aplica STOP 0,5%, objetivo 1%, comisión y deslizamiento;
+- evalúa exclusivamente señales AUTO y excluye operaciones MANUALES;
+- informa operaciones, PnL neto, win rate, drawdown máximo y profit factor.
+
+Ejecución local:
+
+```bash
+python run_historical_backtest.py --days 90
+```
+
+También puede ejecutarse manualmente desde el workflow
+`PROJECT EDGE - Backtest histórico BTC ETH`. El resultado queda disponible
+como un artefacto descargable con un resumen JSON y el detalle CSV.

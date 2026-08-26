@@ -50,6 +50,21 @@ Validacion historica realista del motor antes de considerar Testnet o REAL:
 - Revisar si existen suficientes entradas confirmadas; no flexibilizar reglas solo para aumentar operaciones.
 - Mantener REAL bloqueado independientemente del resultado hasta una decision explicita posterior.
 
+### Avance implementado
+
+- Se agrego un backtest walk-forward conjunto para BTCUSDT y ETHUSDT.
+- Las temporalidades 4H, 1H, 30M, 15M y 5M se construyen desde un unico historial 5M y solo usan velas cerradas.
+- Los swings quedan disponibles recien en su vela de confirmacion para evitar look-ahead bias.
+- Las entradas se simulan en la apertura de la vela 5M posterior a la señal.
+- Se conserva la politica conservadora de asumir STOP primero cuando STOP y TARGET aparecen en la misma vela.
+- El calculo incluye comision de 0,10% y deslizamiento de 0,02% por lado.
+- Los resultados incluyen solo señales AUTO; las operaciones MANUALES y de prueba quedan excluidas.
+- El reporte informa operaciones, PnL neto, win rate, drawdown maximo, profit factor, costos y detalle CSV.
+- El workflow historico permite elegir 30, 60, 90 o 180 dias y publica el reporte como artefacto descargable.
+- Verificacion local del nuevo modulo: 120 tests superados, prueba PAPER completada y recorrido historico sintetico de punta a punta superado.
+
+Pendiente para cerrar el hito: ejecutar el workflow con 90 dias de datos publicos reales, descargar el reporte y registrar el veredicto de BTCUSDT y ETHUSDT sin modificar las reglas para forzar entradas.
+
 ## Verificacion obligatoria
 
 ```bash

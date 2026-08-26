@@ -12,6 +12,7 @@ NO ejecuta órdenes.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import json
 from urllib.parse import urlencode
 from urllib.request import urlopen
@@ -23,6 +24,13 @@ class BinanceHistoricalData:
     BASE_URL = "https://data-api.binance.vision/api/v3/klines"
 
     VALID_INTERVALS = {"5m", "15m", "30m", "1h", "4h"}
+    INTERVAL_MS = {
+        "5m": 5 * 60 * 1000,
+        "15m": 15 * 60 * 1000,
+        "30m": 30 * 60 * 1000,
+        "1h": 60 * 60 * 1000,
+        "4h": 4 * 60 * 60 * 1000,
+    }
 
     def __init__(self, timeout: int = 20) -> None:
         if timeout <= 0:
@@ -133,6 +141,97 @@ class BinanceHistoricalData:
             )
             for project_tf, binance_tf in mapping.items()
         }
+
+    def fetch_range(
+        self,
+        symbol: str,
+        interval: str,
+        start_time_ms: int,
+        end_time_ms: int,
+    ) -> pd.DataFrame:
+        """Descarga un rango completo usando páginas de hasta 1000 velas."""
+        interval = self._validate_interval(interval)
+        start_time_ms = int(start_time_ms)
+        end_time_ms = int(end_time_ms)
+
+        if start_time_ms < 0 or end_time_ms < 0:
+            raise ValueError("Los tiempos no pueden ser negativos.")
+        if start_time_ms > end_time_ms:
+            raise ValueError("start_time_ms no puede superar end_time_ms.")
+
+        cursor = start_time_ms
+        step_ms = self.INTERVAL_MS[interval]
+        batches: list[pd.DataFrame] = []
+
+        while cursor <= end_time_ms:
+            batch = self.fetch(
+                symbol=symbol,
+                interval=interval,
+                start_time_ms=cursor,
+                end_time_ms=end_time_ms,
+                limit=1000,
+            )
+
+            if batch.empty:
+                break
+
+            batches.append(batch)
+            last_open_ms = int(
+                batch["open_time"].iloc[-1].timestamp() * 1000
+            )
+            next_cursor = last_open_ms + step_ms
+
+            if next_cursor <= cursor:
+                raise RuntimeError(
+                    "Binance no avanzó al paginar los datos históricos."
+                )
+
+            cursor = next_cursor
+
+            if len(batch) < 1000:
+                break
+
+        if not batches:
+            return pd.DataFrame()
+
+        result = pd.concat(batches, ignore_index=True)
+        result = (
+            result.drop_duplicates(subset=["open_time"], keep="last")
+            .sort_values("open_time")
+            .reset_index(drop=True)
+        )
+        return result
+
+    def fetch_recent(
+        self,
+        symbol: str,
+        interval: str = "5m",
+        days: int = 90,
+        now: datetime | None = None,
+    ) -> pd.DataFrame:
+        """Descarga velas cerradas de los últimos ``days`` días."""
+        interval = self._validate_interval(interval)
+        days = int(days)
+
+        if not 1 <= days <= 365:
+            raise ValueError("days debe estar entre 1 y 365.")
+
+        current = now or datetime.now(timezone.utc)
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=timezone.utc)
+
+        step_ms = self.INTERVAL_MS[interval]
+        now_ms = int(current.timestamp() * 1000)
+        current_open_ms = (now_ms // step_ms) * step_ms
+        last_closed_open_ms = current_open_ms - step_ms
+        start_time_ms = last_closed_open_ms - days * 24 * 60 * 60 * 1000
+
+        return self.fetch_range(
+            symbol=symbol,
+            interval=interval,
+            start_time_ms=start_time_ms,
+            end_time_ms=last_closed_open_ms,
+        )
 
 
 def fetch_project_edge_timeframes(
