@@ -56,6 +56,8 @@ El proyecto incluye un backtest walk-forward para la estrategia propia v3 que:
 - arriesga como máximo 0,5% por operación y no usa apalancamiento;
 - calcula el STOP con ATR 15M y el objetivo con costos y riesgo/beneficio;
 - aplica cooldown de 30 minutos y pausa de 4 horas tras 3 pérdidas seguidas;
+- precarga 90 días de calentamiento que no cuentan en el resultado;
+- limita la estructura a 500 velas por temporalidad, igual que el bot PAPER;
 - incluye comisión de 0,10% y deslizamiento de 0,02% por lado tanto en el backtest como en el saldo AUTO PAPER;
 - evalúa exclusivamente señales AUTO y excluye operaciones MANUALES;
 - informa operaciones, PnL neto, win rate, drawdown máximo y profit factor.

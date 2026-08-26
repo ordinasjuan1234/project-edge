@@ -17,6 +17,8 @@ import math
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 from engine.data.binance_historical_data import BinanceHistoricalData
 from engine.data.historical_dataset import HistoricalDataset
 from engine.execution.backtest_report import BacktestReport
@@ -29,6 +31,8 @@ from trading_mode import require_paper_mode
 
 
 DEFAULT_SYMBOLS = ("ETHUSDT",)
+BACKTEST_WARMUP_DAYS = 90
+LIVE_ANALYSIS_WINDOW_BARS = 500
 
 
 def _json_safe(value: Any) -> Any:
@@ -189,6 +193,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     require_paper_mode()
     args = parse_args()
+    if not 1 <= args.days <= 365:
+        raise ValueError("days debe estar entre 1 y 365.")
     loader = BinanceHistoricalData(timeout=30)
     dataset = HistoricalDataset()
     results: dict[str, HistoricalBacktestResult] = {}
@@ -201,6 +207,10 @@ def main() -> None:
     print("Costos: comisión 0.10% y deslizamiento 0.02% por lado")
     print("Riesgo: 0.50% por trade, sin apalancamiento, SL por ATR")
     print("Protecciones: cooldown 30m y pausa 4h tras 3 pérdidas")
+    print(
+        "Consistencia: 90 días de calentamiento y ventana estructural "
+        "de 500 velas"
+    )
     print("Operaciones MANUALES: excluidas")
 
     for raw_symbol in args.symbols:
@@ -210,16 +220,26 @@ def main() -> None:
         candles_5m = loader.fetch_recent(
             symbol=symbol,
             interval="5m",
-            days=args.days,
+            days=args.days + BACKTEST_WARMUP_DAYS,
         )
         if candles_5m.empty:
             raise RuntimeError(f"Binance no devolvió datos para {symbol}.")
 
         timeframe_data = dataset.build(candles_5m)
         backtester = HistoricalBacktester(
-            HistoricalBacktestConfig(symbol=symbol)
+            HistoricalBacktestConfig(
+                symbol=symbol,
+                analysis_window_bars=LIVE_ANALYSIS_WINDOW_BARS,
+            )
         )
-        result = backtester.run(timeframe_data)
+        evaluation_start = (
+            pd.Timestamp(candles_5m["open_time"].max())
+            - pd.Timedelta(days=args.days)
+        )
+        result = backtester.run(
+            timeframe_data,
+            evaluation_start=evaluation_start,
+        )
         results[symbol] = result
 
         print(f"RESULTADO {symbol}")
@@ -241,6 +261,8 @@ def main() -> None:
             "auto_symbol": "ETHUSDT",
             "risk_pct": 0.005,
             "leverage": 1,
+            "warmup_days": BACKTEST_WARMUP_DAYS,
+            "analysis_window_bars": LIVE_ANALYSIS_WINDOW_BARS,
         },
         "symbols": {
             symbol: result.report

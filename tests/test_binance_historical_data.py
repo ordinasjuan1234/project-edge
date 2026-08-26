@@ -105,6 +105,26 @@ def test_fetch_recent_requests_only_closed_candles(monkeypatch):
     assert captured["end"] - captured["start"] == 24 * 60 * 60 * 1000
 
 
+def test_fetch_recent_allows_internal_warmup_range(monkeypatch):
+    loader = BinanceHistoricalData()
+    monkeypatch.setattr(loader, "fetch_range", lambda **kwargs: pd.DataFrame())
+
+    loader.fetch_recent(
+        symbol="ETHUSDT",
+        interval="5m",
+        days=455,
+        now=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    )
+
+    with pytest.raises(ValueError, match="730"):
+        loader.fetch_recent(
+            symbol="ETHUSDT",
+            interval="5m",
+            days=731,
+            now=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        )
+
+
 def test_fetch_range_rejects_inverted_times():
     with pytest.raises(ValueError):
         BinanceHistoricalData().fetch_range(

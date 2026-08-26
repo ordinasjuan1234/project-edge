@@ -213,8 +213,8 @@ class BinanceHistoricalData:
         interval = self._validate_interval(interval)
         days = int(days)
 
-        if not 1 <= days <= 365:
-            raise ValueError("days debe estar entre 1 y 365.")
+        if not 1 <= days <= 730:
+            raise ValueError("days debe estar entre 1 y 730.")
 
         current = now or datetime.now(timezone.utc)
         if current.tzinfo is None:

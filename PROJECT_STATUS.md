@@ -44,9 +44,10 @@ Se implemento la primera candidata de la estrategia propia PROJECT EDGE v3:
 - Riesgo maximo 0,5% del saldo y exposicion maxima 100%, siempre x1.
 - Cooldown de 30 minutos y bloqueo de 4 horas tras 3 perdidas AUTO consecutivas.
 - El runner PAPER y el backtest usan el mismo modulo de decision y riesgo.
+- El backtest precarga 90 dias de calentamiento y replica la ventana estructural de 500 velas del runner PAPER.
 - El saldo AUTO PAPER descuenta comision y deslizamiento simulados al cerrar.
 - El dashboard principal pasa a mostrar ETHUSDT y la decision v3.
-- Verificacion local: 135 tests superados y demostracion PAPER completada.
+- Verificacion local: 139 tests superados y demostracion PAPER completada.
 - Prueba directa: `PROJECT_EDGE_MODE=REAL` sigue bloqueando el runner antes de consultar datos o estado.
 
 ## Hito actual

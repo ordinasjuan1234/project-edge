@@ -52,6 +52,95 @@ def test_causal_state_appears_only_at_confirmation_index():
     assert states.iloc[4] == "BULLISH"
 
 
+def test_rolling_structure_drops_swings_outside_live_window():
+    analysis = pd.DataFrame(
+        {
+            "swing_confirmed": [False] * 55,
+            "swing_type": [None] * 55,
+            "swing_price": [None] * 55,
+            "swing_confirmation_index": [None] * 55,
+        }
+    )
+    for pivot, known_at, swing_type, price in (
+        (1, 2, "HIGH", 100.0),
+        (2, 3, "LOW", 90.0),
+        (3, 4, "HIGH", 110.0),
+        (4, 5, "LOW", 95.0),
+    ):
+        analysis.loc[pivot, "swing_confirmed"] = True
+        analysis.loc[pivot, "swing_type"] = swing_type
+        analysis.loc[pivot, "swing_price"] = price
+        analysis.loc[pivot, "swing_confirmation_index"] = known_at
+
+    backtester = HistoricalBacktester(
+        HistoricalBacktestConfig(
+            symbol="ETHUSDT",
+            analysis_window_bars=50,
+        ),
+        structure_engine_kwargs={
+            "pivot_left": 1,
+            "pivot_right": 1,
+            "atr_period": 2,
+        },
+    )
+    states = backtester.rolling_causal_market_states(analysis)
+
+    assert states.iloc[5] == "BULLISH"
+    assert states.iloc[54] == "UNDEFINED"
+
+
+def test_rolling_structure_is_invariant_to_older_history():
+    def analysis_for_range(start, end):
+        size = end - start
+        data = pd.DataFrame(
+            {
+                "swing_confirmed": [False] * size,
+                "swing_type": [None] * size,
+                "swing_price": [None] * size,
+                "swing_confirmation_index": [None] * size,
+            }
+        )
+        events = (
+            (12, 13, "HIGH", 100.0),
+            (18, 19, "LOW", 90.0),
+            (24, 25, "HIGH", 110.0),
+            (30, 31, "LOW", 95.0),
+            (42, 43, "HIGH", 120.0),
+            (48, 49, "LOW", 105.0),
+            (56, 57, "HIGH", 125.0),
+            (62, 63, "LOW", 110.0),
+        )
+        for pivot, known_at, swing_type, price in events:
+            if not start <= pivot < end:
+                continue
+            row = pivot - start
+            data.loc[row, "swing_confirmed"] = True
+            data.loc[row, "swing_type"] = swing_type
+            data.loc[row, "swing_price"] = price
+            data.loc[row, "swing_confirmation_index"] = known_at - start
+        return data
+
+    backtester = HistoricalBacktester(
+        HistoricalBacktestConfig(
+            symbol="ETHUSDT",
+            analysis_window_bars=50,
+        ),
+        structure_engine_kwargs={
+            "pivot_left": 1,
+            "pivot_right": 1,
+            "atr_period": 2,
+        },
+    )
+    full = backtester.rolling_causal_market_states(
+        analysis_for_range(0, 70)
+    )
+    shortened = backtester.rolling_causal_market_states(
+        analysis_for_range(10, 70)
+    )
+
+    assert full.iloc[60:].tolist() == shortened.iloc[50:].tolist()
+
+
 def test_enters_on_next_candle_and_includes_costs():
     backtester = HistoricalBacktester(
         HistoricalBacktestConfig(symbol="BTCUSDT")
@@ -163,3 +252,29 @@ def test_negative_cooldown_is_rejected():
             symbol="BTCUSDT",
             cooldown_minutes=-1,
         )
+
+
+def test_evaluation_start_excludes_warmup_from_results():
+    timeline = pd.concat(
+        [prepared_timeline(), prepared_timeline()],
+        ignore_index=True,
+    )
+    timeline["open_time"] = pd.date_range(
+        "2026-01-01T00:00:00Z",
+        periods=4,
+        freq="5min",
+    )
+    timeline["close_time"] = timeline["open_time"] + pd.Timedelta(minutes=5)
+
+    backtester = HistoricalBacktester(
+        HistoricalBacktestConfig(symbol="ETHUSDT")
+    )
+    backtester._decision_for_row = signal_only_on_first_row
+
+    result = backtester.run_prepared(
+        timeline,
+        evaluation_start="2026-01-01T00:10:00Z",
+    )
+
+    assert result.report["start_time"] == "2026-01-01T00:10:00+00:00"
+    assert result.trades[0]["signal_time"] == "2026-01-01T00:15:00+00:00"

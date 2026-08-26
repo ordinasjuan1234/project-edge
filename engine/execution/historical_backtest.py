@@ -47,6 +47,7 @@ class HistoricalBacktestConfig:
     max_exposure_pct: float = 1.0
     loss_guard_losses: int = 3
     loss_guard_minutes: int = 240
+    analysis_window_bars: int = 500
 
     def __post_init__(self) -> None:
         if not str(self.symbol).strip():
@@ -71,6 +72,8 @@ class HistoricalBacktestConfig:
             raise ValueError("max_exposure_pct debe estar entre 0 y 1.")
         if self.loss_guard_losses < 1 or self.loss_guard_minutes < 0:
             raise ValueError("La proteccion por perdidas es invalida.")
+        if self.analysis_window_bars < 50:
+            raise ValueError("analysis_window_bars debe ser >= 50.")
 
 
 @dataclass
@@ -179,6 +182,98 @@ class HistoricalBacktester:
 
         return pd.Series(states, index=analysis.index, dtype="object")
 
+    def rolling_causal_market_states(
+        self,
+        analysis: pd.DataFrame,
+    ) -> pd.Series:
+        """Replica la ventana estructural finita usada por el bot PAPER.
+
+        El bot en ejecucion analiza las ultimas 500 velas de cada
+        temporalidad. El backtest no debe conservar swings anteriores a esa
+        ventana porque produciria decisiones que el bot real nunca veria.
+        """
+        required = {
+            "swing_confirmed",
+            "swing_type",
+            "swing_price",
+            "swing_confirmation_index",
+        }
+        missing = required.difference(analysis.columns)
+        if missing:
+            raise ValueError(
+                f"Faltan columnas de swings: {sorted(missing)}"
+            )
+
+        events_by_confirmation: dict[
+            int,
+            list[tuple[int, str, float]],
+        ] = defaultdict(list)
+        for pivot_index, row in analysis.iterrows():
+            if not bool(row.get("swing_confirmed")):
+                continue
+            swing_type = str(row.get("swing_type", "")).upper()
+            swing_price = row.get("swing_price")
+            known_at = row.get("swing_confirmation_index")
+            if (
+                swing_type not in {"HIGH", "LOW"}
+                or pd.isna(swing_price)
+                or pd.isna(known_at)
+            ):
+                continue
+            confirmation_index = int(known_at)
+            if 0 <= confirmation_index < len(analysis):
+                events_by_confirmation[confirmation_index].append(
+                    (int(pivot_index), swing_type, float(swing_price))
+                )
+
+        lookback = int(self.config.analysis_window_bars)
+        candidate_offset = max(
+            int(self.structure_engine_kwargs["pivot_left"]),
+            int(self.structure_engine_kwargs["atr_period"]) - 1,
+        )
+        active: list[tuple[int, int, str, float]] = []
+        states: list[str] = []
+
+        for candle_index in range(len(analysis)):
+            for pivot_index, swing_type, price in sorted(
+                events_by_confirmation.get(candle_index, []),
+                key=lambda event: event[0],
+            ):
+                active.append(
+                    (candle_index, pivot_index, swing_type, price)
+                )
+
+            window_start = max(0, candle_index - lookback + 1)
+            earliest_candidate = window_start + candidate_offset
+            active = [
+                event
+                for event in active
+                if event[1] >= earliest_candidate
+            ]
+
+            previous_high: float | None = None
+            previous_low: float | None = None
+            labels: list[tuple[int, str]] = []
+            for confirmation_index, pivot_index, swing_type, price in active:
+                if swing_type == "HIGH":
+                    if previous_high is not None:
+                        if price > previous_high:
+                            labels.append((pivot_index, "HH"))
+                        elif price < previous_high:
+                            labels.append((pivot_index, "LH"))
+                    previous_high = price
+                else:
+                    if previous_low is not None:
+                        if price > previous_low:
+                            labels.append((pivot_index, "HL"))
+                        elif price < previous_low:
+                            labels.append((pivot_index, "LL"))
+                    previous_low = price
+
+            states.append(self._state_from_labels(labels))
+
+        return pd.Series(states, index=analysis.index, dtype="object")
+
     @staticmethod
     def _validate_timeframes(
         timeframe_data: dict[str, pd.DataFrame],
@@ -223,8 +318,8 @@ class HistoricalBacktester:
             analysis = StructureEngine(
                 **self.structure_engine_kwargs
             ).analyze(data[timeframe])
-            analysis["causal_market_structure"] = self.causal_market_states(
-                analysis
+            analysis["causal_market_structure"] = (
+                self.rolling_causal_market_states(analysis)
             )
             if str(self.config.strategy).upper() == "PROJECT_EDGE_V3":
                 analysis = self.strategy_v3.add_features(analysis)
@@ -399,12 +494,28 @@ class HistoricalBacktester:
 
         return maximum
 
-    def run_prepared(self, timeline: pd.DataFrame) -> HistoricalBacktestResult:
+    def run_prepared(
+        self,
+        timeline: pd.DataFrame,
+        evaluation_start: Any | None = None,
+    ) -> HistoricalBacktestResult:
         required = {"open_time", "close_time", "open", "high", "low", "close"}
         required.update(f"state_{tf}" for tf in self.REQUIRED_TIMEFRAMES)
         missing = required.difference(timeline.columns)
         if missing:
             raise ValueError(f"Faltan columnas en el timeline: {sorted(missing)}")
+        timeline = timeline.copy()
+        timeline["open_time"] = pd.to_datetime(timeline["open_time"], utc=True)
+        timeline["close_time"] = pd.to_datetime(timeline["close_time"], utc=True)
+        if evaluation_start is not None:
+            cutoff = pd.Timestamp(evaluation_start)
+            if cutoff.tzinfo is None:
+                cutoff = cutoff.tz_localize("UTC")
+            else:
+                cutoff = cutoff.tz_convert("UTC")
+            timeline = timeline[
+                timeline["open_time"] >= cutoff
+            ].reset_index(drop=True)
         if len(timeline) < 2:
             raise ValueError("Se necesitan al menos dos velas 5M.")
 
@@ -596,5 +707,9 @@ class HistoricalBacktester:
     def run(
         self,
         timeframe_data: dict[str, pd.DataFrame],
+        evaluation_start: Any | None = None,
     ) -> HistoricalBacktestResult:
-        return self.run_prepared(self.prepare_timeline(timeframe_data))
+        return self.run_prepared(
+            self.prepare_timeline(timeframe_data),
+            evaluation_start=evaluation_start,
+        )
