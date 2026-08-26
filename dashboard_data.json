@@ -1,67 +1,67 @@
 {
-  "timestamp": "2026-08-26T20:11:14+00:00",
-  "symbol": "BTCUSDT",
-  "price": 78480.39,
+  "timestamp": "2026-08-26T20:16:07+00:00",
+  "symbol": "ETHUSDT",
+  "price": 2469.93,
   "timeframes": {
-    "4H": "BULLISH",
-    "1H": "BEARISH",
-    "30M": "TRANSITION",
+    "4H": "BEARISH",
+    "1H": "TRANSITION",
+    "30M": "BULLISH",
     "15M": "BULLISH",
-    "5M": "TRANSITION"
+    "5M": "BULLISH"
   },
   "fvg": {
     "4H": {
       "type": "BULLISH",
-      "lower": 73400.0,
-      "upper": 74510.77,
-      "mid": 73955.38500000001,
+      "lower": 2340.0,
+      "upper": 2341.05,
+      "mid": 2340.525,
       "state": "ACTIVE",
-      "distance_pct": 0.050581043238954286,
+      "distance_pct": 0.0521834538490813,
       "created_index": 465
     },
     "1H": {
       "type": "BULLISH",
-      "lower": 78161.73,
-      "upper": 78280.01,
-      "mid": 78220.87,
+      "lower": 2467.03,
+      "upper": 2468.0,
+      "mid": 2467.5150000000003,
       "state": "ACTIVE",
-      "distance_pct": 0.0025532492894085345,
-      "created_index": 497
+      "distance_pct": 0.0007854441808303257,
+      "created_index": 498
     },
     "30M": {
       "type": "BULLISH",
-      "lower": 78161.73,
-      "upper": 78368.0,
-      "mid": 78264.86499999999,
-      "state": "PARTIAL",
-      "distance_pct": 0.0014319502530441958,
+      "lower": 2453.76,
+      "upper": 2455.72,
+      "mid": 2454.74,
+      "state": "ACTIVE",
+      "distance_pct": 0.005757224871859338,
       "created_index": 494
     },
     "15M": {
       "type": "BULLISH",
-      "lower": 78128.91,
-      "upper": 78493.54,
-      "mid": 78311.225,
+      "lower": 2467.11,
+      "upper": 2469.21,
+      "mid": 2468.16,
       "state": "PARTIAL",
-      "distance_pct": 0.0,
-      "created_index": 489
+      "distance_pct": 0.0002915062370187819,
+      "created_index": 494
     },
     "5M": {
       "type": "BEARISH",
-      "lower": 78710.33,
-      "upper": 78905.5,
-      "mid": 78807.91500000001,
-      "state": "PARTIAL",
-      "distance_pct": 0.0029299038906407363,
-      "created_index": 364
+      "lower": 2470.78,
+      "upper": 2471.81,
+      "mid": 2471.295,
+      "state": "ACTIVE",
+      "distance_pct": 0.00034413930759186044,
+      "created_index": 499
     }
   },
-  "alignment": "MACRO_CONTEXT_CONFLICT",
+  "alignment": "INTERMEDIATE_CONFLICT",
   "decision": {
-    "action": "BLOCKED",
+    "action": "WAIT",
     "direction": null,
     "can_execute": false,
-    "reason": "Conflicto entre temporalidades superiores.",
+    "reason": "4H y 1H todavia no comparten una tendencia definida.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -69,18 +69,16 @@
   },
   "readiness": {
     "status": "NOT_READY",
-    "bias": "LONG",
-    "message": "Sesgo macro LONG, pero faltan confirmaciones en temporalidades inferiores.",
+    "bias": null,
+    "message": "4H y 1H todavia no comparten una tendencia definida.",
     "missing_conditions": [
-      "1H debe volver a BULLISH.",
-      "30M debe recuperar estructura BULLISH.",
-      "5M debe confirmar BULLISH."
+      "macro_4h_1h"
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 78480.39,
+      "price": 78454.12,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "BEARISH",
@@ -95,7 +93,7 @@
           "upper": 74510.77,
           "mid": 73955.38500000001,
           "state": "ACTIVE",
-          "distance_pct": 0.050581043238954286,
+          "distance_pct": 0.050263134683047765,
           "created_index": 465
         },
         "1H": {
@@ -104,7 +102,7 @@
           "upper": 78280.01,
           "mid": 78220.87,
           "state": "ACTIVE",
-          "distance_pct": 0.0025532492894085345,
+          "distance_pct": 0.0022192588483562186,
           "created_index": 497
         },
         "30M": {
@@ -113,7 +111,7 @@
           "upper": 78368.0,
           "mid": 78264.86499999999,
           "state": "PARTIAL",
-          "distance_pct": 0.0014319502530441958,
+          "distance_pct": 0.00109771163069569,
           "created_index": 494
         },
         "15M": {
@@ -123,24 +121,24 @@
           "mid": 78311.225,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 489
+          "created_index": 488
         },
         "5M": {
           "type": "BEARISH",
-          "lower": 78710.33,
-          "upper": 78905.5,
-          "mid": 78807.91500000001,
-          "state": "PARTIAL",
-          "distance_pct": 0.0029299038906407363,
-          "created_index": 364
+          "lower": 78459.78,
+          "upper": 78480.0,
+          "mid": 78469.89,
+          "state": "ACTIVE",
+          "distance_pct": 7.21440760536667e-05,
+          "created_index": 499
         }
       },
       "alignment": "MACRO_CONTEXT_CONFLICT",
       "decision": {
-        "action": "BLOCKED",
+        "action": "WAIT",
         "direction": null,
         "can_execute": false,
-        "reason": "Conflicto entre temporalidades superiores.",
+        "reason": "4H y 1H todavia no comparten una tendencia definida.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -148,19 +146,17 @@
       },
       "readiness": {
         "status": "NOT_READY",
-        "bias": "LONG",
-        "message": "Sesgo macro LONG, pero faltan confirmaciones en temporalidades inferiores.",
+        "bias": null,
+        "message": "4H y 1H todavia no comparten una tendencia definida.",
         "missing_conditions": [
-          "1H debe volver a BULLISH.",
-          "30M debe recuperar estructura BULLISH.",
-          "5M debe confirmar BULLISH."
+          "macro_4h_1h"
         ]
       },
       "scanner_signal": "WAIT"
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2471.92,
+      "price": 2469.93,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "TRANSITION",
@@ -175,7 +171,7 @@
           "upper": 2341.05,
           "mid": 2340.525,
           "state": "ACTIVE",
-          "distance_pct": 0.053145665230843755,
+          "distance_pct": 0.0521834538490813,
           "created_index": 465
         },
         "1H": {
@@ -184,7 +180,7 @@
           "upper": 2468.0,
           "mid": 2467.5150000000003,
           "state": "ACTIVE",
-          "distance_pct": 0.0017796473062611595,
+          "distance_pct": 0.0007854441808303257,
           "created_index": 498
         },
         "30M": {
@@ -193,7 +189,7 @@
           "upper": 2455.72,
           "mid": 2454.74,
           "state": "ACTIVE",
-          "distance_pct": 0.006742463769874523,
+          "distance_pct": 0.005757224871859338,
           "created_index": 494
         },
         "15M": {
@@ -202,25 +198,25 @@
           "upper": 2469.21,
           "mid": 2468.16,
           "state": "PARTIAL",
-          "distance_pct": 0.0012862048463227228,
-          "created_index": 495
+          "distance_pct": 0.0002915062370187819,
+          "created_index": 494
         },
         "5M": {
           "type": "BEARISH",
-          "lower": 2471.89,
-          "upper": 2475.62,
-          "mid": 2473.755,
-          "state": "PARTIAL",
-          "distance_pct": 0.0,
-          "created_index": 493
+          "lower": 2470.78,
+          "upper": 2471.81,
+          "mid": 2471.295,
+          "state": "ACTIVE",
+          "distance_pct": 0.00034413930759186044,
+          "created_index": 499
         }
       },
       "alignment": "INTERMEDIATE_CONFLICT",
       "decision": {
-        "action": "BLOCKED",
+        "action": "WAIT",
         "direction": null,
         "can_execute": false,
-        "reason": "Conflicto entre temporalidades superiores.",
+        "reason": "4H y 1H todavia no comparten una tendencia definida.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -228,13 +224,10 @@
       },
       "readiness": {
         "status": "NOT_READY",
-        "bias": "SHORT",
-        "message": "Sesgo macro SHORT, pero faltan confirmaciones en temporalidades inferiores.",
+        "bias": null,
+        "message": "4H y 1H todavia no comparten una tendencia definida.",
         "missing_conditions": [
-          "1H debe volver a BEARISH.",
-          "30M debe recuperar estructura BEARISH.",
-          "15M debe confirmar BEARISH.",
-          "5M debe confirmar BEARISH."
+          "macro_4h_1h"
         ]
       },
       "scanner_signal": "WAIT"
