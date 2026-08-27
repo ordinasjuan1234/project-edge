@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import argparse
 import csv
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 import math
 from pathlib import Path
@@ -33,6 +33,22 @@ from trading_mode import require_paper_mode
 DEFAULT_SYMBOLS = ("ETHUSDT",)
 BACKTEST_WARMUP_DAYS = 90
 LIVE_ANALYSIS_WINDOW_BARS = 500
+
+
+def reference_now_for_years_ago(
+    years_ago: int,
+    current: datetime | None = None,
+) -> datetime:
+    """Fija el final de un bloque histórico sin cambiar la estrategia."""
+    years_ago = int(years_ago)
+    if not 0 <= years_ago <= 5:
+        raise ValueError("years_ago debe estar entre 0 y 5.")
+
+    reference = current or datetime.now(timezone.utc)
+    if reference.tzinfo is None:
+        reference = reference.replace(tzinfo=timezone.utc)
+
+    return reference - timedelta(days=365 * years_ago)
 
 
 def _json_safe(value: Any) -> Any:
@@ -183,6 +199,15 @@ def parse_args() -> argparse.Namespace:
         help="Símbolos públicos de Binance.",
     )
     parser.add_argument(
+        "--years-ago",
+        type=int,
+        default=0,
+        help=(
+            "Desplaza el bloque completo hacia atrás en años de 365 días "
+            "(0 a 5)."
+        ),
+    )
+    parser.add_argument(
         "--output-dir",
         default="artifacts/backtest",
         help="Carpeta para el reporte JSON y el detalle CSV.",
@@ -195,6 +220,7 @@ def main() -> None:
     args = parse_args()
     if not 1 <= args.days <= 365:
         raise ValueError("days debe estar entre 1 y 365.")
+    reference_now = reference_now_for_years_ago(args.years_ago)
     loader = BinanceHistoricalData(timeout=30)
     dataset = HistoricalDataset()
     results: dict[str, HistoricalBacktestResult] = {}
@@ -203,6 +229,8 @@ def main() -> None:
     print("PROJECT EDGE v3 - BACKTEST HISTÓRICO AUTO PAPER")
     print("=" * 68)
     print(f"Período solicitado: {args.days} días")
+    print(f"Bloque desplazado:  {args.years_ago} año(s) hacia atrás")
+    print(f"Fecha de referencia: {reference_now.isoformat()}")
     print("Metodología: walk-forward, entrada en vela siguiente, sin look-ahead")
     print("Costos: comisión 0.10% y deslizamiento 0.02% por lado")
     print("Riesgo: 0.50% por trade, sin apalancamiento, SL por ATR")
@@ -221,6 +249,7 @@ def main() -> None:
             symbol=symbol,
             interval="5m",
             days=args.days + BACKTEST_WARMUP_DAYS,
+            now=reference_now,
         )
         if candles_5m.empty:
             raise RuntimeError(f"Binance no devolvió datos para {symbol}.")
@@ -249,8 +278,11 @@ def main() -> None:
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "requested_days": args.days,
+        "years_ago": args.years_ago,
+        "reference_now": reference_now.isoformat(),
         "methodology": {
             "type": "walk_forward_project_edge_v3",
+            "parameter_policy": "fixed_project_edge_v3_no_optimization",
             "signal_time": "cierre de vela 5M",
             "entry_time": "apertura de la siguiente vela 5M",
             "intrabar_policy": "STOP primero si STOP y TARGET coinciden",

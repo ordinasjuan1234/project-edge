@@ -1,6 +1,6 @@
 # PROJECT EDGE - Estado permanente
 
-Ultima revision tecnica: 26 de agosto de 2026.
+Ultima revision tecnica: 27 de agosto de 2026.
 
 Este archivo es la memoria operativa del proyecto. Debe consultarse al iniciar un chat nuevo y actualizarse al terminar cada hito.
 
@@ -60,6 +60,30 @@ Validacion historica realista del motor antes de considerar Testnet o REAL:
 - Revisar si existen suficientes entradas confirmadas; no flexibilizar reglas solo para aumentar operaciones.
 - Mantener REAL bloqueado independientemente del resultado hasta una decision explicita posterior.
 
+### Validacion v3 completada sobre el año reciente
+
+- El backtest corregido de 365 dias evaluo 37 operaciones ETH AUTO.
+- Resultado neto: +209,73 USDT (+2,10%) sobre 10.000 USDT PAPER.
+- Profit factor 1,203, win rate 43,24% y drawdown maximo 2,43%.
+- Costos simulados incluidos: 395,95 USDT.
+- Las señales de los tramos comunes coinciden exactamente con las corridas
+  corregidas de 90 y 180 dias; la consistencia temporal quedo verificada.
+- El resultado supera apenas el criterio minimo de profit factor 1,20 y la
+  muestra de 37 operaciones todavia es insuficiente para habilitar REAL.
+- PROJECT EDGE v3 queda como candidata PAPER, con parametros congelados.
+
+### Siguiente validacion sin optimizacion
+
+- Ejecutar dos bloques anteriores, independientes, de 365 dias cada uno.
+- El workflow multianual ejecuta ambos bloques en trabajos separados con una
+  sola activacion manual y entrega un artefacto por año.
+- Usar la misma estrategia v3, riesgo, costos, calentamiento y ventana de
+  analisis; no ajustar parametros entre bloques.
+- Comparar rentabilidad neta, profit factor, drawdown y estabilidad por año.
+- Continuar exclusivamente en PAPER aunque los tres años sean positivos.
+- Verificacion local de esta ampliacion: 142 tests superados, demostracion
+  PAPER completada y rechazo de REAL confirmado antes de consultar precios.
+
 ### Avance implementado y resultados de referencia v2
 
 - Se agrego un backtest walk-forward conjunto para BTCUSDT y ETHUSDT.
@@ -94,9 +118,9 @@ Validacion historica realista del motor antes de considerar Testnet o REAL:
 
 ### Proximo paso verificable
 
-- Ejecutar `PROJECT EDGE v3 - Backtest historico ETH` con 90 dias.
-- Si completa correctamente, repetir con 180 dias sin cambiar parametros entre ambas corridas.
-- Comparar operaciones, retorno neto, costos, profit factor y drawdown con v2.
+- Ejecutar `PROJECT EDGE v3 - Validacion multianual ETH` una sola vez.
+- Descargar los artefactos de uno y dos años hacia atras.
+- Comparar ambos bloques contra el año reciente ya validado, sin cambiar parametros.
 - Mantener el bot exclusivamente en PAPER aunque v3 resulte positivo.
 
 ## Verificacion obligatoria

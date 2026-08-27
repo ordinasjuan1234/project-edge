@@ -1,0 +1,51 @@
+name: PROJECT EDGE v3 - Validación multianual ETH
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  yearly-backtest:
+    name: Año anterior ${{ matrix.years_ago }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        years_ago:
+          - 1
+          - 2
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar bloque anual ETH v3
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          PROJECT_EDGE_MODE: PAPER
+        run: >-
+          python run_historical_backtest.py
+          --days 365
+          --years-ago "${{ matrix.years_ago }}"
+          --output-dir "artifacts/backtest-${{ matrix.years_ago }}"
+
+      - name: Guardar reporte anual descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-edge-v3-eth-365-days-${{ matrix.years_ago }}-years-ago
+          path: artifacts/backtest-${{ matrix.years_ago }}/
+          if-no-files-found: error
+          retention-days: 30
