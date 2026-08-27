@@ -78,15 +78,41 @@ class ProjectEdgeV3:
         "pe_ema_fast",
         "pe_ema_slow",
         "pe_ema_slope",
+        "pe_ema_gap_pct",
+        "pe_ema_slope_pct",
+        "pe_distance_from_ema_pct",
         "pe_atr",
+        "pe_atr_pct",
         "pe_adx",
+        "pe_adx_delta",
         "pe_adx_rising",
+        "pe_efficiency_ratio",
         "pe_pullback_long",
         "pe_pullback_short",
+        "pe_pullback_depth_long_pct",
+        "pe_pullback_depth_short_pct",
         "pe_trigger_long",
         "pe_trigger_short",
         "pe_fvg_long",
         "pe_fvg_short",
+    )
+    DIAGNOSTIC_FIELDS = (
+        "state_4h",
+        "state_1h",
+        "state_30m",
+        "state_15m",
+        "state_5m",
+        "adx_1h",
+        "adx_delta_1h",
+        "ema_gap_pct_4h",
+        "ema_gap_pct_1h",
+        "ema_slope_pct_4h",
+        "ema_slope_pct_1h",
+        "efficiency_ratio_1h",
+        "atr_pct_15m",
+        "pullback_depth_pct_15m",
+        "distance_from_ema_pct_5m",
+        "fvg_confluence",
     )
 
     def __init__(self, config: ProjectEdgeV3Config | None = None) -> None:
@@ -130,6 +156,15 @@ class ProjectEdgeV3:
             result["pe_ema_fast"]
             - result["pe_ema_fast"].shift(self.config.ema_slope_lookback)
         )
+        safe_close = close.replace(0.0, float("nan"))
+        result["pe_ema_gap_pct"] = (
+            (result["pe_ema_fast"] - result["pe_ema_slow"]).abs()
+            / safe_close
+        )
+        result["pe_ema_slope_pct"] = result["pe_ema_slope"] / safe_close
+        result["pe_distance_from_ema_pct"] = (
+            close - result["pe_ema_fast"]
+        ) / safe_close
 
         previous_close = close.shift(1)
         true_range = pd.concat(
@@ -146,6 +181,7 @@ class ProjectEdgeV3:
             min_periods=adx_period,
         ).mean()
         result["pe_atr"] = atr
+        result["pe_atr_pct"] = atr / safe_close
 
         up_move = high.diff()
         down_move = -low.diff()
@@ -176,9 +212,22 @@ class ProjectEdgeV3:
             adjust=False,
             min_periods=adx_period,
         ).mean()
-        result["pe_adx_rising"] = (
+        result["pe_adx_delta"] = (
             result["pe_adx"]
-            > result["pe_adx"].shift(self.config.ema_slope_lookback)
+            - result["pe_adx"].shift(self.config.ema_slope_lookback)
+        )
+        result["pe_adx_rising"] = (
+            result["pe_adx_delta"] > 0
+        )
+        efficiency_path = close.diff().abs().rolling(
+            self.config.ema_fast_period,
+            min_periods=self.config.ema_fast_period,
+        ).sum()
+        efficiency_move = (
+            close - close.shift(self.config.ema_fast_period)
+        ).abs()
+        result["pe_efficiency_ratio"] = (
+            efficiency_move / efficiency_path.replace(0.0, float("nan"))
         )
 
         touched_long = low <= result["pe_ema_fast"]
@@ -201,6 +250,22 @@ class ProjectEdgeV3:
             & (close < result["pe_ema_fast"])
             & (close <= open_price)
         )
+        long_depth = (
+            (result["pe_ema_fast"] - low)
+            / result["pe_ema_fast"].replace(0.0, float("nan"))
+        ).clip(lower=0.0)
+        short_depth = (
+            (high - result["pe_ema_fast"])
+            / result["pe_ema_fast"].replace(0.0, float("nan"))
+        ).clip(lower=0.0)
+        result["pe_pullback_depth_long_pct"] = long_depth.rolling(
+            self.config.pullback_lookback,
+            min_periods=1,
+        ).max()
+        result["pe_pullback_depth_short_pct"] = short_depth.rolling(
+            self.config.pullback_lookback,
+            min_periods=1,
+        ).max()
 
         crossed_long = (
             (close > result["pe_ema_fast"])
@@ -294,6 +359,68 @@ class ProjectEdgeV3:
     def decide_mtf(self, mtf_result: dict[str, Any]) -> dict[str, Any]:
         return self.decide_snapshot(self.snapshot_from_mtf(mtf_result))
 
+    def diagnostic_snapshot(
+        self,
+        values: dict[str, Any],
+        states: dict[str, str],
+        direction: str | None,
+    ) -> dict[str, Any]:
+        """Resume variables causales para estudiar la señal sin modificarla."""
+        side = None
+        if direction == "LONG":
+            side = "long"
+        elif direction == "SHORT":
+            side = "short"
+
+        fvg_confluence = False
+        if side is not None:
+            fvg_confluence = self._clean_bool(
+                values.get(f"pe_fvg_{side}_15M")
+            ) or self._clean_bool(values.get(f"pe_fvg_{side}_5M"))
+
+        pullback_depth = None
+        if side is not None:
+            pullback_depth = self._clean_number(
+                values.get(f"pe_pullback_depth_{side}_pct_15M")
+            )
+
+        diagnostics = {
+            "state_4h": states["4H"],
+            "state_1h": states["1H"],
+            "state_30m": states["30M"],
+            "state_15m": states["15M"],
+            "state_5m": states["5M"],
+            "adx_1h": self._clean_number(values.get("pe_adx_1H")),
+            "adx_delta_1h": self._clean_number(
+                values.get("pe_adx_delta_1H")
+            ),
+            "ema_gap_pct_4h": self._clean_number(
+                values.get("pe_ema_gap_pct_4H")
+            ),
+            "ema_gap_pct_1h": self._clean_number(
+                values.get("pe_ema_gap_pct_1H")
+            ),
+            "ema_slope_pct_4h": self._clean_number(
+                values.get("pe_ema_slope_pct_4H")
+            ),
+            "ema_slope_pct_1h": self._clean_number(
+                values.get("pe_ema_slope_pct_1H")
+            ),
+            "efficiency_ratio_1h": self._clean_number(
+                values.get("pe_efficiency_ratio_1H")
+            ),
+            "atr_pct_15m": self._clean_number(values.get("pe_atr_pct_15M")),
+            "pullback_depth_pct_15m": pullback_depth,
+            "distance_from_ema_pct_5m": self._clean_number(
+                values.get("pe_distance_from_ema_pct_5M")
+            ),
+            "fvg_confluence": fvg_confluence,
+        }
+        return {
+            field: diagnostics.get(field)
+            for field in self.DIAGNOSTIC_FIELDS
+        }
+
     def decide_snapshot(self, snapshot: dict[str, Any] | pd.Series) -> dict[str, Any]:
         """Evalua una fotografia ya alineada temporalmente."""
         values = dict(snapshot)
@@ -326,6 +453,11 @@ class ProjectEdgeV3:
                 "checks": checks,
                 "states": states,
                 "atr_15m": self._clean_number(values.get("pe_atr_15M")),
+                "diagnostics": self.diagnostic_snapshot(
+                    values,
+                    states,
+                    direction,
+                ),
                 "config": asdict(self.config),
             }
 
@@ -439,6 +571,11 @@ class ProjectEdgeV3:
             "checks": checks,
             "states": states,
             "atr_15m": atr_15m,
+            "diagnostics": self.diagnostic_snapshot(
+                values,
+                states,
+                direction,
+            ),
             "config": asdict(self.config),
         }
 

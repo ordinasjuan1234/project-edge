@@ -1,4 +1,4 @@
-name: PROJECT EDGE v3 - Validación multianual ETH
+name: PROJECT EDGE v3.1 - Diagnóstico multianual ETH
 
 on:
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Ejecutar bloque anual ETH v3
+      - name: Ejecutar bloque diagnóstico ETH v3.1
         env:
           PYTHONPATH: ${{ github.workspace }}
           PROJECT_EDGE_MODE: PAPER
@@ -45,7 +45,7 @@ jobs:
       - name: Guardar reporte anual descargable
         uses: actions/upload-artifact@v4
         with:
-          name: project-edge-v3-eth-365-days-${{ matrix.years_ago }}-years-ago
+          name: project-edge-v3.1-diagnostic-eth-365-days-${{ matrix.years_ago }}-years-ago
           path: artifacts/backtest-${{ matrix.years_ago }}/
           if-no-files-found: error
           retention-days: 30

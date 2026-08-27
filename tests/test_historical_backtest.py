@@ -185,6 +185,11 @@ def test_v3_backtest_uses_atr_and_half_percent_risk_plan():
             "direction": "LONG",
             "can_execute": True,
             "atr_15m": 0.2,
+            "diagnostics": {
+                "adx_1h": 31.0,
+                "efficiency_ratio_1h": 0.44,
+                "atr_pct_15m": 0.002,
+            },
         }
         if row.name == 0
         else {"decision": "WAIT", "direction": None, "can_execute": False}
@@ -198,6 +203,12 @@ def test_v3_backtest_uses_atr_and_half_percent_risk_plan():
     assert trade["estimated_risk"] <= 50.0 + 1e-9
     assert trade["position_size"] * trade["entry_price"] <= 10000.0 + 1e-9
     assert trade["estimated_net_reward_risk"] >= 1.5
+    assert trade["diag_adx_1h"] == pytest.approx(31.0)
+    assert trade["diag_efficiency_ratio_1h"] == pytest.approx(0.44)
+    assert trade["diag_atr_pct_15m"] == pytest.approx(0.002)
+    assert trade["holding_minutes"] == pytest.approx(5.0)
+    assert trade["stop_distance_pct"] > 0
+    assert trade["target_distance_pct"] > trade["stop_distance_pct"]
 
 
 def test_realistic_cost_parameters_are_validated():

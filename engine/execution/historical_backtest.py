@@ -463,6 +463,12 @@ class HistoricalBacktester:
         fees = entry_fee + exit_fee
         net_pnl = gross_pnl - fees
 
+        entry_time = pd.Timestamp(position["entry_time"])
+        closed_time = pd.Timestamp(exit_time)
+        holding_minutes = (
+            closed_time - entry_time
+        ).total_seconds() / 60.0
+
         return {
             **position,
             "opened": False,
@@ -470,6 +476,7 @@ class HistoricalBacktester:
             "exit_price": exit_price,
             "exit_index": int(exit_index),
             "exit_time": pd.Timestamp(exit_time).isoformat(),
+            "holding_minutes": float(holding_minutes),
             "close_reason": reason,
             "gross_pnl": gross_pnl,
             "fees": fees,
@@ -641,6 +648,9 @@ class HistoricalBacktester:
                 "real_order_sent": False,
             }
             if decision.get("strategy") == "PROJECT_EDGE_V3":
+                diagnostics = decision.get("diagnostics")
+                if not isinstance(diagnostics, dict):
+                    diagnostics = {}
                 position.update(
                     {
                         "risk_budget": float(trade_plan["risk_budget"]),
@@ -649,6 +659,23 @@ class HistoricalBacktester:
                             trade_plan["estimated_net_reward_risk"]
                         ),
                         "leverage": 1,
+                        "stop_distance_pct": float(
+                            trade_plan["stop_distance"] / entry_price
+                        ),
+                        "target_distance_pct": float(
+                            trade_plan["target_distance"] / entry_price
+                        ),
+                        "exposure_pct": float(
+                            trade_plan["exposure"] / balance
+                        ),
+                        "estimated_cost_risk_ratio": float(
+                            trade_plan["estimated_cost"]
+                            / trade_plan["risk_budget"]
+                        ),
+                        **{
+                            f"diag_{field}": diagnostics.get(field)
+                            for field in self.strategy_v3.DIAGNOSTIC_FIELDS
+                        },
                     }
                 )
 

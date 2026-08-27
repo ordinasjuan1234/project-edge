@@ -84,6 +84,29 @@ Validacion historica realista del motor antes de considerar Testnet o REAL:
 - Verificacion local de esta ampliacion: 142 tests superados, demostracion
   PAPER completada y rechazo de REAL confirmado antes de consultar precios.
 
+### Resultado multianual v3
+
+- 2023-2024: +2,99%, 45 operaciones y profit factor 1,25.
+- 2024-2025: -6,20%, 31 operaciones y profit factor 0,45.
+- 2025-2026: +2,10%, 37 operaciones y profit factor 1,20.
+- Simulacion secuencial de tres anos: -1,36%, profit factor 0,96 y drawdown
+  maximo aproximado 9,37% despues de costos.
+- LONG acumulo -256,99 USDT y SHORT +146,19 USDT, pero SHORT tampoco alcanzo
+  el criterio minimo y perdio durante el ano intermedio.
+- Veredicto: v3 no aprueba validacion para REAL; permanece solo como
+  observacion PAPER.
+
+### Hito diagnostico v3.1
+
+- Registrar en cada operacion ADX, cambio de ADX, separacion y pendiente EMA,
+  eficiencia de tendencia, ATR relativo, profundidad del retroceso, distancia
+  al gatillo, FVG, duracion y dimensiones del plan de riesgo.
+- Mantener intactas las reglas de decision v3 durante esta medicion.
+- Repetir los tres bloques anuales y comparar ganadoras contra perdedoras antes
+  de proponer filtros para una candidata v4.
+- Verificacion local: 144 tests superados, demostracion PAPER completada y
+  rechazo de REAL confirmado antes de consultar precios.
+
 ### Avance implementado y resultados de referencia v2
 
 - Se agrego un backtest walk-forward conjunto para BTCUSDT y ETHUSDT.
@@ -118,9 +141,9 @@ Validacion historica realista del motor antes de considerar Testnet o REAL:
 
 ### Proximo paso verificable
 
-- Ejecutar `PROJECT EDGE v3 - Validacion multianual ETH` una sola vez.
-- Descargar los artefactos de uno y dos años hacia atras.
-- Comparar ambos bloques contra el año reciente ya validado, sin cambiar parametros.
+- Ejecutar nuevamente los tres bloques con el CSV diagnostico v3.1.
+- Comparar variables de entrada entre los dos anos positivos y el ano negativo.
+- Proponer filtros v4 solo si aparece una diferencia causal y repetible.
 - Mantener el bot exclusivamente en PAPER aunque v3 resulte positivo.
 
 ## Verificacion obligatoria

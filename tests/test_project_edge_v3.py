@@ -25,8 +25,17 @@ def ready_snapshot(direction="LONG"):
         "pe_ema_slow_1H": 100.0,
         "pe_ema_slope_1H": 0.5 if bullish else -0.5,
         "pe_adx_1H": 30.0,
+        "pe_adx_delta_1H": 2.5,
         "pe_adx_rising_1H": True,
+        "pe_ema_gap_pct_4H": 0.10,
+        "pe_ema_gap_pct_1H": 0.05,
+        "pe_ema_slope_pct_4H": 0.01 if bullish else -0.01,
+        "pe_ema_slope_pct_1H": 0.005 if bullish else -0.005,
+        "pe_efficiency_ratio_1H": 0.42,
         "pe_atr_15M": 2.0,
+        "pe_atr_pct_15M": 0.02,
+        f"pe_pullback_depth_{'long' if bullish else 'short'}_pct_15M": 0.006,
+        "pe_distance_from_ema_pct_5M": 0.003 if bullish else -0.003,
         f"pe_pullback_{'long' if bullish else 'short'}_15M": True,
         f"pe_trigger_{'long' if bullish else 'short'}_5M": True,
     }
@@ -62,6 +71,31 @@ def test_missing_5m_trigger_keeps_signal_on_watch():
     assert decision["decision"] == "WATCH_SHORT"
     assert decision["can_execute"] is False
     assert "trigger_5m" in decision["reason"]
+
+
+def test_ready_signal_exposes_diagnostics_without_changing_decision():
+    decision = ProjectEdgeV3().decide_snapshot(ready_snapshot("SHORT"))
+
+    assert decision["decision"] == "READY_SHORT"
+    assert decision["can_execute"] is True
+    assert decision["diagnostics"] == {
+        "state_4h": "BEARISH",
+        "state_1h": "BEARISH",
+        "state_30m": "BEARISH",
+        "state_15m": "BEARISH",
+        "state_5m": "BEARISH",
+        "adx_1h": pytest.approx(30.0),
+        "adx_delta_1h": pytest.approx(2.5),
+        "ema_gap_pct_4h": pytest.approx(0.10),
+        "ema_gap_pct_1h": pytest.approx(0.05),
+        "ema_slope_pct_4h": pytest.approx(-0.01),
+        "ema_slope_pct_1h": pytest.approx(-0.005),
+        "efficiency_ratio_1h": pytest.approx(0.42),
+        "atr_pct_15m": pytest.approx(0.02),
+        "pullback_depth_pct_15m": pytest.approx(0.006),
+        "distance_from_ema_pct_5m": pytest.approx(-0.003),
+        "fvg_confluence": False,
+    }
 
 
 def test_features_are_causal_when_future_candle_changes():

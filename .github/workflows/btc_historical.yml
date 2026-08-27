@@ -1,4 +1,4 @@
-name: PROJECT EDGE v3 - Backtest histórico ETH
+name: PROJECT EDGE v3.1 - Diagnóstico histórico ETH
 
 on:
   workflow_dispatch:
@@ -37,7 +37,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Ejecutar backtest ETH v3
+      - name: Ejecutar diagnóstico ETH v3.1
         env:
           PYTHONPATH: ${{ github.workspace }}
           PROJECT_EDGE_MODE: PAPER
@@ -46,7 +46,7 @@ jobs:
       - name: Guardar reporte descargable
         uses: actions/upload-artifact@v4
         with:
-          name: project-edge-v3-eth-${{ inputs.days }}-days
+          name: project-edge-v3.1-diagnostic-eth-${{ inputs.days }}-days
           path: artifacts/backtest/
           if-no-files-found: error
           retention-days: 30
