@@ -54,11 +54,14 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
   4h; por defecto abre en 15m.
 - El activo visual sigue al selector manual cuando no hay una operación y pasa
   automáticamente al activo de la posición o LIMIT PAPER cuando existen.
+- Un cartel sobre el gráfico informa ALCISTA/COMPRAR/LONG,
+  BAJISTA/VENDER/SHORT o SIN CONFIRMACIÓN/ESPERAR según la señal real del
+  scanner. Si existe una posición o LIMIT PAPER, ese estado tiene prioridad.
 - El gráfico se carga al abrir la sección para evitar dimensiones incorrectas
   mientras el panel está oculto y no se reinicia en cada actualización.
 - Es estrictamente visual: no abre, modifica ni cierra operaciones, no usa
   claves privadas y no cambia la estrategia AUTO v3.
-- Verificación local: 154 tests superados, JavaScript validado, demostración
+- Verificación local: 157 tests superados, JavaScript validado, demostración
   PAPER completada y rechazo directo de REAL confirmado.
 
 ## Ultimo hito completado

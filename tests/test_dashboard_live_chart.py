@@ -33,3 +33,23 @@ def test_live_chart_follows_manual_symbol_and_open_position():
     assert "renderManualTradingViewChart(liveTargetSymbol)" in HTML
     assert "renderManualTradingViewChart(symbol)" in HTML
     assert "renderManualTradingViewChart(manualChartTargetSymbol)" in HTML
+
+
+def test_live_chart_shows_only_confirmed_project_edge_signal():
+    assert 'id=\'manualChartSignal\'' in HTML
+    assert "ALCISTA · COMPRAR · LONG" in HTML
+    assert "BAJISTA · VENDER · SHORT" in HTML
+    assert "SIN CONFIRMACIÓN · ESPERAR" in HTML
+    assert "Señal técnica PAPER confirmada por PROJECT EDGE" in HTML
+
+
+def test_live_chart_prioritizes_open_paper_position():
+    assert "POSICIÓN PAPER · LONG" in HTML
+    assert "POSICIÓN PAPER · SHORT" in HTML
+    assert "Entrada '+fmt(position.entry_price)+' USDT" in HTML
+
+
+def test_live_chart_identifies_pending_limit_order():
+    assert "ORDEN LIMIT PAPER · LONG" in HTML
+    assert "ORDEN LIMIT PAPER · SHORT" in HTML
+    assert "Esperando ejecución en '+fmt(pending.limit_price)+' USDT" in HTML
