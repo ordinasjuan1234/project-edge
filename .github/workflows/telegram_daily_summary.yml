@@ -1,0 +1,29 @@
+name: PROJECT EDGE - Resumen diario Telegram PAPER
+
+on:
+  schedule:
+    # 00:20 de Argentina. Resume el día local anterior.
+    - cron: "20 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  daily-paper-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Send previous-day PAPER summary
+        env:
+          PROJECT_EDGE_MODE: PAPER
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python send_daily_summary.py

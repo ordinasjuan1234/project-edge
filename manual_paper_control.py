@@ -29,6 +29,12 @@ import argparse
 
 from engine.data.binance_historical_data import BinanceHistoricalData
 from paper_state import PaperState
+from telegram_notifier import (
+    notify_auto_control,
+    notify_manual_action,
+    notify_manual_entry,
+    notify_manual_exit,
+)
 from trading_mode import require_paper_mode
 
 
@@ -157,6 +163,11 @@ def pause_auto(
         False,
         reason="MANUAL_PAUSE",
     )
+    notify_auto_control(
+        "PAUSE_AUTO",
+        result,
+        balance=state.balance,
+    )
 
     print("=" * 60)
     print("PROJECT EDGE - AUTO PAPER PAUSADO")
@@ -194,6 +205,11 @@ def emergency_stop_auto(
         False,
         reason="EMERGENCY_STOP",
     )
+    notify_auto_control(
+        "EMERGENCY_STOP_AUTO",
+        result,
+        balance=state.balance,
+    )
 
     print("=" * 60)
     print("PROJECT EDGE - EMERGENCY STOP AUTO")
@@ -226,6 +242,11 @@ def resume_auto(
     """
     result = state.set_auto_enabled(
         True
+    )
+    notify_auto_control(
+        "RESUME_AUTO",
+        result,
+        balance=state.balance,
     )
 
     print("=" * 60)
@@ -313,6 +334,10 @@ def open_market_manual(
 
     state.data["position"] = position
     state.save()
+    notify_manual_entry(
+        position,
+        balance=state.balance,
+    )
 
     print("=" * 60)
     print("PROJECT EDGE - ENTRADA MARKET PAPER")
@@ -406,6 +431,11 @@ def create_limit_manual(
         take_profit=tp,
         source="MANUAL",
     )
+    notify_manual_action(
+        "LIMIT_CREATED",
+        order,
+        balance=state.balance,
+    )
 
     print("=" * 60)
     print("PROJECT EDGE - ORDEN LIMIT PAPER PENDIENTE")
@@ -440,6 +470,11 @@ def cancel_limit_manual(
 
     order = state.cancel_pending_order(
         reason="MANUAL_CANCEL",
+    )
+    notify_manual_action(
+        "LIMIT_CANCELLED",
+        order,
+        balance=state.balance,
     )
 
     print("=" * 60)
@@ -479,6 +514,7 @@ def close_manual(
         exit_price=price,
         reason="MANUAL_CLOSE",
     )
+    notify_manual_exit(trade)
 
     print("=" * 60)
     print("PROJECT EDGE - CIERRE MANUAL PAPER")
@@ -537,6 +573,14 @@ def partial_close_manual(
             else f"PARTIAL_CLOSE_{int(pct)}"
         ),
     )
+    if result.get("is_final") is True:
+        notify_manual_exit(result)
+    else:
+        notify_manual_action(
+            "PARTIAL_CLOSE",
+            result,
+            balance=state.balance,
+        )
 
     print("=" * 60)
 
@@ -651,6 +695,11 @@ def update_manual_risk(
 
     state.data["position"] = position
     state.save()
+    notify_manual_action(
+        "RISK_UPDATED",
+        position,
+        balance=state.balance,
+    )
 
     print("=" * 60)
     print("PROJECT EDGE - MODIFICAR SL/TP PAPER")
@@ -694,6 +743,11 @@ def set_break_even(
 
     state.data["position"] = position
     state.save()
+    notify_manual_action(
+        "BREAK_EVEN",
+        position,
+        balance=state.balance,
+    )
 
     print("=" * 60)
     print("PROJECT EDGE - BREAK EVEN PAPER")
@@ -758,6 +812,11 @@ def enable_trailing(
 
     state.data["position"] = position
     state.save()
+    notify_manual_action(
+        "TRAILING_ON",
+        position,
+        balance=state.balance,
+    )
 
     print("=" * 60)
     print("PROJECT EDGE - TRAILING STOP ACTIVADO")
@@ -785,6 +844,11 @@ def disable_trailing(
 
     state.data["position"] = position
     state.save()
+    notify_manual_action(
+        "TRAILING_OFF",
+        position,
+        balance=state.balance,
+    )
 
     print("=" * 60)
     print("PROJECT EDGE - TRAILING STOP DESACTIVADO")

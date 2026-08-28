@@ -128,6 +128,9 @@ jobs:
           TAKE_PROFIT: ${{ inputs.take_profit }}
           TRAILING_PCT: ${{ inputs.trailing_pct }}
           PARTIAL_PCT: ${{ inputs.partial_pct }}
+          PROJECT_EDGE_MODE: PAPER
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
         run: |
           ARGS=(

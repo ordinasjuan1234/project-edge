@@ -45,7 +45,11 @@ from engine.decision.project_edge_v3 import (
 )
 
 from paper_state import PaperState
-from telegram_notifier import notify_auto_entry, notify_auto_exit
+from telegram_notifier import (
+    notify_auto_entry,
+    notify_manual_entry,
+    notify_position_exit,
+)
 from trading_mode import require_paper_mode
 
 SYMBOL = "ETHUSDT"
@@ -383,6 +387,10 @@ def manage_pending_order(
         state.fill_pending_order(
             fill_price=limit_price,
         )
+    )
+    notify_manual_entry(
+        position,
+        balance=state.balance,
     )
 
     print("")
@@ -842,8 +850,8 @@ def manage_open_position(
                     reason=reason,
                 )
             )
-            notify_auto_exit(result)
-            
+            notify_position_exit(result)
+
             print("")
             print(
                 "PAPER POSITION - CERRADA"
@@ -879,7 +887,7 @@ def manage_open_position(
                 )
             )
 
-            notify_auto_exit(result)
+            notify_position_exit(result)
             print("")
             print(
                 "PAPER POSITION - CERRADA"
@@ -921,7 +929,7 @@ def manage_open_position(
                     reason=reason,
                 )
             )
-            notify_auto_exit(result)
+            notify_position_exit(result)
             print("")
             print(
                 "PAPER POSITION - CERRADA"
@@ -956,7 +964,7 @@ def manage_open_position(
                     reason="TAKE_PROFIT",
                 )
             )
-            notify_auto_exit(result)
+            notify_position_exit(result)
             print("")
             print(
                 "PAPER POSITION - CERRADA"

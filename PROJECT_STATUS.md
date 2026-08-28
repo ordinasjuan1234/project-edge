@@ -1,6 +1,6 @@
 # PROJECT EDGE - Estado permanente
 
-Ultima revision tecnica: 27 de agosto de 2026.
+Ultima revision tecnica: 28 de agosto de 2026.
 
 Este archivo es la memoria operativa del proyecto. Debe consultarse al iniciar un chat nuevo y actualizarse al terminar cada hito.
 
@@ -29,6 +29,22 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - PAUSE AUTO, RESUME AUTO y EMERGENCY STOP AUTO.
 - Scanner manual BTC/ETH, dashboard GitHub Pages y alertas Telegram PAPER.
 - Workflows de tests, persistencia, demostracion PAPER y validacion completa.
+
+### Integracion verificada de la carpeta PENDIENTES
+
+- Las referencias de panel manual, gestion AUTO y dashboard ya estaban
+  integradas en versiones actuales y no debian reemplazar el codigo vigente.
+- Telegram ahora cubre entradas MARKET y LIMIT ejecutadas, salidas por SL, TP,
+  trailing o tiempo, cierres manuales y parciales, cambios de SL/TP,
+  break-even y activacion/desactivacion de trailing.
+- PAUSE AUTO, RESUME AUTO y EMERGENCY STOP generan un aviso sin cerrar una
+  posicion ni cancelar una LIMIT pendiente.
+- Un workflow diario a las 00:20 de Argentina informa por separado operaciones
+  AUTO y MANUAL, ganadas, perdidas, acierto, PnL y saldo PAPER.
+- El AUTO PAPER conserva su ejecucion normal; no se modificaron la estrategia,
+  sus parametros ni el estado operativo.
+- Verificacion local de esta integracion: 150 tests superados, demostracion
+  PAPER completada y rechazo de REAL confirmado antes de consultar precios.
 
 ## Ultimo hito completado
 
@@ -107,6 +123,16 @@ Validacion historica realista del motor antes de considerar Testnet o REAL:
 - Verificacion local: 144 tests superados, demostracion PAPER completada y
   rechazo de REAL confirmado antes de consultar precios.
 
+### Resultado del diagnostico v3.1
+
+- La estrategia congelada reunio 113 operaciones en los tres bloques anuales:
+  -110,81 USDT netos, profit factor 0,967 y 1178,77 USDT de costos.
+- El analisis retrospectivo encontro una candidata de filtro con ADX >= 30 y
+  eficiencia de tendencia >= 0,30: 63 operaciones, +808,10 USDT y profit
+  factor 1,52, con resultado positivo en cada bloque.
+- Esta combinacion fue descubierta sobre los mismos datos y por lo tanto NO
+  constituye validacion fuera de muestra ni autoriza v4 o REAL.
+
 ### Avance implementado y resultados de referencia v2
 
 - Se agrego un backtest walk-forward conjunto para BTCUSDT y ETHUSDT.
@@ -141,10 +167,12 @@ Validacion historica realista del motor antes de considerar Testnet o REAL:
 
 ### Proximo paso verificable
 
-- Ejecutar nuevamente los tres bloques con el CSV diagnostico v3.1.
-- Comparar variables de entrada entre los dos anos positivos y el ano negativo.
-- Proponer filtros v4 solo si aparece una diferencia causal y repetible.
-- Mantener el bot exclusivamente en PAPER aunque v3 resulte positivo.
+- Mantener v3 funcionando solo en AUTO PAPER con parametros congelados.
+- Probar la candidata ADX/eficiencia sobre periodos anteriores que no se usaron
+  para descubrirla, sin volver a ajustar los umbrales.
+- Proponer v4 solo si esos periodos fuera de muestra conservan beneficio neto,
+  profit factor aceptable y drawdown controlado.
+- Mantener REAL bloqueado independientemente del resultado.
 
 ## Verificacion obligatoria
 

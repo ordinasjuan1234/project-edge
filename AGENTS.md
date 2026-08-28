@@ -13,7 +13,7 @@ Estas reglas son obligatorias para cualquier persona o agente que trabaje en est
 ## Arquitectura
 
 - Mantener separado el motor de analisis de la ejecucion.
-- El AUTO actual ejecuta solamente BTCUSDT en PAPER.
+- El AUTO actual ejecuta solamente ETHUSDT en PAPER.
 - El control manual PAPER admite BTCUSDT y ETHUSDT.
 - SOLUSDT permanece planificado, no habilitado en la ejecucion actual.
 - Conservar una sola posicion o una sola orden LIMIT pendiente a la vez.
