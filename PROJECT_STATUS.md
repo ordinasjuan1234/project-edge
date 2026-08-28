@@ -27,7 +27,7 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - Ordenes MARKET y LIMIT PAPER.
 - Stop Loss, Take Profit, cierres parciales 25/50/75/100, break-even y trailing stop.
 - PAUSE AUTO, RESUME AUTO y EMERGENCY STOP AUTO.
-- Scanner manual BTC/ETH, dashboard GitHub Pages y alertas Telegram PAPER.
+- Scanner manual BTC/ETH, gráfico de velas en vivo, dashboard GitHub Pages y alertas Telegram PAPER.
 - Workflows de tests, persistencia, demostracion PAPER y validacion completa.
 
 ### Integracion verificada de la carpeta PENDIENTES
@@ -45,6 +45,21 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
   sus parametros ni el estado operativo.
 - Verificacion local de esta integracion: 150 tests superados, demostracion
   PAPER completada y rechazo de REAL confirmado antes de consultar precios.
+
+### Hito de panel manual: gráfico de velas en vivo
+
+- Se incorporó el gráfico oficial Advanced Chart de TradingView dentro de
+  `Operaciones`, usando únicamente datos públicos de Binance.
+- El gráfico permite alternar BTCUSDT y ETHUSDT y elegir 5m, 15m, 30m, 1h o
+  4h; por defecto abre en 15m.
+- El activo visual sigue al selector manual cuando no hay una operación y pasa
+  automáticamente al activo de la posición o LIMIT PAPER cuando existen.
+- El gráfico se carga al abrir la sección para evitar dimensiones incorrectas
+  mientras el panel está oculto y no se reinicia en cada actualización.
+- Es estrictamente visual: no abre, modifica ni cierra operaciones, no usa
+  claves privadas y no cambia la estrategia AUTO v3.
+- Verificación local: 154 tests superados, JavaScript validado, demostración
+  PAPER completada y rechazo directo de REAL confirmado.
 
 ## Ultimo hito completado
 

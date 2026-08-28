@@ -40,9 +40,14 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}
 .statusbox{margin-top:10px;padding:10px;border:1px solid var(--l);border-radius:8px;background:#091522;color:var(--m)}
 .position,.pending{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pending{padding:10px;border:1px solid #6d5d2f;border-radius:9px;background:#17170f}
 .empty{color:var(--m);padding:10px 0}.error{color:var(--r)}
+.chart-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.manual-chart-frame{height:560px;margin-top:8px;overflow:hidden;border:1px solid var(--l);border-radius:10px;background:#07101b}
+.manual-chart-frame .tradingview-widget-container{width:100%;height:100%}.manual-chart-frame .tradingview-widget-container__widget{width:100%;height:calc(100% - 24px)}
+.manual-chart-loading{display:flex;align-items:center;justify-content:center;height:100%;color:var(--m)}
+.tradingview-widget-copyright{height:24px;padding:5px 8px;background:#07101b;color:var(--m);font-size:10px}.tradingview-widget-copyright a{color:var(--c);text-decoration:none}
 .view{display:none}.view.active{display:block}.footer{color:#62788e;font-size:10px;margin-top:12px}
 input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf4fa;border:1px solid #20354b;border-radius:7px}
-@media(max-width:950px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.top{flex-direction:column}.position,.pending{grid-template-columns:1fr}.main{padding:14px}.controls{grid-template-columns:1fr 1fr}.partials{grid-template-columns:1fr 1fr}}
+@media(max-width:950px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.top{flex-direction:column}.position,.pending{grid-template-columns:1fr}.main{padding:14px}.controls{grid-template-columns:1fr 1fr}.partials{grid-template-columns:1fr 1fr}.manual-chart-frame{height:480px}}
 </style>
 </head>
 <body>
@@ -185,6 +190,18 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
         </div>
         <div id="scannerReason" class="statusbox">Esperando lectura del scanner.</div>
         <div class="notice" style="margin-top:8px"><b>Qué falta:</b><ul id="scannerMissing" style="margin-bottom:0"></ul></div>
+
+        <h2 style="margin-top:18px">Gráfico de velas en vivo · TradingView</h2>
+        <div class="notice">
+          Gráfico visual con datos públicos de Binance. Cambiar el activo o la temporalidad <b>no abre ni cierra operaciones</b>; todos los controles continúan exclusivamente en PAPER / DEMO.
+        </div>
+        <div class="chart-toolbar">
+          <div class="mini"><span class="mut">Activo del gráfico</span><b id="manualChartSymbolLabel">BTC/USDT</b></div>
+          <div class="mini"><span class="mut">Temporalidad</span><select id="manualChartInterval"><option value="5">5 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="240">4 horas</option></select></div>
+        </div>
+        <div id="manualTradingViewChart" class="manual-chart-frame">
+          <div class="manual-chart-loading">El gráfico se cargará al abrir Operaciones.</div>
+        </div>
 
         <h2 style="margin-top:18px">Mesa manual · guía rápida</h2>
         <div class="notice" style="margin-bottom:12px">
@@ -355,7 +372,10 @@ function cls(state){
 function tag(state){const c=cls(state);return`<span class="tag ${c==='g'?'tg':c==='r'?'tr':c==='y'?'ty':'tb'}">${state||'UNKNOWN'}</span>`}
 function setVal(id,val,state){const el=document.getElementById(id);if(!el)return;el.textContent=val;if(state!==undefined)el.className='val '+cls(state)}
 function decisionLabel(action){action=(action||'WAIT').toUpperCase();if(action.includes('LONG'))return'🟢 '+action;if(action.includes('SHORT')||action.includes('BLOCK'))return'🔴 '+action;return'🟡 '+action}
-function showTab(tab){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+tab).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab))}
+function showTab(tab){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+tab).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  if(tab==='operaciones')setTimeout(()=>renderManualTradingViewChart(manualChartTargetSymbol),0);
+}
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 
 function setControlStatus(msg,kind=''){const el=document.getElementById('controlStatus');el.textContent=msg;el.className='statusbox'+(kind?' '+kind:'')}
@@ -399,6 +419,7 @@ function disconnectControl(){
 
 let partialCloseBusy=false,manualActionBusy=false,liveLastPrice=null;
 let autoEnabled=true,lastDashboardData=null;
+let manualChartTargetSymbol='BTCUSDT',manualChartRenderedSymbol='',manualChartRenderedInterval='';
 
 async function triggerManual(action,partialPct=''){
   if(!getToken()){showTab('sistema');setControlStatus('Conectá GitHub para usar los controles.','y');return}
@@ -529,6 +550,23 @@ function connectLiveMarket(symbol){
   liveSocket.onmessage=e=>{const d=JSON.parse(e.data),price=Number(d.c),change24=Number(d.P);if(Number.isFinite(price))updateLiveMarket(price,change24)};
   liveSocket.onerror=()=>document.getElementById('liveStatus').textContent='Error de conexión en vivo · reintentando...';
   liveSocket.onclose=()=>{document.getElementById('liveStatus').textContent='Reconectando precio en vivo...';liveReconnectTimer=setTimeout(()=>connectLiveMarket(liveSocketSymbol),3000)};
+}
+function renderManualTradingViewChart(symbol){
+  const chart=document.getElementById('manualTradingViewChart'),intervalEl=document.getElementById('manualChartInterval'),label=document.getElementById('manualChartSymbolLabel');
+  symbol=String(symbol||'BTCUSDT').replace('/','').toUpperCase();
+  if(!['BTCUSDT','ETHUSDT'].includes(symbol))symbol='BTCUSDT';
+  const interval=['5','15','30','60','240'].includes(intervalEl?.value)?intervalEl.value:'15';
+  manualChartTargetSymbol=symbol;if(label)label.textContent=symbol.replace('USDT','/USDT');
+  if(!chart||!document.getElementById('view-operaciones').classList.contains('active'))return;
+  if(manualChartRenderedSymbol===symbol&&manualChartRenderedInterval===interval)return;
+
+  manualChartRenderedSymbol=symbol;manualChartRenderedInterval=interval;chart.innerHTML='';
+  const widget=document.createElement('div');widget.className='tradingview-widget-container';
+  const widgetBody=document.createElement('div');widgetBody.className='tradingview-widget-container__widget';widget.appendChild(widgetBody);
+  const attribution=document.createElement('div');attribution.className='tradingview-widget-copyright';attribution.innerHTML='<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">Gráfico de TradingView</a>';widget.appendChild(attribution);
+  const script=document.createElement('script');script.type='text/javascript';script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';script.async=true;
+  script.textContent=JSON.stringify({autosize:true,symbol:'BINANCE:'+symbol,interval,timezone:'America/Argentina/Buenos_Aires',theme:'dark',backgroundColor:'rgba(7, 16, 27, 1)',style:'1',locale:'es',withdateranges:true,hide_side_toolbar:false,allow_symbol_change:false,save_image:false,calendar:false,support_host:'https://www.tradingview.com'});
+  widget.appendChild(script);chart.appendChild(widget);
 }
 function renderFvg(d){
   const order=['4H','1H','30M','15M','5M'],fvg=d.fvg||{};
@@ -674,7 +712,7 @@ async function loadData(){
     setVal('balance',fmt(p.balance)+' USDT','BULL');document.getElementById('initialBalance').textContent=fmt(p.initial_balance)+' USDT';document.getElementById('opBalance').textContent=fmt(p.balance)+' USDT';document.getElementById('unrealized').textContent=(Number(p.unrealized_pnl)>=0?'+':'')+fmt(p.unrealized_pnl)+' USDT';document.getElementById('unrealized').className=Number(p.unrealized_pnl)>0?'g':Number(p.unrealized_pnl)<0?'r':'';
 
     const pos=p.position,pending=p.pending_order;livePosition=pos||null;
-    const liveTargetSymbol=pos?.symbol||pending?.symbol||d.symbol||(document.getElementById('manualSymbol')?.value||'ETH/USDT').replace('/','');connectLiveMarket(liveTargetSymbol);
+    const liveTargetSymbol=pos?.symbol||pending?.symbol||(document.getElementById('manualSymbol')?.value||d.symbol||'ETH/USDT').replace('/','');connectLiveMarket(liveTargetSymbol);renderManualTradingViewChart(liveTargetSymbol);
 
     const box=document.getElementById('positionBox'),pendingBox=document.getElementById('pendingOrderBox');
     if(pos){
@@ -772,7 +810,8 @@ document.getElementById('autoEmergencyBtn').addEventListener('click',()=>trigger
 document.getElementById('manualSL').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualTP').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualOrderType').addEventListener('change',syncOrderTypeInput);
-document.getElementById('manualSymbol').addEventListener('change',e=>{if(!livePosition)connectLiveMarket(e.target.value.replace('/',''))});
+document.getElementById('manualSymbol').addEventListener('change',e=>{const symbol=e.target.value.replace('/','');if(!livePosition)connectLiveMarket(symbol);renderManualTradingViewChart(symbol)});
+document.getElementById('manualChartInterval').addEventListener('change',()=>{manualChartRenderedInterval='';renderManualTradingViewChart(manualChartTargetSymbol)});
 document.getElementById('scannerSymbol').addEventListener('change',()=>{if(lastDashboardData)renderManualScanner(lastDashboardData)});
 
 if(getToken()){setControlEnabled(true);setControlStatus('CONTROL CONECTADO · PAPER','g')}else{setControlEnabled(false)}
