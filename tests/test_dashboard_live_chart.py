@@ -4,7 +4,8 @@ from pathlib import Path
 HTML = (Path(__file__).resolve().parents[1] / "index.html").read_text(encoding="utf-8")
 
 
-def test_manual_dashboard_embeds_official_tradingview_chart():
+def test_dashboard_embeds_two_official_tradingview_charts():
+    assert 'id="autoTradingViewChart"' in HTML
     assert 'id="manualTradingViewChart"' in HTML
     assert "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" in HTML
     assert "symbol:'BINANCE:'+symbol" in HTML
@@ -29,18 +30,50 @@ def test_live_chart_exposes_requested_timeframes():
         assert label in HTML
 
 
-def test_live_chart_follows_manual_symbol_and_open_position():
-    assert "renderManualTradingViewChart(liveTargetSymbol)" in HTML
+def test_auto_and_manual_charts_have_independent_targets():
+    assert 'id="autoChartSymbolLabel">ETH/USDT' in HTML
+    assert 'id="manualChartSymbol"' in HTML
+    assert "renderAutoTradingViewChart(autoTargetSymbol)" in HTML
     assert "renderManualTradingViewChart(symbol)" in HTML
+    assert "renderManualTradingViewChart(manualChartSelector?.value||'BTC/USDT')" in HTML
+    assert "chartSelector.value=e.target.value" in HTML
+
+
+def test_both_charts_render_when_operations_tab_opens():
+    assert "renderAutoTradingViewChart(autoChartTargetSymbol)" in HTML
     assert "renderManualTradingViewChart(manualChartTargetSymbol)" in HTML
+    assert "mountTradingViewChart(chart,symbol,interval,'autoChartSignal')" in HTML
+    assert "mountTradingViewChart(chart,symbol,interval,'manualChartSignal')" in HTML
+
+
+def test_auto_chart_follows_only_auto_state_and_engine_symbol():
+    assert "String(position.source||'').toUpperCase()==='AUTO'" in HTML
+    assert "String(pending.source||'').toUpperCase()==='AUTO'" in HTML
+    assert "autoPosition?pos.symbol:autoPending?pending.symbol:(d.symbol||'ETHUSDT')" in HTML
+    assert "AUTO PAPER · POSICIÓN LONG" in HTML
+    assert "AUTO PAPER · POSICIÓN SHORT" in HTML
+
+
+def test_manual_chart_prioritizes_only_manual_state():
+    assert "String(position.source||'').toUpperCase()==='MANUAL'" in HTML
+    assert "String(pending.source||'').toUpperCase()==='MANUAL'" in HTML
+    assert "manualPosition?pos.symbol:pending.symbol" in HTML
 
 
 def test_live_chart_shows_only_confirmed_project_edge_signal():
-    assert 'id=\'manualChartSignal\'' in HTML
+    assert "mountTradingViewChart(chart,symbol,interval,'manualChartSignal')" in HTML
     assert "ALCISTA · COMPRAR · LONG" in HTML
     assert "BAJISTA · VENDER · SHORT" in HTML
     assert "SIN CONFIRMACIÓN · ESPERAR" in HTML
     assert "Señal técnica PAPER confirmada por PROJECT EDGE" in HTML
+
+
+def test_auto_chart_requires_executable_engine_confirmation():
+    assert "canExecute=d.decision?.can_execute===true" in HTML
+    assert "canExecute&&action.includes('LONG')" in HTML
+    assert "canExecute&&action.includes('SHORT')" in HTML
+    assert "AUTO · SIN CONFIRMACIÓN · ESPERAR" in HTML
+    assert "Oportunidad AUTO PAPER confirmada por PROJECT EDGE" in HTML
 
 
 def test_live_chart_prioritizes_open_paper_position():

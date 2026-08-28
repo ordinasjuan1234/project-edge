@@ -27,7 +27,7 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - Ordenes MARKET y LIMIT PAPER.
 - Stop Loss, Take Profit, cierres parciales 25/50/75/100, break-even y trailing stop.
 - PAUSE AUTO, RESUME AUTO y EMERGENCY STOP AUTO.
-- Scanner manual BTC/ETH, gráfico de velas en vivo, dashboard GitHub Pages y alertas Telegram PAPER.
+- Scanner manual BTC/ETH, gráficos AUTO/MANUAL de velas en vivo, dashboard GitHub Pages y alertas Telegram PAPER.
 - Workflows de tests, persistencia, demostracion PAPER y validacion completa.
 
 ### Integracion verificada de la carpeta PENDIENTES
@@ -46,22 +46,24 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - Verificacion local de esta integracion: 150 tests superados, demostracion
   PAPER completada y rechazo de REAL confirmado antes de consultar precios.
 
-### Hito de panel manual: gráfico de velas en vivo
+### Hito de panel PAPER: gráficos AUTO y MANUAL en vivo
 
-- Se incorporó el gráfico oficial Advanced Chart de TradingView dentro de
-  `Operaciones`, usando únicamente datos públicos de Binance.
-- El gráfico permite alternar BTCUSDT y ETHUSDT y elegir 5m, 15m, 30m, 1h o
-  4h; por defecto abre en 15m.
-- El activo visual sigue al selector manual cuando no hay una operación y pasa
-  automáticamente al activo de la posición o LIMIT PAPER cuando existen.
-- Un cartel sobre el gráfico informa ALCISTA/COMPRAR/LONG,
-  BAJISTA/VENDER/SHORT o SIN CONFIRMACIÓN/ESPERAR según la señal real del
-  scanner. Si existe una posición o LIMIT PAPER, ese estado tiene prioridad.
-- El gráfico se carga al abrir la sección para evitar dimensiones incorrectas
-  mientras el panel está oculto y no se reinicia en cada actualización.
+- Se incorporaron dos gráficos oficiales Advanced Chart de TradingView dentro
+  de `Operaciones`, usando únicamente datos públicos de Binance.
+- El gráfico AUTO sigue exclusivamente el símbolo del motor automático,
+  actualmente ETHUSDT. El gráfico MANUAL permite alternar BTCUSDT y ETHUSDT
+  sin depender del AUTO. Ambos permiten elegir 5m, 15m, 30m, 1h o 4h y abren
+  en 15m por defecto.
+- Cada gráfico tiene su propio cartel. AUTO muestra únicamente la posición,
+  LIMIT o confirmación ejecutable de origen AUTO; MANUAL muestra únicamente
+  la posición o LIMIT de origen MANUAL y, cuando no existen, la señal del
+  scanner del activo seleccionado.
+- Los gráficos se cargan al abrir la sección para evitar dimensiones
+  incorrectas mientras el panel está oculto y no se reinician en cada
+  actualización.
 - Es estrictamente visual: no abre, modifica ni cierra operaciones, no usa
   claves privadas y no cambia la estrategia AUTO v3.
-- Verificación local: 157 tests superados, JavaScript validado, demostración
+- Verificación local: 161 tests superados, JavaScript validado, demostración
   PAPER completada y rechazo directo de REAL confirmado.
 
 ## Ultimo hito completado

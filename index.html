@@ -169,6 +169,18 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
         </div>
         <div id="liveStatus" class="statusbox">Precio público Binance · esperando conexión en vivo...</div>
 
+        <h2 style="margin-top:18px">Gráfico AUTO PAPER · ETH/USDT</h2>
+        <div class="notice">
+          Sigue exclusivamente al motor automático. Actualmente el AUTO opera ETH/USDT; cambiar esta temporalidad solo modifica la vista y no altera la estrategia.
+        </div>
+        <div class="chart-toolbar">
+          <div class="mini"><span class="mut">Activo AUTO</span><b id="autoChartSymbolLabel">ETH/USDT</b></div>
+          <div class="mini"><span class="mut">Temporalidad visual</span><select id="autoChartInterval"><option value="5">5 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="240">4 horas</option></select></div>
+        </div>
+        <div id="autoTradingViewChart" class="manual-chart-frame">
+          <div class="manual-chart-loading">El gráfico AUTO se cargará al abrir Operaciones.</div>
+        </div>
+
         <h2 style="margin-top:18px">Scanner MANUAL · BTC / ETH</h2>
         <div class="notice" style="margin-bottom:10px">
           El scanner <b>solo analiza</b>. No abre ni cierra operaciones. LONG = compra esperando suba · SHORT = operación esperando baja · WAIT = esperar.
@@ -194,12 +206,12 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
         <div id="scannerReason" class="statusbox">Esperando lectura del scanner.</div>
         <div class="notice" style="margin-top:8px"><b>Qué falta:</b><ul id="scannerMissing" style="margin-bottom:0"></ul></div>
 
-        <h2 style="margin-top:18px">Gráfico de velas en vivo · TradingView</h2>
+        <h2 style="margin-top:18px">Gráfico MANUAL · BTC/USDT o ETH/USDT</h2>
         <div class="notice">
-          Gráfico visual con datos públicos de Binance. Cambiar el activo o la temporalidad <b>no abre ni cierra operaciones</b>; todos los controles continúan exclusivamente en PAPER / DEMO.
+          Es independiente del AUTO y sigue el activo elegido en la mesa manual. Cambiar el activo o la temporalidad <b>no abre ni cierra operaciones</b>; todos los controles continúan exclusivamente en PAPER / DEMO.
         </div>
         <div class="chart-toolbar">
-          <div class="mini"><span class="mut">Activo del gráfico</span><b id="manualChartSymbolLabel">BTC/USDT</b></div>
+          <div class="mini"><span class="mut">Activo del gráfico MANUAL</span><select id="manualChartSymbol"><option>BTC/USDT</option><option>ETH/USDT</option></select></div>
           <div class="mini"><span class="mut">Temporalidad</span><select id="manualChartInterval"><option value="5">5 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="240">4 horas</option></select></div>
         </div>
         <div id="manualTradingViewChart" class="manual-chart-frame">
@@ -377,7 +389,7 @@ function setVal(id,val,state){const el=document.getElementById(id);if(!el)return
 function decisionLabel(action){action=(action||'WAIT').toUpperCase();if(action.includes('LONG'))return'🟢 '+action;if(action.includes('SHORT')||action.includes('BLOCK'))return'🔴 '+action;return'🟡 '+action}
 function showTab(tab){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+tab).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
-  if(tab==='operaciones')setTimeout(()=>renderManualTradingViewChart(manualChartTargetSymbol),0);
+  if(tab==='operaciones')setTimeout(()=>{renderAutoTradingViewChart(autoChartTargetSymbol);renderManualTradingViewChart(manualChartTargetSymbol)},0);
 }
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 
@@ -423,6 +435,7 @@ function disconnectControl(){
 let partialCloseBusy=false,manualActionBusy=false,liveLastPrice=null;
 let autoEnabled=true,lastDashboardData=null;
 let manualChartTargetSymbol='BTCUSDT',manualChartRenderedSymbol='',manualChartRenderedInterval='';
+let autoChartTargetSymbol='ETHUSDT',autoChartRenderedSymbol='',autoChartRenderedInterval='';
 
 async function triggerManual(action,partialPct=''){
   if(!getToken()){showTab('sistema');setControlStatus('Conectá GitHub para usar los controles.','y');return}
@@ -554,35 +567,81 @@ function connectLiveMarket(symbol){
   liveSocket.onerror=()=>document.getElementById('liveStatus').textContent='Error de conexión en vivo · reintentando...';
   liveSocket.onclose=()=>{document.getElementById('liveStatus').textContent='Reconectando precio en vivo...';liveReconnectTimer=setTimeout(()=>connectLiveMarket(liveSocketSymbol),3000)};
 }
-function renderManualTradingViewChart(symbol){
-  const chart=document.getElementById('manualTradingViewChart'),intervalEl=document.getElementById('manualChartInterval'),label=document.getElementById('manualChartSymbolLabel');
-  symbol=String(symbol||'BTCUSDT').replace('/','').toUpperCase();
-  if(!['BTCUSDT','ETHUSDT'].includes(symbol))symbol='BTCUSDT';
-  const interval=['5','15','30','60','240'].includes(intervalEl?.value)?intervalEl.value:'15';
-  manualChartTargetSymbol=symbol;if(label)label.textContent=symbol.replace('USDT','/USDT');
-  updateManualChartSignal();
-  if(!chart||!document.getElementById('view-operaciones').classList.contains('active'))return;
-  if(manualChartRenderedSymbol===symbol&&manualChartRenderedInterval===interval)return;
-
-  manualChartRenderedSymbol=symbol;manualChartRenderedInterval=interval;chart.innerHTML='';
+function mountTradingViewChart(chart,symbol,interval,signalId){
+  chart.innerHTML='';
   const widget=document.createElement('div');widget.className='tradingview-widget-container';
   const widgetBody=document.createElement('div');widgetBody.className='tradingview-widget-container__widget';widget.appendChild(widgetBody);
   const attribution=document.createElement('div');attribution.className='tradingview-widget-copyright';attribution.innerHTML='<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">Gráfico de TradingView</a>';widget.appendChild(attribution);
   const script=document.createElement('script');script.type='text/javascript';script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';script.async=true;
   script.textContent=JSON.stringify({autosize:true,symbol:'BINANCE:'+symbol,interval,timezone:'America/Argentina/Buenos_Aires',theme:'dark',backgroundColor:'rgba(7, 16, 27, 1)',style:'1',locale:'es',withdateranges:true,hide_side_toolbar:false,allow_symbol_change:false,save_image:false,calendar:false,support_host:'https://www.tradingview.com'});
   widget.appendChild(script);chart.appendChild(widget);
-  const signal=document.createElement('div');signal.id='manualChartSignal';signal.className='chart-signal wait';chart.appendChild(signal);updateManualChartSignal();
+  const signal=document.createElement('div');signal.id=signalId;signal.className='chart-signal wait';chart.appendChild(signal);
+}
+function renderAutoTradingViewChart(symbol){
+  const chart=document.getElementById('autoTradingViewChart'),intervalEl=document.getElementById('autoChartInterval'),label=document.getElementById('autoChartSymbolLabel');
+  symbol=String(symbol||'ETHUSDT').replace('/','').toUpperCase();
+  if(!['BTCUSDT','ETHUSDT'].includes(symbol))symbol='ETHUSDT';
+  const interval=['5','15','30','60','240'].includes(intervalEl?.value)?intervalEl.value:'15';
+  autoChartTargetSymbol=symbol;if(label)label.textContent=symbol.replace('USDT','/USDT');
+  updateAutoChartSignal();
+  if(!chart||!document.getElementById('view-operaciones').classList.contains('active'))return;
+  if(autoChartRenderedSymbol===symbol&&autoChartRenderedInterval===interval)return;
+
+  autoChartRenderedSymbol=symbol;autoChartRenderedInterval=interval;
+  mountTradingViewChart(chart,symbol,interval,'autoChartSignal');updateAutoChartSignal();
+}
+function renderManualTradingViewChart(symbol){
+  const chart=document.getElementById('manualTradingViewChart'),intervalEl=document.getElementById('manualChartInterval'),selector=document.getElementById('manualChartSymbol');
+  symbol=String(symbol||selector?.value||'BTCUSDT').replace('/','').toUpperCase();
+  if(!['BTCUSDT','ETHUSDT'].includes(symbol))symbol='BTCUSDT';
+  const interval=['5','15','30','60','240'].includes(intervalEl?.value)?intervalEl.value:'15';
+  manualChartTargetSymbol=symbol;if(selector)selector.value=symbol.replace('USDT','/USDT');
+  updateManualChartSignal();
+  if(!chart||!document.getElementById('view-operaciones').classList.contains('active'))return;
+  if(manualChartRenderedSymbol===symbol&&manualChartRenderedInterval===interval)return;
+
+  manualChartRenderedSymbol=symbol;manualChartRenderedInterval=interval;
+  mountTradingViewChart(chart,symbol,interval,'manualChartSignal');updateManualChartSignal();
+}
+function updateAutoChartSignal(){
+  const banner=document.getElementById('autoChartSignal');if(!banner)return;
+  const d=lastDashboardData||{},paper=d.paper||{},position=paper.position,pending=paper.pending_order;
+  const autoPosition=position&&String(position.source||'').toUpperCase()==='AUTO'&&String(position.symbol||'').replace('/','')===autoChartTargetSymbol;
+  const autoPending=pending&&String(pending.source||'').toUpperCase()==='AUTO'&&String(pending.symbol||'').replace('/','')===autoChartTargetSymbol;
+  if(autoPosition){
+    const direction=String(position.direction||'LONG').toUpperCase(),isLong=direction==='LONG';
+    banner.className='chart-signal '+(isLong?'long':'short');
+    banner.innerHTML='<strong>'+(isLong?'▲ AUTO PAPER · POSICIÓN LONG':'▼ AUTO PAPER · POSICIÓN SHORT')+'</strong><span>'+(isLong?'COMPRA automática abierta':'VENTA automática abierta')+' · Entrada '+fmt(position.entry_price)+' USDT</span>';
+    return;
+  }
+  if(autoPending){
+    const direction=String(pending.direction||'LONG').toUpperCase(),isLong=direction==='LONG';
+    banner.className='chart-signal '+(isLong?'long':'short');
+    banner.innerHTML='<strong>'+(isLong?'△ AUTO PAPER · LIMIT LONG':'▽ AUTO PAPER · LIMIT SHORT')+'</strong><span>Esperando ejecución automática en '+fmt(pending.limit_price)+' USDT.</span>';
+    return;
+  }
+  const action=String(d.decision?.action||'WAIT').toUpperCase(),canExecute=d.decision?.can_execute===true;
+  if(canExecute&&action.includes('LONG')){
+    banner.className='chart-signal long';banner.innerHTML='<strong>▲ AUTO · ALCISTA · COMPRAR · LONG</strong><span>Oportunidad AUTO PAPER confirmada por PROJECT EDGE.</span>';
+  }else if(canExecute&&action.includes('SHORT')){
+    banner.className='chart-signal short';banner.innerHTML='<strong>▼ AUTO · BAJISTA · VENDER · SHORT</strong><span>Oportunidad AUTO PAPER confirmada por PROJECT EDGE.</span>';
+  }else{
+    const reason=d.readiness?.message||d.decision?.reason||'El motor sigue esperando confirmaciones.';
+    banner.className='chart-signal wait';banner.innerHTML='<strong>● AUTO · SIN CONFIRMACIÓN · ESPERAR</strong><span>'+reason+'</span>';
+  }
 }
 function updateManualChartSignal(){
   const banner=document.getElementById('manualChartSignal');if(!banner)return;
   const d=lastDashboardData||{},paper=d.paper||{},position=paper.position,pending=paper.pending_order,scanner=d.manual_scanner?.[manualChartTargetSymbol];
-  if(position&&String(position.symbol||'').replace('/','')===manualChartTargetSymbol){
+  const manualPosition=position&&String(position.source||'').toUpperCase()==='MANUAL'&&String(position.symbol||'').replace('/','')===manualChartTargetSymbol;
+  const manualPending=pending&&String(pending.source||'').toUpperCase()==='MANUAL'&&String(pending.symbol||'').replace('/','')===manualChartTargetSymbol;
+  if(manualPosition){
     const direction=String(position.direction||'LONG').toUpperCase(),isLong=direction==='LONG';
     banner.className='chart-signal '+(isLong?'long':'short');
     banner.innerHTML='<strong>'+(isLong?'▲ POSICIÓN PAPER · LONG':'▼ POSICIÓN PAPER · SHORT')+'</strong><span>'+(isLong?'ALCISTA · compra abierta':'BAJISTA · venta abierta')+' · Entrada '+fmt(position.entry_price)+' USDT</span>';
     return;
   }
-  if(pending&&String(pending.symbol||'').replace('/','')===manualChartTargetSymbol){
+  if(manualPending){
     const direction=String(pending.direction||'LONG').toUpperCase(),isLong=direction==='LONG';
     banner.className='chart-signal '+(isLong?'long':'short');
     banner.innerHTML='<strong>'+(isLong?'△ ORDEN LIMIT PAPER · LONG':'▽ ORDEN LIMIT PAPER · SHORT')+'</strong><span>Esperando ejecución en '+fmt(pending.limit_price)+' USDT.</span>';
@@ -741,7 +800,12 @@ async function loadData(){
     setVal('balance',fmt(p.balance)+' USDT','BULL');document.getElementById('initialBalance').textContent=fmt(p.initial_balance)+' USDT';document.getElementById('opBalance').textContent=fmt(p.balance)+' USDT';document.getElementById('unrealized').textContent=(Number(p.unrealized_pnl)>=0?'+':'')+fmt(p.unrealized_pnl)+' USDT';document.getElementById('unrealized').className=Number(p.unrealized_pnl)>0?'g':Number(p.unrealized_pnl)<0?'r':'';
 
     const pos=p.position,pending=p.pending_order;livePosition=pos||null;
-    const liveTargetSymbol=pos?.symbol||pending?.symbol||(document.getElementById('manualSymbol')?.value||d.symbol||'ETH/USDT').replace('/','');connectLiveMarket(liveTargetSymbol);renderManualTradingViewChart(liveTargetSymbol);
+    const liveTargetSymbol=pos?.symbol||pending?.symbol||(document.getElementById('manualSymbol')?.value||d.symbol||'ETH/USDT').replace('/','');connectLiveMarket(liveTargetSymbol);
+    const autoPosition=pos&&String(pos.source||'').toUpperCase()==='AUTO',autoPending=pending&&String(pending.source||'').toUpperCase()==='AUTO';
+    const autoTargetSymbol=autoPosition?pos.symbol:autoPending?pending.symbol:(d.symbol||'ETHUSDT');renderAutoTradingViewChart(autoTargetSymbol);
+    const manualPosition=pos&&String(pos.source||'').toUpperCase()==='MANUAL',manualPending=pending&&String(pending.source||'').toUpperCase()==='MANUAL',manualChartSelector=document.getElementById('manualChartSymbol');
+    if(manualChartSelector&&(manualPosition||manualPending))manualChartSelector.value=String((manualPosition?pos.symbol:pending.symbol)||'BTCUSDT').replace('USDT','/USDT');
+    renderManualTradingViewChart(manualChartSelector?.value||'BTC/USDT');
 
     const box=document.getElementById('positionBox'),pendingBox=document.getElementById('pendingOrderBox');
     if(pos){
@@ -839,8 +903,10 @@ document.getElementById('autoEmergencyBtn').addEventListener('click',()=>trigger
 document.getElementById('manualSL').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualTP').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualOrderType').addEventListener('change',syncOrderTypeInput);
-document.getElementById('manualSymbol').addEventListener('change',e=>{const symbol=e.target.value.replace('/','');if(!livePosition)connectLiveMarket(symbol);renderManualTradingViewChart(symbol)});
+document.getElementById('manualSymbol').addEventListener('change',e=>{const symbol=e.target.value.replace('/',''),chartSelector=document.getElementById('manualChartSymbol');if(chartSelector)chartSelector.value=e.target.value;if(!livePosition)connectLiveMarket(symbol);renderManualTradingViewChart(symbol)});
+document.getElementById('manualChartSymbol').addEventListener('change',e=>renderManualTradingViewChart(e.target.value));
 document.getElementById('manualChartInterval').addEventListener('change',()=>{manualChartRenderedInterval='';renderManualTradingViewChart(manualChartTargetSymbol)});
+document.getElementById('autoChartInterval').addEventListener('change',()=>{autoChartRenderedInterval='';renderAutoTradingViewChart(autoChartTargetSymbol)});
 document.getElementById('scannerSymbol').addEventListener('change',()=>{if(lastDashboardData)renderManualScanner(lastDashboardData)});
 
 if(getToken()){setControlEnabled(true);setControlStatus('CONTROL CONECTADO · PAPER','g')}else{setControlEnabled(false)}
