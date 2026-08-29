@@ -608,7 +608,8 @@ def calculate_daily_summary(
 
 def format_daily_summary_message(
     summary: dict[str, Any],
-    balance: Any,
+    auto_balance: Any,
+    manual_balance: Any,
 ) -> str:
     """Construye el resumen diario AUTO/MANUAL."""
     lines = [
@@ -627,7 +628,10 @@ def format_daily_summary_message(
     lines.extend(
         [
             "",
-            f"Saldo PAPER: {_format_number(balance)} USDT",
+            "Capital AUTO DEMO: "
+            f"{_format_number(auto_balance)} USDT",
+            "Saldo MANUAL / legado: "
+            f"{_format_number(manual_balance)} USDT",
             "ℹ️ PAPER / DEMO · sin dinero real",
         ]
     )
@@ -735,6 +739,10 @@ def notify_daily_summary(
     return send_telegram_message(
         format_daily_summary_message(
             summary,
-            balance=state_data.get("balance"),
+            auto_balance=state_data.get(
+                "auto_demo_balance",
+                1000.0,
+            ),
+            manual_balance=state_data.get("balance"),
         )
     )

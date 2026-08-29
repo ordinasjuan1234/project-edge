@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from paper_state import PaperState
@@ -12,6 +14,9 @@ def test_initial_state(tmp_path):
     )
 
     assert state.balance == 10000.0
+    assert state.auto_demo_initial_balance == 1000.0
+    assert state.auto_demo_balance == 1000.0
+    assert state_file.exists()
     assert state.position is None
     assert state.has_open_position is False
     assert state.status()["closed_trades"] == 0
@@ -142,7 +147,77 @@ def test_auto_v3_paper_trade_deducts_fees_and_slippage(tmp_path):
     assert result["gross_pnl"] == pytest.approx(9.79)
     assert result["fees"] == pytest.approx(0.20999)
     assert result["pnl"] == pytest.approx(9.58001)
-    assert result["balance"] == pytest.approx(10009.58001)
+    assert result["balance"] == pytest.approx(1009.58001)
+    assert state.auto_demo_balance == pytest.approx(1009.58001)
+    assert state.balance == pytest.approx(10000.0)
+
+
+def test_migration_creates_and_persists_clean_auto_demo_account(tmp_path):
+    state_file = tmp_path / "paper_state.json"
+    state_file.write_text(
+        json.dumps(
+            {
+                "version": 3,
+                "initial_balance": 10000.0,
+                "balance": 9943.64,
+                "position": None,
+                "pending_order": None,
+                "closed_trades": [],
+                "auto_enabled": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    state = PaperState(
+        file_path=state_file,
+        initial_balance=10000.0,
+        auto_initial_balance=1000.0,
+    )
+
+    assert state.balance == pytest.approx(9943.64)
+    assert state.auto_demo_balance == pytest.approx(1000.0)
+    migrated = json.loads(state_file.read_text(encoding="utf-8"))
+    assert migrated["version"] == 4
+    assert migrated["auto_demo_initial_balance"] == pytest.approx(1000.0)
+    assert migrated["auto_demo_balance"] == pytest.approx(1000.0)
+    assert migrated["auto_demo_started_at"]
+
+
+def test_manual_and_auto_trades_update_only_their_own_accounts(tmp_path):
+    state = PaperState(
+        file_path=tmp_path / "paper_state.json",
+        initial_balance=10000.0,
+        auto_initial_balance=1000.0,
+    )
+
+    state.open_position(
+        symbol="BTCUSDT",
+        direction="LONG",
+        entry_price=100.0,
+        quantity=1.0,
+        stop_loss=90.0,
+        take_profit=110.0,
+        source="MANUAL",
+    )
+    state.close_position(exit_price=110.0, reason="TAKE_PROFIT")
+
+    assert state.balance == pytest.approx(10010.0)
+    assert state.auto_demo_balance == pytest.approx(1000.0)
+
+    state.open_position(
+        symbol="ETHUSDT",
+        direction="SHORT",
+        entry_price=100.0,
+        quantity=1.0,
+        stop_loss=110.0,
+        take_profit=90.0,
+        source="AUTO",
+    )
+    state.close_position(exit_price=90.0, reason="TAKE_PROFIT")
+
+    assert state.balance == pytest.approx(10010.0)
+    assert state.auto_demo_balance == pytest.approx(1010.0)
 
 
 def test_second_position_is_blocked(tmp_path):
@@ -198,5 +273,6 @@ def test_reset_restores_initial_state(tmp_path):
     state.reset()
 
     assert state.balance == 10000.0
+    assert state.auto_demo_balance == 1000.0
     assert state.position is None
     assert state.status()["closed_trades"] == 0

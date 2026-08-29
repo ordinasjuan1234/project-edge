@@ -79,6 +79,14 @@ def test_daily_summary_separates_auto_and_manual_in_argentina():
     assert summary["manual"]["total"] == 1
     assert summary["manual"]["win_rate"] == pytest.approx(100.0)
 
+    message = telegram_notifier.format_daily_summary_message(
+        summary,
+        auto_balance=1006.0,
+        manual_balance=9943.64,
+    )
+    assert "Capital AUTO DEMO: 1.006,00 USDT" in message
+    assert "Saldo MANUAL / legado: 9.943,64 USDT" in message
+
 
 def test_auto_control_message_preserves_open_protection():
     message = telegram_notifier.format_auto_control_message(

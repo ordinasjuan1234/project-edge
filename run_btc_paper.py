@@ -833,7 +833,8 @@ def manage_open_position(
 
     print(
         f"Saldo:        "
-        f"{state.balance:.2f} USDT"
+        f"{state.balance_for_source(position.get('source', 'UNCLASSIFIED')):.2f} "
+        "USDT"
     )
 
     if direction == "LONG":
@@ -1129,8 +1130,8 @@ def main():
 
     print("")
     print(
-        f"Saldo paper: "
-        f"{state.balance:.2f} USDT"
+        f"Capital AUTO DEMO: "
+        f"{state.auto_demo_balance:.2f} USDT"
     )
 
     print_auto_state(
@@ -1256,8 +1257,8 @@ def main():
         )
 
         print(
-            f"Saldo paper: "
-            f"{state.balance:.2f} USDT"
+            f"Capital AUTO DEMO: "
+            f"{state.auto_demo_balance:.2f} USDT"
         )
 
         print("=" * 60)
@@ -1289,8 +1290,8 @@ def main():
             f"{ceil(cooldown_remaining)} minutos."
         )
         print(
-            f"Saldo paper: "
-            f"{state.balance:.2f} USDT"
+            f"Capital AUTO DEMO: "
+            f"{state.auto_demo_balance:.2f} USDT"
         )
         print("=" * 60)
         return
@@ -1379,8 +1380,8 @@ def main():
         )
 
         print(
-            f"Saldo paper: "
-            f"{state.balance:.2f} USDT"
+            f"Capital AUTO DEMO: "
+            f"{state.auto_demo_balance:.2f} USDT"
         )
 
         print("=" * 60)
@@ -1390,7 +1391,7 @@ def main():
     trade_plan = STRATEGY.build_trade_plan(
         decision=decision,
         entry_price=entry_price,
-        account_equity=state.balance,
+        account_equity=state.auto_demo_balance,
     )
     if not trade_plan.get("approved"):
         print("PAPER TRADE: RECHAZADA POR RIESGO")
@@ -1451,7 +1452,7 @@ def main():
 
     state.save()
 
-    notify_auto_entry(position, balance=state.balance)
+    notify_auto_entry(position, balance=state.auto_demo_balance)
     risk_usdt = float(trade_plan["estimated_risk"])
 
     target_usdt = (
@@ -1523,8 +1524,8 @@ def main():
     )
 
     print(
-        f"Saldo paper:  "
-        f"{state.balance:.2f} USDT"
+        f"Capital AUTO DEMO: "
+        f"{state.auto_demo_balance:.2f} USDT"
     )
 
     print("")

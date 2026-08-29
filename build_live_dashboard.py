@@ -84,6 +84,8 @@ def calculate_unrealized_pnl(
 def calculate_performance(
     trades,
     source,
+    initial_balance,
+    started_at=None,
 ):
     source = source.upper()
 
@@ -96,6 +98,10 @@ def calculate_performance(
                 "UNCLASSIFIED",
             )
         ).upper() == source
+        and (
+            not started_at
+            or str(trade.get("closed_at", "")) >= str(started_at)
+        )
     ]
 
     total = len(
@@ -134,6 +140,45 @@ def calculate_performance(
         for trade in selected
     )
 
+    gross_profit = sum(
+        max(float(trade.get("pnl", 0.0)), 0.0)
+        for trade in selected
+    )
+    gross_loss = abs(
+        sum(
+            min(float(trade.get("pnl", 0.0)), 0.0)
+            for trade in selected
+        )
+    )
+    fees = sum(
+        float(trade.get("fees", 0.0))
+        for trade in selected
+    )
+
+    initial_balance = float(initial_balance)
+    equity = initial_balance
+    peak = initial_balance
+    max_drawdown_pct = 0.0
+    for trade in selected:
+        equity += float(trade.get("pnl", 0.0))
+        peak = max(peak, equity)
+        if peak > 0:
+            max_drawdown_pct = max(
+                max_drawdown_pct,
+                (peak - equity) / peak * 100.0,
+            )
+
+    profit_factor = (
+        gross_profit / gross_loss
+        if gross_loss > 0
+        else None
+    )
+    return_pct = (
+        pnl / initial_balance * 100.0
+        if initial_balance > 0
+        else 0.0
+    )
+
     win_rate = (
         wins
         / total
@@ -148,6 +193,12 @@ def calculate_performance(
         "losses": losses,
         "win_rate": win_rate,
         "pnl": pnl,
+        "gross_profit": gross_profit,
+        "gross_loss": gross_loss,
+        "fees": fees,
+        "profit_factor": profit_factor,
+        "return_pct": return_pct,
+        "max_drawdown_pct": max_drawdown_pct,
     }
 
 
@@ -821,6 +872,10 @@ def main():
         calculate_performance(
             closed_trades,
             "MANUAL",
+            state.data.get(
+                "initial_balance",
+                INITIAL_BALANCE,
+            ),
         )
     )
 
@@ -828,7 +883,25 @@ def main():
         calculate_performance(
             closed_trades,
             "AUTO",
+            state.auto_demo_initial_balance,
+            started_at=state.data.get(
+                "auto_demo_started_at"
+            ),
         )
+    )
+
+    position_source = str(
+        (position or {}).get("source", "UNCLASSIFIED")
+    ).upper()
+    auto_unrealized_pnl = (
+        float(unrealized_pnl)
+        if position_source == "AUTO"
+        else 0.0
+    )
+    manual_unrealized_pnl = (
+        float(unrealized_pnl)
+        if position_source != "AUTO"
+        else 0.0
     )
 
     payload = {
@@ -886,6 +959,24 @@ def main():
             ),
             "balance": (
                 state.balance
+            ),
+            "manual_initial_balance": float(
+                state.data.get(
+                    "initial_balance",
+                    INITIAL_BALANCE,
+                )
+            ),
+            "manual_balance": state.balance,
+            "manual_equity": (
+                state.balance + manual_unrealized_pnl
+            ),
+            "auto_initial_balance": state.auto_demo_initial_balance,
+            "auto_balance": state.auto_demo_balance,
+            "auto_equity": (
+                state.auto_demo_balance + auto_unrealized_pnl
+            ),
+            "auto_demo_started_at": state.data.get(
+                "auto_demo_started_at"
             ),
             "position": (
                 position

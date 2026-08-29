@@ -166,7 +166,7 @@ def pause_auto(
     notify_auto_control(
         "PAUSE_AUTO",
         result,
-        balance=state.balance,
+        balance=state.auto_demo_balance,
     )
 
     print("=" * 60)
@@ -180,7 +180,7 @@ def pause_auto(
     print(
         "LIMIT pendientes:    SIGUEN siendo gestionadas."
     )
-    print(f"Saldo PAPER:      {state.balance:.2f} USDT")
+    print(f"Capital AUTO DEMO:{state.auto_demo_balance:.2f} USDT")
     print(
         f"Actualizado:       {result.get('auto_updated_at') or '—'}"
     )
@@ -208,7 +208,7 @@ def emergency_stop_auto(
     notify_auto_control(
         "EMERGENCY_STOP_AUTO",
         result,
-        balance=state.balance,
+        balance=state.auto_demo_balance,
     )
 
     print("=" * 60)
@@ -222,7 +222,7 @@ def emergency_stop_auto(
     print(
         "LIMIT pendientes:    SIGUEN siendo gestionadas."
     )
-    print(f"Saldo PAPER:      {state.balance:.2f} USDT")
+    print(f"Capital AUTO DEMO:{state.auto_demo_balance:.2f} USDT")
     print(
         f"Actualizado:       {result.get('auto_updated_at') or '—'}"
     )
@@ -246,7 +246,7 @@ def resume_auto(
     notify_auto_control(
         "RESUME_AUTO",
         result,
-        balance=state.balance,
+        balance=state.auto_demo_balance,
     )
 
     print("=" * 60)
@@ -257,7 +257,7 @@ def resume_auto(
     print(
         "El bot solo entrara si el motor confirma una oportunidad."
     )
-    print(f"Saldo PAPER:      {state.balance:.2f} USDT")
+    print(f"Capital AUTO DEMO:{state.auto_demo_balance:.2f} USDT")
     print(
         f"Actualizado:       {result.get('auto_updated_at') or '—'}"
     )
@@ -579,7 +579,7 @@ def partial_close_manual(
         notify_manual_action(
             "PARTIAL_CLOSE",
             result,
-            balance=state.balance,
+            balance=result["balance"],
         )
 
     print("=" * 60)
@@ -698,7 +698,9 @@ def update_manual_risk(
     notify_manual_action(
         "RISK_UPDATED",
         position,
-        balance=state.balance,
+        balance=state.balance_for_source(
+            position.get("source", "UNCLASSIFIED")
+        ),
     )
 
     print("=" * 60)
@@ -746,7 +748,9 @@ def set_break_even(
     notify_manual_action(
         "BREAK_EVEN",
         position,
-        balance=state.balance,
+        balance=state.balance_for_source(
+            position.get("source", "UNCLASSIFIED")
+        ),
     )
 
     print("=" * 60)
@@ -815,7 +819,9 @@ def enable_trailing(
     notify_manual_action(
         "TRAILING_ON",
         position,
-        balance=state.balance,
+        balance=state.balance_for_source(
+            position.get("source", "UNCLASSIFIED")
+        ),
     )
 
     print("=" * 60)
@@ -847,7 +853,9 @@ def disable_trailing(
     notify_manual_action(
         "TRAILING_OFF",
         position,
-        balance=state.balance,
+        balance=state.balance_for_source(
+            position.get("source", "UNCLASSIFIED")
+        ),
     )
 
     print("=" * 60)

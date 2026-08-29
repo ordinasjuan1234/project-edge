@@ -1,6 +1,6 @@
 # PROJECT EDGE - Estado permanente
 
-Ultima revision tecnica: 28 de agosto de 2026.
+Ultima revision tecnica: 29 de agosto de 2026.
 
 Este archivo es la memoria operativa del proyecto. Debe consultarse al iniciar un chat nuevo y actualizarse al terminar cada hito.
 
@@ -66,7 +66,33 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - Verificación local: 161 tests superados, JavaScript validado, demostración
   PAPER completada y rechazo directo de REAL confirmado.
 
-## Ultimo hito completado
+### Hito de cuenta AUTO DEMO separada
+
+- Se incorporo una cuenta AUTO DEMO limpia con capital inicial de 1.000 USDT.
+- El saldo MANUAL / legado se conserva por separado; una ganancia o perdida
+  AUTO ya no modifica ese saldo y viceversa.
+- La migracion desde estados anteriores es automatica, persistente y no borra
+  posiciones, LIMIT ni operaciones historicas.
+- El dimensionamiento de riesgo AUTO usa exclusivamente el capital AUTO DEMO;
+  con el riesgo vigente de 0,5%, el presupuesto base es 5 USDT por operacion.
+- El panel muestra capital inicial y actual AUTO, saldo MANUAL, retorno AUTO,
+  profit factor y drawdown maximo. El resumen diario de Telegram informa ambos
+  saldos por separado.
+- Las metricas AUTO nuevas comienzan en la fecha de creacion de esta cuenta y
+  no mezclan operaciones AUTO historicas anteriores a la migracion.
+- La estrategia v3 y sus condiciones de entrada no cambiaron en este hito.
+- Verificacion local: 167 tests superados, JavaScript validado, demostracion
+  PAPER completada y rechazo directo de REAL confirmado antes de leer datos.
+
+## Proximo hito
+
+Diseñar y validar una candidata intradia AUTO mas activa para reunir una muestra
+util en PAPER. El objetivo operativo es evaluar varias oportunidades diarias,
+pero no se forzaran entradas ni se asumira que mas operaciones producen mayor
+rentabilidad. La candidata debera medirse con costos, retorno neto, profit
+factor, drawdown, frecuencia y bloques fuera de muestra antes de reemplazar v3.
+
+## Estrategia AUTO v3 vigente
 
 Se implemento la primera candidata de la estrategia propia PROJECT EDGE v3:
 
@@ -86,7 +112,7 @@ Se implemento la primera candidata de la estrategia propia PROJECT EDGE v3:
 - Verificacion local: 139 tests superados y demostracion PAPER completada.
 - Prueba directa: `PROJECT_EDGE_MODE=REAL` sigue bloqueando el runner antes de consultar datos o estado.
 
-## Hito actual
+## Validacion historica de referencia
 
 Validacion historica realista del motor antes de considerar Testnet o REAL:
 

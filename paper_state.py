@@ -13,6 +13,7 @@ Este modulo:
 - Permite cierres parciales sin inflar el numero de trades.
 - Guarda si el modo AUTO esta habilitado o pausado.
 - Puede descontar comision y deslizamiento simulados en operaciones AUTO.
+- Separa el saldo AUTO DEMO del saldo MANUAL heredado.
 
 IMPORTANTE:
 Pausar AUTO NO cierra posiciones y NO cancela LIMIT pendientes.
@@ -30,8 +31,9 @@ from uuid import uuid4
 
 DEFAULT_STATE_FILE = "paper_state.json"
 DEFAULT_BALANCE = 10000.0
+DEFAULT_AUTO_DEMO_BALANCE = 1000.0
 
-STATE_VERSION = 3
+STATE_VERSION = 4
 MIN_QUANTITY = 1e-12
 
 
@@ -44,9 +46,11 @@ class PaperState:
         self,
         file_path: str = DEFAULT_STATE_FILE,
         initial_balance: float = DEFAULT_BALANCE,
+        auto_initial_balance: float = DEFAULT_AUTO_DEMO_BALANCE,
     ):
         self.file_path = Path(file_path)
         self.initial_balance = float(initial_balance)
+        self.auto_initial_balance = float(auto_initial_balance)
         self.data = self._load()
 
     def _default_state(self) -> dict[str, Any]:
@@ -54,6 +58,9 @@ class PaperState:
             "version": STATE_VERSION,
             "initial_balance": self.initial_balance,
             "balance": self.initial_balance,
+            "auto_demo_initial_balance": self.auto_initial_balance,
+            "auto_demo_balance": self.auto_initial_balance,
+            "auto_demo_started_at": utc_now(),
             "position": None,
             "pending_order": None,
             "closed_trades": [],
@@ -64,7 +71,9 @@ class PaperState:
 
     def _load(self) -> dict[str, Any]:
         if not self.file_path.exists():
-            return self._default_state()
+            data = self._default_state()
+            self._write(data)
+            return data
 
         try:
             with self.file_path.open("r", encoding="utf-8") as file:
@@ -88,27 +97,77 @@ class PaperState:
                 f"{sorted(missing)}"
             )
 
-        # Migracion automatica desde versiones anteriores.
-        data.setdefault("pending_order", None)
-        data.setdefault("auto_enabled", True)
-        data.setdefault("auto_pause_reason", None)
-        data.setdefault("auto_updated_at", None)
-        data["version"] = STATE_VERSION
+        # Migracion automatica desde versiones anteriores. La migracion se
+        # persiste al cargar para que el inicio de la cuenta AUTO DEMO sea
+        # estable aunque el ciclo termine sin abrir una operacion.
+        migrated = False
+        defaults = {
+            "pending_order": None,
+            "auto_enabled": True,
+            "auto_pause_reason": None,
+            "auto_updated_at": None,
+            "auto_demo_initial_balance": self.auto_initial_balance,
+            "auto_demo_started_at": utc_now(),
+        }
+        for key, value in defaults.items():
+            if key not in data:
+                data[key] = value
+                migrated = True
+
+        if "auto_demo_balance" not in data:
+            data["auto_demo_balance"] = float(
+                data["auto_demo_initial_balance"]
+            )
+            migrated = True
+
+        if data.get("version") != STATE_VERSION:
+            data["version"] = STATE_VERSION
+            migrated = True
+
+        if migrated:
+            self._write(data)
 
         return data
 
-    def save(self) -> None:
+    def _write(self, data: dict[str, Any]) -> None:
         with self.file_path.open("w", encoding="utf-8") as file:
             json.dump(
-                self.data,
+                data,
                 file,
                 indent=2,
                 ensure_ascii=False,
             )
 
+    def save(self) -> None:
+        self._write(self.data)
+
     @property
     def balance(self) -> float:
         return float(self.data["balance"])
+
+    @property
+    def auto_demo_initial_balance(self) -> float:
+        return float(self.data["auto_demo_initial_balance"])
+
+    @property
+    def auto_demo_balance(self) -> float:
+        return float(self.data["auto_demo_balance"])
+
+    def balance_for_source(self, source: str) -> float:
+        """Devuelve el saldo virtual que corresponde al origen."""
+        if str(source).upper() == "AUTO":
+            return self.auto_demo_balance
+        return self.balance
+
+    def _apply_pnl(self, source: str, pnl: float) -> float:
+        """Acredita P&L sin mezclar las cuentas AUTO y MANUAL."""
+        key = (
+            "auto_demo_balance"
+            if str(source).upper() == "AUTO"
+            else "balance"
+        )
+        self.data[key] = float(self.data[key]) + float(pnl)
+        return float(self.data[key])
 
     @property
     def position(self) -> Optional[dict[str, Any]]:
@@ -597,9 +656,9 @@ class PaperState:
         fees = entry_fee + exit_fee
         pnl = gross_pnl - fees
 
-        self.data["balance"] = (
-            float(self.data["balance"])
-            + pnl
+        account_balance = self._apply_pnl(
+            position.get("source", "UNCLASSIFIED"),
+            pnl,
         )
 
         previous_realized = float(
@@ -637,9 +696,7 @@ class PaperState:
             "gross_pnl": float(gross_pnl),
             "fees": float(fees),
             "pnl": float(pnl),
-            "balance": float(
-                self.data["balance"]
-            ),
+            "balance": account_balance,
             "reason": reason,
             "closed_at": utc_now(),
         }
@@ -716,9 +773,7 @@ class PaperState:
             "realized_pnl_total": float(
                 position["realized_pnl"]
             ),
-            "balance": float(
-                self.data["balance"]
-            ),
+            "balance": account_balance,
             "reason": reason,
             "is_final": False,
         }
@@ -786,9 +841,9 @@ class PaperState:
         ) + final_leg_fees
 
         # Los parciales ya fueron acreditados antes.
-        self.data["balance"] = (
-            float(self.data["balance"])
-            + final_leg_pnl
+        account_balance = self._apply_pnl(
+            position.get("source", "UNCLASSIFIED"),
+            final_leg_pnl,
         )
 
         trade = {
@@ -841,9 +896,7 @@ class PaperState:
                 total_trade_pnl
             ),
             "reason": reason,
-            "balance": float(
-                self.data["balance"]
-            ),
+            "balance": account_balance,
             "is_final": True,
             "closed_at": utc_now(),
         }
@@ -930,6 +983,11 @@ class PaperState:
                 self.data["initial_balance"]
             ),
             "balance": self.balance,
+            "auto_demo_initial_balance": self.auto_demo_initial_balance,
+            "auto_demo_balance": self.auto_demo_balance,
+            "auto_demo_started_at": self.data.get(
+                "auto_demo_started_at"
+            ),
             "position": self.position,
             "pending_order": (
                 self.pending_order

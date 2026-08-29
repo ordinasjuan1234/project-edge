@@ -89,7 +89,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
       <div class="card"><div class="lab">Precio</div><div id="price" class="val b">—</div></div>
       <div class="card"><div class="lab">Contexto 4H</div><div id="tf4h" class="val">—</div></div>
       <div class="card"><div class="lab">Decisión</div><div id="decisionCard" class="val y">—</div></div>
-      <div class="card"><div class="lab">Saldo PAPER</div><div id="balance" class="val g">—</div></div>
+      <div class="card"><div class="lab">Capital AUTO DEMO</div><div id="balance" class="val g">—</div></div>
     </div>
     <div class="layout">
       <section class="panel">
@@ -270,13 +270,15 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
       </section>
 
       <section class="panel">
-        <h2>Resultado PAPER</h2>
+        <h2>Cuentas PAPER separadas</h2>
         <div class="kpis">
-          <div class="mini"><span class="mut">Saldo inicial</span><b id="initialBalance">—</b></div>
-          <div class="mini"><span class="mut">Saldo actual</span><b id="opBalance">—</b></div>
-          <div class="mini"><span class="mut">PnL abierto</span><b id="unrealized">—</b></div>
+          <div class="mini"><span class="mut">Capital AUTO inicial</span><b id="initialBalance">—</b></div>
+          <div class="mini"><span class="mut">Capital AUTO actual</span><b id="opBalance">—</b></div>
+          <div class="mini"><span class="mut">Saldo MANUAL / legado</span><b id="manualBalance">—</b></div>
+          <div class="mini"><span class="mut">P&L posición actual</span><b id="unrealized">—</b></div>
           <div class="mini"><span class="mut">Trades cerrados</span><b id="closedCount">—</b></div>
         </div>
+        <div class="note">AUTO DEMO comienza con 1.000 USDT propios. MANUAL conserva su saldo anterior. Ambas cuentas son simuladas y no usan dinero real.</div>
 
         <h2 style="margin-top:18px">Rendimiento MANUAL</h2>
         <div class="kpis">
@@ -294,6 +296,9 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">Perdidas</span><b id="autoPerfLosses">—</b></div>
           <div class="mini"><span class="mut">% Aciertos</span><b id="autoPerfWinRate">—</b></div>
           <div class="mini"><span class="mut">P&L AUTO</span><b id="autoPerfPnl">—</b></div>
+          <div class="mini"><span class="mut">Retorno AUTO</span><b id="autoPerfReturn">—</b></div>
+          <div class="mini"><span class="mut">Profit Factor</span><b id="autoPerfProfitFactor">—</b></div>
+          <div class="mini"><span class="mut">Caída máxima</span><b id="autoPerfDrawdown">—</b></div>
         </div>
 
         <h2 style="margin-top:18px">Automático PAPER</h2>
@@ -796,8 +801,8 @@ async function loadData(){
     renderAutoState(p,ageMin,connected);
 
     document.getElementById('manualPerfTotal').textContent=manualPerf.total??0;document.getElementById('manualPerfWins').textContent=manualPerf.wins??0;document.getElementById('manualPerfLosses').textContent=manualPerf.losses??0;document.getElementById('manualPerfWinRate').textContent=Number(manualPerf.win_rate??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';document.getElementById('manualPerfPnl').textContent=(Number(manualPerf.pnl??0)>=0?'+':'')+fmt(manualPerf.pnl)+' USDT';
-    document.getElementById('autoPerfTotal').textContent=autoPerf.total??0;document.getElementById('autoPerfWins').textContent=autoPerf.wins??0;document.getElementById('autoPerfLosses').textContent=autoPerf.losses??0;document.getElementById('autoPerfWinRate').textContent=Number(autoPerf.win_rate??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';document.getElementById('autoPerfPnl').textContent=(Number(autoPerf.pnl??0)>=0?'+':'')+fmt(autoPerf.pnl)+' USDT';
-    setVal('balance',fmt(p.balance)+' USDT','BULL');document.getElementById('initialBalance').textContent=fmt(p.initial_balance)+' USDT';document.getElementById('opBalance').textContent=fmt(p.balance)+' USDT';document.getElementById('unrealized').textContent=(Number(p.unrealized_pnl)>=0?'+':'')+fmt(p.unrealized_pnl)+' USDT';document.getElementById('unrealized').className=Number(p.unrealized_pnl)>0?'g':Number(p.unrealized_pnl)<0?'r':'';
+    document.getElementById('autoPerfTotal').textContent=autoPerf.total??0;document.getElementById('autoPerfWins').textContent=autoPerf.wins??0;document.getElementById('autoPerfLosses').textContent=autoPerf.losses??0;document.getElementById('autoPerfWinRate').textContent=Number(autoPerf.win_rate??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';document.getElementById('autoPerfPnl').textContent=(Number(autoPerf.pnl??0)>=0?'+':'')+fmt(autoPerf.pnl)+' USDT';document.getElementById('autoPerfReturn').textContent=(Number(autoPerf.return_pct??0)>=0?'+':'')+Number(autoPerf.return_pct??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';document.getElementById('autoPerfProfitFactor').textContent=autoPerf.profit_factor==null?'—':Number(autoPerf.profit_factor).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});document.getElementById('autoPerfDrawdown').textContent=Number(autoPerf.max_drawdown_pct??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+    setVal('balance',fmt(p.auto_balance)+' USDT','BULL');document.getElementById('initialBalance').textContent=fmt(p.auto_initial_balance)+' USDT';document.getElementById('opBalance').textContent=fmt(p.auto_balance)+' USDT';document.getElementById('manualBalance').textContent=fmt(p.manual_balance)+' USDT';document.getElementById('unrealized').textContent=(Number(p.unrealized_pnl)>=0?'+':'')+fmt(p.unrealized_pnl)+' USDT';document.getElementById('unrealized').className=Number(p.unrealized_pnl)>0?'g':Number(p.unrealized_pnl)<0?'r':'';
 
     const pos=p.position,pending=p.pending_order;livePosition=pos||null;
     const liveTargetSymbol=pos?.symbol||pending?.symbol||(document.getElementById('manualSymbol')?.value||d.symbol||'ETH/USDT').replace('/','');connectLiveMarket(liveTargetSymbol);
