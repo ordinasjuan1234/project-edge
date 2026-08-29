@@ -42,8 +42,7 @@ def test_auto_and_manual_charts_have_independent_targets():
 def test_both_charts_render_when_operations_tab_opens():
     assert "renderAutoTradingViewChart(autoChartTargetSymbol)" in HTML
     assert "renderManualTradingViewChart(manualChartTargetSymbol)" in HTML
-    assert "mountTradingViewChart(chart,symbol,interval,'autoChartSignal')" in HTML
-    assert "mountTradingViewChart(chart,symbol,interval,'manualChartSignal')" in HTML
+    assert "mountTradingViewChart(chart,symbol,interval)" in HTML
 
 
 def test_auto_chart_follows_only_auto_state_and_engine_symbol():
@@ -61,7 +60,7 @@ def test_manual_chart_prioritizes_only_manual_state():
 
 
 def test_live_chart_shows_only_confirmed_project_edge_signal():
-    assert "mountTradingViewChart(chart,symbol,interval,'manualChartSignal')" in HTML
+    assert 'id="manualChartSignal"' in HTML
     assert "ALCISTA · COMPRAR · LONG" in HTML
     assert "BAJISTA · VENDER · SHORT" in HTML
     assert "SIN CONFIRMACIÓN · ESPERAR" in HTML
@@ -86,3 +85,17 @@ def test_live_chart_identifies_pending_limit_order():
     assert "ORDEN LIMIT PAPER · LONG" in HTML
     assert "ORDEN LIMIT PAPER · SHORT" in HTML
     assert "Esperando ejecución en '+fmt(pending.limit_price)+' USDT" in HTML
+
+
+def test_chart_status_bars_stay_outside_the_candle_area():
+    assert 'id="autoChartSignal"' in HTML
+    assert 'id="manualChartSignal"' in HTML
+    assert HTML.index('id="autoChartSignal"') < HTML.index(
+        'id="autoTradingViewChart"'
+    )
+    assert HTML.index('id="manualChartSignal"') < HTML.index(
+        'id="manualTradingViewChart"'
+    )
+    assert ".chart-signal{display:flex" in HTML
+    assert "position:absolute" not in HTML
+    assert "chart.appendChild(signal)" not in HTML

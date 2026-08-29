@@ -45,12 +45,12 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}
 .manual-chart-frame .tradingview-widget-container{width:100%;height:100%}.manual-chart-frame .tradingview-widget-container__widget{width:100%;height:calc(100% - 24px)}
 .manual-chart-loading{display:flex;align-items:center;justify-content:center;height:100%;color:var(--m)}
 .tradingview-widget-copyright{height:24px;padding:5px 8px;background:#07101b;color:var(--m);font-size:10px}.tradingview-widget-copyright a{color:var(--c);text-decoration:none}
-.chart-signal{position:absolute;z-index:5;top:70px;right:18px;max-width:300px;padding:12px 15px;border:1px solid var(--l);border-radius:9px;background:rgba(8,19,31,.94);box-shadow:0 6px 22px rgba(0,0,0,.35);pointer-events:none}
-.chart-signal strong{display:block;font-size:14px;letter-spacing:.3px}.chart-signal span{display:block;margin-top:5px;color:#c2d0dd;font-size:11px;line-height:1.35}
-.chart-signal.long{border-color:#2c8d6d;background:rgba(8,55,44,.94);color:#55f0b7}.chart-signal.short{border-color:#a94550;background:rgba(70,20,28,.94);color:#ff8c94}.chart-signal.wait{border-color:#8c7230;background:rgba(54,45,15,.94);color:#ffd76b}
+.chart-signal{display:flex;align-items:center;gap:12px;width:100%;margin-top:8px;padding:10px 12px;border:1px solid var(--l);border-radius:9px;background:#08131f;pointer-events:none}
+.chart-signal strong{font-size:13px;letter-spacing:.3px;white-space:nowrap}.chart-signal span{flex:1;color:#c2d0dd;font-size:11px;line-height:1.35}
+.chart-signal.long{border-color:#2c8d6d;background:#08372c;color:#55f0b7}.chart-signal.short{border-color:#a94550;background:#46141c;color:#ff8c94}.chart-signal.wait{border-color:#8c7230;background:#362d0f;color:#ffd76b}
 .view{display:none}.view.active{display:block}.footer{color:#62788e;font-size:10px;margin-top:12px}
 input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf4fa;border:1px solid #20354b;border-radius:7px}
-@media(max-width:950px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.top{flex-direction:column}.position,.pending{grid-template-columns:1fr}.main{padding:14px}.controls{grid-template-columns:1fr 1fr}.partials{grid-template-columns:1fr 1fr}.manual-chart-frame{height:480px}}
+@media(max-width:950px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.top{flex-direction:column}.position,.pending{grid-template-columns:1fr}.main{padding:14px}.controls{grid-template-columns:1fr 1fr}.partials{grid-template-columns:1fr 1fr}.manual-chart-frame{height:480px}.chart-signal{align-items:flex-start;flex-direction:column;gap:4px}.chart-signal strong{white-space:normal}}
 </style>
 </head>
 <body>
@@ -177,6 +177,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">Activo AUTO</span><b id="autoChartSymbolLabel">ETH/USDT</b></div>
           <div class="mini"><span class="mut">Temporalidad visual</span><select id="autoChartInterval"><option value="5">5 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="240">4 horas</option></select></div>
         </div>
+        <div id="autoChartSignal" class="chart-signal wait" aria-live="polite"><strong>● AUTO · ESPERANDO DATOS</strong><span>La lectura aparecerá aquí sin cubrir las velas.</span></div>
         <div id="autoTradingViewChart" class="manual-chart-frame">
           <div class="manual-chart-loading">El gráfico AUTO se cargará al abrir Operaciones.</div>
         </div>
@@ -214,6 +215,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">Activo del gráfico MANUAL</span><select id="manualChartSymbol"><option>BTC/USDT</option><option>ETH/USDT</option></select></div>
           <div class="mini"><span class="mut">Temporalidad</span><select id="manualChartInterval"><option value="5">5 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="240">4 horas</option></select></div>
         </div>
+        <div id="manualChartSignal" class="chart-signal wait" aria-live="polite"><strong>● MANUAL · ESPERANDO DATOS</strong><span>La lectura aparecerá aquí sin cubrir las velas.</span></div>
         <div id="manualTradingViewChart" class="manual-chart-frame">
           <div class="manual-chart-loading">El gráfico se cargará al abrir Operaciones.</div>
         </div>
@@ -572,7 +574,7 @@ function connectLiveMarket(symbol){
   liveSocket.onerror=()=>document.getElementById('liveStatus').textContent='Error de conexión en vivo · reintentando...';
   liveSocket.onclose=()=>{document.getElementById('liveStatus').textContent='Reconectando precio en vivo...';liveReconnectTimer=setTimeout(()=>connectLiveMarket(liveSocketSymbol),3000)};
 }
-function mountTradingViewChart(chart,symbol,interval,signalId){
+function mountTradingViewChart(chart,symbol,interval){
   chart.innerHTML='';
   const widget=document.createElement('div');widget.className='tradingview-widget-container';
   const widgetBody=document.createElement('div');widgetBody.className='tradingview-widget-container__widget';widget.appendChild(widgetBody);
@@ -580,7 +582,6 @@ function mountTradingViewChart(chart,symbol,interval,signalId){
   const script=document.createElement('script');script.type='text/javascript';script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';script.async=true;
   script.textContent=JSON.stringify({autosize:true,symbol:'BINANCE:'+symbol,interval,timezone:'America/Argentina/Buenos_Aires',theme:'dark',backgroundColor:'rgba(7, 16, 27, 1)',style:'1',locale:'es',withdateranges:true,hide_side_toolbar:false,allow_symbol_change:false,save_image:false,calendar:false,support_host:'https://www.tradingview.com'});
   widget.appendChild(script);chart.appendChild(widget);
-  const signal=document.createElement('div');signal.id=signalId;signal.className='chart-signal wait';chart.appendChild(signal);
 }
 function renderAutoTradingViewChart(symbol){
   const chart=document.getElementById('autoTradingViewChart'),intervalEl=document.getElementById('autoChartInterval'),label=document.getElementById('autoChartSymbolLabel');
@@ -593,7 +594,7 @@ function renderAutoTradingViewChart(symbol){
   if(autoChartRenderedSymbol===symbol&&autoChartRenderedInterval===interval)return;
 
   autoChartRenderedSymbol=symbol;autoChartRenderedInterval=interval;
-  mountTradingViewChart(chart,symbol,interval,'autoChartSignal');updateAutoChartSignal();
+  mountTradingViewChart(chart,symbol,interval);updateAutoChartSignal();
 }
 function renderManualTradingViewChart(symbol){
   const chart=document.getElementById('manualTradingViewChart'),intervalEl=document.getElementById('manualChartInterval'),selector=document.getElementById('manualChartSymbol');
@@ -606,7 +607,7 @@ function renderManualTradingViewChart(symbol){
   if(manualChartRenderedSymbol===symbol&&manualChartRenderedInterval===interval)return;
 
   manualChartRenderedSymbol=symbol;manualChartRenderedInterval=interval;
-  mountTradingViewChart(chart,symbol,interval,'manualChartSignal');updateManualChartSignal();
+  mountTradingViewChart(chart,symbol,interval);updateManualChartSignal();
 }
 function updateAutoChartSignal(){
   const banner=document.getElementById('autoChartSignal');if(!banner)return;

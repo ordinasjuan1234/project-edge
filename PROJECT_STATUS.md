@@ -84,6 +84,18 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - Verificacion local: 167 tests superados, JavaScript validado, demostracion
   PAPER completada y rechazo directo de REAL confirmado antes de leer datos.
 
+### Hito visual: estados fuera de los graficos
+
+- Los carteles dinamicos AUTO y MANUAL ya no se superponen a las velas de
+  TradingView.
+- Cada lectura aparece como una barra compacta entre los selectores y el
+  grafico correspondiente.
+- Se conservan los estados ESPERAR, LONG, SHORT, LIMIT y POSICION PAPER con
+  sus colores y detalles de entrada.
+- El cambio es exclusivamente visual: no modifica señales, posiciones, riesgo,
+  capital ni la estrategia AUTO.
+- Verificacion local: 168 tests superados y JavaScript validado.
+
 ## Proximo hito
 
 Diseñar y validar una candidata intradia AUTO mas activa para reunir una muestra
