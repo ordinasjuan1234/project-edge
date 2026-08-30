@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-30T11:26:03+00:00",
+  "timestamp": "2026-08-30T11:31:22+00:00",
   "symbol": "ETHUSDT",
-  "price": 2459.9,
+  "price": 2460.03,
   "timeframes": {
     "4H": "BULLISH",
     "1H": "BULLISH",
@@ -35,7 +35,7 @@
       "mid": 2458.355,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 414
+      "created_index": 413
     },
     "15M": {
       "type": "BEARISH",
@@ -44,16 +44,16 @@
       "mid": 2460.145,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 327
+      "created_index": 326
     },
     "5M": {
       "type": "BULLISH",
-      "lower": 2459.5,
-      "upper": 2459.71,
-      "mid": 2459.605,
-      "state": "ACTIVE",
-      "distance_pct": 7.723891215092262e-05,
-      "created_index": 499
+      "lower": 2456.76,
+      "upper": 2457.91,
+      "mid": 2457.335,
+      "state": "PARTIAL",
+      "distance_pct": 0.0008617781083971925,
+      "created_index": 490
     }
   },
   "alignment": "PULLBACK_OR_WAIT",
@@ -61,7 +61,7 @@
     "action": "WATCH_LONG",
     "direction": "LONG",
     "can_execute": false,
-    "reason": "Faltan condiciones: ema_4h, ema_1h, adx_1h, lower_timeframes_no_conflict, trigger_5m.",
+    "reason": "Faltan condiciones: ema_4h, ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -70,19 +70,20 @@
   "readiness": {
     "status": "NOT_READY",
     "bias": "LONG",
-    "message": "Faltan condiciones: ema_4h, ema_1h, adx_1h, lower_timeframes_no_conflict, trigger_5m.",
+    "message": "Faltan condiciones: ema_4h, ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
     "missing_conditions": [
       "ema_4h",
       "ema_1h",
       "adx_1h",
       "lower_timeframes_no_conflict",
+      "pullback_15m",
       "trigger_5m"
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 78187.23,
+      "price": 78195.11,
       "timeframes": {
         "4H": "TRANSITION",
         "1H": "BEARISH",
@@ -97,7 +98,7 @@
           "upper": 79001.01,
           "mid": 78702.505,
           "state": "ACTIVE",
-          "distance_pct": 0.0027725758762109564,
+          "distance_pct": 0.002671394669052827,
           "created_index": 489
         },
         "1H": {
@@ -106,17 +107,17 @@
           "upper": 78144.18,
           "mid": 78131.525,
           "state": "ACTIVE",
-          "distance_pct": 0.0005506014217411579,
+          "distance_pct": 0.0006513195006696399,
           "created_index": 499
         },
         "30M": {
-          "type": "BEARISH",
-          "lower": 78207.22,
-          "upper": 78230.0,
-          "mid": 78218.61,
+          "type": "BULLISH",
+          "lower": 78145.29,
+          "upper": 78184.0,
+          "mid": 78164.64499999999,
           "state": "ACTIVE",
-          "distance_pct": 0.0002556683489107523,
-          "created_index": 493
+          "distance_pct": 0.00014195262874535386,
+          "created_index": 499
         },
         "15M": {
           "type": "BEARISH",
@@ -125,16 +126,16 @@
           "mid": 78196.0,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 485
+          "created_index": 484
         },
         "5M": {
-          "type": "BULLISH",
-          "lower": 78174.75,
-          "upper": 78187.21,
-          "mid": 78180.98000000001,
-          "state": "ACTIVE",
-          "distance_pct": 2.557962469001987e-07,
-          "created_index": 499
+          "type": "BEARISH",
+          "lower": 78199.09,
+          "upper": 78230.0,
+          "mid": 78214.545,
+          "state": "PARTIAL",
+          "distance_pct": 5.089832343730862e-05,
+          "created_index": 452
         }
       },
       "alignment": "NO_DIRECTION",
@@ -160,7 +161,7 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2459.9,
+      "price": 2460.03,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "BULLISH",
@@ -194,7 +195,7 @@
           "mid": 2458.355,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 414
+          "created_index": 413
         },
         "15M": {
           "type": "BEARISH",
@@ -203,16 +204,16 @@
           "mid": 2460.145,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 327
+          "created_index": 326
         },
         "5M": {
           "type": "BULLISH",
-          "lower": 2459.5,
-          "upper": 2459.71,
-          "mid": 2459.605,
-          "state": "ACTIVE",
-          "distance_pct": 7.723891215092262e-05,
-          "created_index": 499
+          "lower": 2456.76,
+          "upper": 2457.91,
+          "mid": 2457.335,
+          "state": "PARTIAL",
+          "distance_pct": 0.0008617781083971925,
+          "created_index": 490
         }
       },
       "alignment": "PULLBACK_OR_WAIT",
@@ -220,7 +221,7 @@
         "action": "WATCH_LONG",
         "direction": "LONG",
         "can_execute": false,
-        "reason": "Faltan condiciones: ema_4h, ema_1h, adx_1h, lower_timeframes_no_conflict, trigger_5m.",
+        "reason": "Faltan condiciones: ema_4h, ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -229,12 +230,13 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "LONG",
-        "message": "Faltan condiciones: ema_4h, ema_1h, adx_1h, lower_timeframes_no_conflict, trigger_5m.",
+        "message": "Faltan condiciones: ema_4h, ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
         "missing_conditions": [
           "ema_4h",
           "ema_1h",
           "adx_1h",
           "lower_timeframes_no_conflict",
+          "pullback_15m",
           "trigger_5m"
         ]
       },
@@ -246,7 +248,7 @@
     "balance": 9943.639206926546,
     "manual_initial_balance": 10000.0,
     "manual_balance": 9943.639206926546,
-    "manual_equity": 9943.895376348677,
+    "manual_equity": 9943.905480538519,
     "auto_initial_balance": 1000.0,
     "auto_balance": 1000.0,
     "auto_equity": 1000.0,
@@ -279,8 +281,8 @@
       "trailing_pct": null,
       "trailing_anchor": null
     },
-    "position_price": 78187.23,
-    "unrealized_pnl": 0.2561694221313799,
+    "position_price": 78195.11,
+    "unrealized_pnl": 0.2662736119721872,
     "pending_order": null,
     "pending_order_price": null,
     "has_open_position": true,
