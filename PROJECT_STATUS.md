@@ -1,6 +1,6 @@
 # PROJECT EDGE - Estado permanente
 
-Ultima revision tecnica: 29 de agosto de 2026.
+Ultima revision tecnica: 31 de agosto de 2026.
 
 Este archivo es la memoria operativa del proyecto. Debe consultarse al iniciar un chat nuevo y actualizarse al terminar cada hito.
 
@@ -8,7 +8,7 @@ Este archivo es la memoria operativa del proyecto. Debe consultarse al iniciar u
 
 PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `trading_mode.py`, no hay API privada de Binance conectada y ninguna funcion actual puede mover dinero real.
 
-## Ultimo punto verificado
+## Snapshot operativo de referencia (29 de agosto de 2026)
 
 - Ultimo commit humano anterior a esta revision: `1ec3978` (`Aplicar enfriamiento AUTO de 30 minutos`).
 - El runner AUTO PAPER continua ejecutandose aproximadamente cada cinco minutos mediante GitHub Actions.
@@ -95,6 +95,34 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - El cambio es exclusivamente visual: no modifica señales, posiciones, riesgo,
   capital ni la estrategia AUTO.
 - Verificacion local: 168 tests superados y JavaScript validado.
+
+### Hito de mensajes PAPER claros y contador historico
+
+- Telegram identifica GANASTE, PERDISTE o SIN GANANCIA NI PERDIDA segun el
+  resultado de la operacion, no segun LONG/SHORT ni el motivo del cierre.
+- Entradas y salidas informan capital utilizado, apalancamiento y exposicion
+  cuando esos datos estan disponibles. El rendimiento porcentual usa el
+  capital utilizado en esa operacion, no el saldo total de la cuenta.
+- Cada cierre informa la cuenta de origen AUTO o MANUAL, el saldo antes y
+  despues y el cambio producido exclusivamente por ese cierre.
+- Los parciales muestran su propio resultado y capital cerrado. El cierre
+  final distingue el resultado total del trade de lo ya contabilizado en
+  parciales; no se vuelve a sumar ni descontar ningun importe.
+- Se muestran las comisiones ya descontadas y el deslizamiento ya aplicado.
+  El MANUAL vigente sigue sin simular esos costos y lo advierte expresamente;
+  no se lo rotula como resultado neto. Los registros antiguos sin metadatos
+  suficientes indican informacion incompleta, sin inventar costos ni origen.
+- El resumen diario conserva su agrupacion por fecha local de cierre completo,
+  separa AUTO/MANUAL, aclara los resultados y distingue los saldos actuales del
+  resultado diario. Los mensajes anteriores de Telegram no se reescriben.
+- El contador del panel usa todo el historial persistente, incluidos registros
+  anteriores sin clasificar. La tabla sigue mostrando solo los ultimos diez;
+  las estadisticas AUTO y MANUAL siguen separadas.
+- No se modificaron estrategias, riesgo, saldos, historiales operativos ni
+  tarifas; solo se agregaron metadatos informativos a nuevos cierres.
+- Verificacion local: 198 tests superados, demostracion PAPER completada,
+  sintaxis Python/JavaScript validada y bloqueo REAL verificado antes de acceder
+  al estado o al mercado. No se enviaron mensajes reales de Telegram.
 
 ## Proximo hito
 

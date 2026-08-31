@@ -764,6 +764,11 @@ class PaperState:
             "exit_price": exit_price,
             "percent": percent,
             "closed_quantity": closed_quantity,
+            # Metadatos informativos para Telegram; no cambian el cálculo.
+            "source": position.get("source", "UNCLASSIFIED"),
+            "leverage": position.get("leverage"),
+            "fee_rate": fee_rate,
+            "slippage_rate": slippage_rate,
             "remaining_quantity": (
                 remaining_quantity
             ),
@@ -891,6 +896,8 @@ class PaperState:
                 final_leg_pnl
             ),
             "gross_pnl": float(total_gross_pnl),
+            "fee_rate": fee_rate,
+            "slippage_rate": slippage_rate,
             "fees": float(total_fees),
             "pnl": float(
                 total_trade_pnl

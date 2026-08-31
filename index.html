@@ -278,7 +278,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">Capital AUTO actual</span><b id="opBalance">—</b></div>
           <div class="mini"><span class="mut">Saldo MANUAL / legado</span><b id="manualBalance">—</b></div>
           <div class="mini"><span class="mut">P&L posición actual</span><b id="unrealized">—</b></div>
-          <div class="mini"><span class="mut">Trades cerrados</span><b id="closedCount">—</b></div>
+          <div class="mini"><span class="mut">Operaciones cerradas · total histórico</span><b id="closedCount">—</b><small class="mut">Incluye AUTO, MANUAL y registros anteriores.</small></div>
         </div>
         <div class="note">AUTO DEMO comienza con 1.000 USDT propios. MANUAL conserva su saldo anterior. Ambas cuentas son simuladas y no usan dinero real.</div>
 
@@ -321,7 +321,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
     </div>
 
     <section class="panel" style="margin-top:12px">
-      <h2>Últimas operaciones cerradas</h2>
+      <h2>Últimas 10 operaciones cerradas</h2>
       <table class="trades">
         <thead><tr><th>Par</th><th>Dirección</th><th>Entrada</th><th>Salida</th><th>P&L</th><th>Origen</th><th>Motivo</th></tr></thead>
         <tbody id="tradesBody"><tr><td colspan="7" class="mut">Sin operaciones cerradas todavía.</td></tr></tbody>
@@ -882,7 +882,7 @@ async function loadData(){
 
     document.getElementById('autoToggleBtn').disabled=!connected||manualActionBusy;
     document.getElementById('autoEmergencyBtn').disabled=!connected||manualActionBusy||String(p.auto_pause_reason||'')==='EMERGENCY_STOP';
-    const trades=p.closed_trades||[];document.getElementById('closedCount').textContent=trades.length;
+    const trades=p.closed_trades||[];document.getElementById('closedCount').textContent=p.closed_trades_count??'—';
     document.getElementById('tradesBody').innerHTML=trades.length?trades.slice().reverse().map(t=>`<tr><td>${(t.symbol||'').replace('USDT','/USDT')}</td><td class="${t.direction==='LONG'?'g':'r'}">${t.direction}</td><td>${fmt(t.entry_price)}</td><td>${fmt(t.exit_price)}</td><td class="${Number(t.pnl)>=0?'g':'r'}">${Number(t.pnl)>=0?'+':''}${fmt(t.pnl)}</td><td>${t.source==='MANUAL'?'MANUAL':t.source==='AUTO'?'AUTO':'SIN CLASIFICAR'}</td><td>${t.reason||'—'}${Number(t.partial_count||0)>0?' · '+t.partial_count+' parcial(es)':''}</td></tr>`).join(''):'<tr><td colspan="7" class="mut">Sin operaciones cerradas todavía.</td></tr>';
   }catch(e){
     document.getElementById('backendDot').className='dot off';document.getElementById('backendText').textContent='Sin datos del dashboard';document.getElementById('sysBackend').textContent='OFFLINE';document.getElementById('sysBackend').className='r';document.getElementById('message').innerHTML='<span class="error">No se pudo leer dashboard_data.json.</span>';

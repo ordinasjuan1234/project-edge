@@ -28,7 +28,7 @@ def test_manual_entry_is_clearly_paper():
     )
 
     assert "ENTRADA MANUAL PAPER" in message
-    assert "ETHUSDT" in message
+    assert "ETH/USDT" in message
     assert "sin orden real" in message
 
 

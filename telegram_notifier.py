@@ -22,6 +22,7 @@ y Telegram queda simplemente desactivado.
 
 from __future__ import annotations
 
+import math
 import os
 import urllib.error
 import urllib.parse
@@ -53,6 +54,8 @@ def _format_number(
         number = float(value)
     except (TypeError, ValueError):
         return "—"
+    if not math.isfinite(number):
+        return "—"
 
     return f"{number:,.{decimals}f}".replace(
         ",",
@@ -64,6 +67,142 @@ def _format_number(
         "_",
         ".",
     )
+
+
+def _number(value: Any) -> float | None:
+    """No inventar importes cuando un registro antiguo no contiene el dato."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _signed(value: Any, decimals: int = 4) -> str:
+    number = _number(value)
+    if number is None:
+        return "—"
+    if number == 0:
+        return _format_number(0, decimals)
+    # No convertir una pequeña ganancia/pérdida en un engañoso ±0,0000.
+    while round(number, decimals) == 0 and decimals < 8:
+        decimals += 1
+    if round(number, decimals) == 0:
+        return ("−" if number < 0 else "+") + "<0,00000001"
+    return ("+" if number > 0 else "") + _format_number(number, decimals)
+
+
+def _result_label(value: Any) -> tuple[str, str, str]:
+    number = _number(value)
+    if number is None:
+        return "⚪", "RESULTADO NO DISPONIBLE", "Resultado no disponible"
+    if number > 0:
+        return "🟢", "GANANCIA", "GANASTE"
+    if number < 0:
+        return "🔴", "PÉRDIDA", "PERDISTE"
+    return "⚪", "SIN GANANCIA NI PÉRDIDA", "SIN GANANCIA NI PÉRDIDA"
+
+
+def _source(record: dict[str, Any], default: str) -> str:
+    return str(record.get("source") or default).upper()
+
+
+def _account_label(source: str) -> str:
+    return {
+        "AUTO": "Saldo AUTO DEMO",
+        "MANUAL": "Saldo MANUAL / legado",
+    }.get(source, "Saldo PAPER (origen sin clasificar)")
+
+
+def _symbol_label(symbol: Any) -> str:
+    symbol = str(symbol or "—")
+    if symbol in {"BTCUSDT", "ETHUSDT"}:
+        return symbol.replace("USDT", "/USDT")
+    return symbol
+
+
+def _amounts(record: dict[str, Any], source: str) -> tuple[float | None, float | None, float | None]:
+    """Capital usado, multiplicador y exposición; nunca el saldo de la cuenta."""
+    leverage = _number(record.get("leverage"))
+    if leverage is None and source == "AUTO":
+        leverage = 1.0  # AUTO PAPER vigente opera siempre x1.
+    if leverage is not None and leverage <= 0:
+        leverage = None
+    partial = "closed_quantity" in record
+    capital = None if partial else _number(record.get("capital"))
+    exposure = None if partial else _number(record.get("exposure"))
+    quantity = _number(record.get("closed_quantity" if partial else "quantity"))
+    entry = _number(record.get("entry_price"))
+    if exposure is None and capital is not None and leverage is not None:
+        exposure = capital * leverage
+    if exposure is None and quantity is not None and entry is not None:
+        exposure = quantity * entry
+    if capital is None and exposure is not None and leverage is not None:
+        capital = exposure / leverage
+    return capital, leverage, exposure
+
+
+def _amount_lines(record: dict[str, Any], source: str) -> list[str]:
+    capital, leverage, exposure = _amounts(record, source)
+    lines = []
+    if capital is not None and capital > 0:
+        label = "Capital de la parte cerrada" if "closed_quantity" in record else "Capital utilizado"
+        lines.append(f"{label}: {_format_number(capital)} USDT")
+    if leverage is not None:
+        lines.append(f"Apalancamiento: x{leverage:g}")
+    if exposure is not None and exposure > 0:
+        lines.append(f"Exposición: {_format_number(exposure)} USDT")
+    return lines
+
+
+def _cost_lines(record: dict[str, Any], *, closed: bool) -> list[str]:
+    fee_rate = _number(record.get("fee_rate"))
+    slippage = _number(record.get("slippage_rate"))
+    fees = _number(record.get("fees"))
+    if (fees == 0 if closed else fee_rate == 0) and slippage == 0:
+        return ["⚠️ Sin comisiones ni deslizamiento simulados; resultado sin esos costos."]
+    if closed:
+        commission = (
+            f"Comisión simulada: {_signed(-fees)} USDT (ya descontada)."
+            if fees is not None and fees >= 0
+            else "Comisiones: no informadas en este registro."
+        )
+    else:
+        commission = (
+            f"Comisión simulada: {_format_number(fee_rate * 100, 4)}% por lado; se descuenta al cerrar."
+            if fee_rate is not None and fee_rate >= 0
+            else "Comisiones: no informadas en este registro."
+        )
+    if slippage is None or slippage < 0:
+        slip_text = "Deslizamiento: no informado en este registro."
+    elif slippage == 0:
+        slip_text = "Deslizamiento: no simulado."
+    else:
+        slip_text = f"Deslizamiento simulado: {_format_number(slippage * 100, 4)}% por lado"
+        slip_text += " (ya aplicado en los precios)." if closed else "."
+    return [commission, slip_text]
+
+
+def _balance_lines(source: str, balance: Any, change: Any = None) -> list[str]:
+    current = _number(balance)
+    if current is None:
+        return []
+    label = _account_label(source)
+    change = _number(change)
+    if change is None:
+        return [f"{label}: {_format_number(current)} USDT"]
+    return [
+        f"{label} antes → después: "
+        f"{_format_number(current - change)} → {_format_number(current)} USDT",
+        f"Cambio de saldo en este cierre: {_signed(change)} USDT",
+    ]
+
+
+def _message_footer(record: dict[str, Any]) -> list[str]:
+    lines = []
+    if record.get("trade_id"):
+        lines.append(f"Trade ID: {record['trade_id']}")
+    return ["", *lines, "ℹ️ PAPER / DEMO · sin orden real"]
 
 
 def _direction_label(
@@ -94,7 +233,7 @@ def _reason_label(
             "TAKE PROFIT · toma de ganancia"
         ),
         "STOP_LOSS": (
-            "STOP LOSS · corte de pérdida"
+            "STOP LOSS · stop alcanzado"
         ),
         "TRAILING_STOP": (
             "TRAILING STOP · stop dinámico"
@@ -222,101 +361,32 @@ def send_telegram_message(
         return False
 
 
-def format_auto_entry_message(
-    position: dict[str, Any],
-    balance: Any = None,
-) -> str:
-    """Construye el aviso de una entrada AUTO PAPER."""
+def _format_entry_message(position: dict[str, Any], balance: Any, default: str) -> str:
+    source = _source(position, default)
+    icon = "🤖" if source == "AUTO" else "🧑"
     lines = [
-        "🤖 PROJECT EDGE · ENTRADA AUTO PAPER",
+        f"{icon} PROJECT EDGE · ENTRADA {source} PAPER",
         "",
-        (
-            "Activo: "
-            f"{position.get('symbol', '—')}"
-        ),
-        (
-            "Dirección: "
-            f"{_direction_label(position.get('direction'))}"
-        ),
-        (
-            "Tipo: "
-            f"{position.get('order_type', 'MARKET')}"
-        ),
-        (
-            "Entrada: "
-            f"{_format_number(position.get('entry_price'))} USDT"
-        ),
-        (
-            "STOP LOSS (corte de pérdida): "
-            f"{_format_number(position.get('stop_loss'))} USDT"
-        ),
-        (
-            "TAKE PROFIT (toma de ganancia): "
-            f"{_format_number(position.get('take_profit'))} USDT"
-        ),
+        f"Activo: {_symbol_label(position.get('symbol'))}",
+        f"Dirección: {_direction_label(position.get('direction'))}",
+        f"Tipo: {position.get('order_type', 'MARKET')}",
+        f"Entrada: {_format_number(position.get('entry_price'))} USDT",
+        f"STOP LOSS: {_format_number(position.get('stop_loss'))} USDT",
+        f"TAKE PROFIT: {_format_number(position.get('take_profit'))} USDT",
+        "",
+        *_amount_lines(position, source),
+        *_cost_lines(position, closed=False),
+        "",
+        *_balance_lines(source, balance),
+        "El capital utilizado no es la ganancia; el resultado depende del movimiento del precio.",
+        *_message_footer(position),
     ]
+    return "\n".join(lines)
 
-    capital = position.get(
-        "capital"
-    )
-    leverage = position.get(
-        "leverage"
-    )
-    exposure = position.get(
-        "exposure"
-    )
 
-    if capital is not None:
-        lines.append(
-            "Capital: "
-            f"{_format_number(capital)} USDT"
-        )
-
-    if leverage is not None:
-        lines.append(
-            "Apalancamiento: "
-            f"x{int(float(leverage))}"
-        )
-
-    if exposure is not None:
-        lines.append(
-            "Exposición: "
-            f"{_format_number(exposure)} USDT"
-        )
-
-    if balance is not None:
-        lines.append(
-            "Saldo PAPER: "
-            f"{_format_number(balance)} USDT"
-        )
-
-    trade_id = position.get(
-        "trade_id"
-    )
-    if trade_id:
-        lines.extend(
-            [
-                "",
-                (
-                    "Trade ID: "
-                    f"{trade_id}"
-                ),
-            ]
-        )
-
-    lines.extend(
-        [
-            "",
-            (
-                "ℹ️ PAPER / DEMO · "
-                "sin orden real"
-            ),
-        ]
-    )
-
-    return "\n".join(
-        lines
-    )
+def format_auto_entry_message(position: dict[str, Any], balance: Any = None) -> str:
+    """Construye el aviso de una entrada AUTO PAPER."""
+    return _format_entry_message(position, balance, "AUTO")
 
 
 def format_manual_entry_message(
@@ -324,129 +394,92 @@ def format_manual_entry_message(
     balance: Any = None,
 ) -> str:
     """Construye el aviso de una entrada MANUAL PAPER."""
-    message = format_auto_entry_message(
-        position,
-        balance=balance,
-    )
-    return message.replace(
-        "ENTRADA AUTO PAPER",
-        "ENTRADA MANUAL PAPER",
-        1,
-    ).replace(
-        "🤖 PROJECT EDGE",
-        "🧑 PROJECT EDGE",
-        1,
-    )
+    return _format_entry_message(position, balance, "MANUAL")
 
 
-def format_auto_exit_message(
-    trade: dict[str, Any],
-) -> str:
-    """Construye el aviso de una salida AUTO PAPER."""
-    pnl = float(
-        trade.get(
-            "pnl",
-            0.0,
-        )
-    )
-
-    result_icon = (
-        "🟢"
-        if pnl > 0
-        else (
-            "🔴"
-            if pnl < 0
-            else "⚪"
-        )
-    )
-
+def _format_exit_message(trade: dict[str, Any], default: str) -> str:
+    source = _source(trade, default)
+    pnl = _number(trade.get("pnl"))
+    icon, title, verb = _result_label(pnl)
+    partials = trade.get("partial_closes") or []
+    has_partials = bool(partials) or (_number(trade.get("partial_count")) or 0) > 0
+    realized = _number(trade.get("realized_pnl_before_final"))
+    final_pnl = _number(trade.get("final_leg_pnl"))
+    if final_pnl is None and pnl is not None:
+        if realized is not None:
+            final_pnl = pnl - realized
+        elif not has_partials:
+            final_pnl = pnl
+    label = source if source in {"AUTO", "MANUAL"} else "ORIGEN SIN CLASIFICAR"
     lines = [
-        (
-            f"{result_icon} PROJECT EDGE · "
-            "SALIDA AUTO PAPER"
-        ),
+        f"{icon} PROJECT EDGE · SALIDA {label} PAPER · {title}",
         "",
-        (
-            "Activo: "
-            f"{trade.get('symbol', '—')}"
-        ),
-        (
-            "Dirección: "
-            f"{_direction_label(trade.get('direction'))}"
-        ),
-        (
-            "Entrada: "
-            f"{_format_number(trade.get('entry_price'))} USDT"
-        ),
-        (
-            "Salida: "
-            f"{_format_number(trade.get('exit_price'))} USDT"
-        ),
-        (
-            "Motivo: "
-            f"{_reason_label(trade.get('reason'))}"
-        ),
-        (
-            "P&L (ganancia/pérdida): "
-            f"{_format_number(pnl, 4)} USDT"
-        ),
+        f"{verb}: {_signed(pnl)} USDT",
     ]
+    capital, _, _ = _amounts(trade, source)
+    if capital is not None and capital > 0 and pnl is not None:
+        lines.append(f"Rendimiento sobre capital utilizado: {_signed(pnl / capital * 100, 2)}%")
+    if has_partials:
+        lines.append("Resultado TOTAL de la operación: incluye los parciales, sin sumarlos otra vez.")
+        if realized is not None:
+            lines.append(f"Ya contabilizado en parciales: {_signed(realized)} USDT")
+    lines.extend([
+        "",
+        f"Activo: {_symbol_label(trade.get('symbol'))}",
+        f"Dirección: {_direction_label(trade.get('direction'))}",
+        f"Entrada: {_format_number(trade.get('entry_price'))} → "
+        f"Salida{' final' if has_partials else ''}: {_format_number(trade.get('exit_price'))} USDT",
+        f"Motivo: {_reason_label(trade.get('reason'))}",
+        *_amount_lines(trade, source),
+        "",
+        *_cost_lines(trade, closed=True),
+        "",
+        *_balance_lines(source, trade.get("balance"), final_pnl),
+        *_message_footer(trade),
+    ])
+    return "\n".join(lines)
 
-    if trade.get(
-        "balance"
-    ) is not None:
-        lines.append(
-            "Saldo PAPER: "
-            f"{_format_number(trade.get('balance'))} USDT"
-        )
 
-    trade_id = trade.get(
-        "trade_id"
-    )
-    if trade_id:
-        lines.extend(
-            [
-                "",
-                (
-                    "Trade ID: "
-                    f"{trade_id}"
-                ),
-            ]
-        )
-
-    lines.extend(
-        [
-            "",
-            (
-                "ℹ️ PAPER / DEMO · "
-                "sin orden real"
-            ),
-        ]
-    )
-
-    return "\n".join(
-        lines
-    )
+def format_auto_exit_message(trade: dict[str, Any]) -> str:
+    """Construye el aviso de una salida AUTO PAPER."""
+    return _format_exit_message(trade, "AUTO")
 
 
 def format_manual_exit_message(
     trade: dict[str, Any],
 ) -> str:
     """Construye el aviso de una salida PAPER no rotulada como AUTO."""
-    message = format_auto_exit_message(
-        trade
-    )
-    message = message.replace(
-        "SALIDA AUTO PAPER",
-        "SALIDA PAPER",
-        1,
-    )
-    lines = message.splitlines()
-    lines.insert(
-        2,
-        "Origen de la posición: "
-        f"{str(trade.get('source', 'UNCLASSIFIED')).upper()}",
-    )
+    # Una acción manual también puede cerrar una posición originada por AUTO.
+    return _format_exit_message(trade, "UNCLASSIFIED")
+
+
+def _format_partial_message(payload: dict[str, Any], balance: Any) -> str:
+    source = _source(payload, "MANUAL")
+    pnl = _number(payload.get("pnl"))
+    icon, title, verb = _result_label(pnl)
+    capital, _, _ = _amounts(payload, source)
+    lines = [
+        f"{icon} PROJECT EDGE · CIERRE PARCIAL {source} PAPER · {title}",
+        "",
+        f"{verb} EN ESTE PARCIAL: {_signed(pnl)} USDT",
+    ]
+    if capital is not None and capital > 0 and pnl is not None:
+        lines.append(f"Rendimiento sobre capital de la parte cerrada: {_signed(pnl / capital * 100, 2)}%")
+    lines.extend([
+        "",
+        f"Activo: {_symbol_label(payload.get('symbol'))}",
+        f"Dirección: {_direction_label(payload.get('direction'))}",
+        f"Porcentaje cerrado: {_format_number(payload.get('percent'), 0)}% de lo que seguía abierto",
+        f"Entrada: {_format_number(payload.get('entry_price'))} → "
+        f"Salida parcial: {_format_number(payload.get('exit_price'))} USDT",
+        *_amount_lines(payload, source),
+        f"Cantidad restante: {_format_number(payload.get('remaining_quantity'), 8)}",
+        *_cost_lines(payload, closed=True),
+        "",
+        *_balance_lines(source, balance if balance is not None else payload.get("balance"), pnl),
+        "La posición sigue abierta. Este parcial no cuenta como una operación nueva.",
+        *_message_footer(payload),
+    ])
     return "\n".join(lines)
 
 
@@ -458,6 +491,9 @@ def format_manual_action_message(
     """Construye avisos de controles manuales que no cierran un trade."""
     payload = payload or {}
     action = str(action).upper()
+    if action == "PARTIAL_CLOSE":
+        return _format_partial_message(payload, balance)
+    source = _source(payload, "MANUAL")
     labels = {
         "LIMIT_CREATED": "ORDEN LIMIT CREADA",
         "LIMIT_CANCELLED": "ORDEN LIMIT CANCELADA",
@@ -479,7 +515,6 @@ def format_manual_action_message(
         ("entry_price", "Entrada", 2, " USDT"),
         ("exit_price", "Salida", 2, " USDT"),
         ("percent", "Porcentaje", 0, "%"),
-        ("pnl", "P&L parcial", 4, " USDT"),
         ("remaining_quantity", "Cantidad restante", 8, ""),
         ("stop_loss", "Stop Loss", 2, " USDT"),
         ("take_profit", "Take Profit", 2, " USDT"),
@@ -489,17 +524,18 @@ def format_manual_action_message(
         value = payload.get(key)
         if value is None:
             continue
-        if key in {"symbol", "direction"}:
-            rendered = str(value)
+        if key == "symbol":
+            rendered = _symbol_label(value)
+        elif key == "direction":
+            rendered = _direction_label(value)
         else:
             rendered = _format_number(value, decimals)
         lines.append(f"{label}: {rendered}{suffix}")
 
-    if balance is not None:
-        lines.append(
-            "Saldo PAPER: "
-            f"{_format_number(balance)} USDT"
-        )
+    if action == "LIMIT_CREATED":
+        lines.extend(_amount_lines(payload, source))
+        lines.append("PENDIENTE: todavía no es una entrada ejecutada ni una ganancia/pérdida.")
+    lines.extend(_balance_lines(source, balance))
 
     lines.extend(
         [
@@ -538,7 +574,7 @@ def format_auto_control_message(
     ]
     if balance is not None:
         lines.append(
-            "Saldo PAPER: "
+            "Saldo AUTO DEMO: "
             f"{_format_number(balance)} USDT"
         )
     lines.extend(
@@ -593,8 +629,20 @@ def calculate_daily_summary(
             "total": total,
             "wins": wins,
             "losses": losses,
+            "breakeven": sum(float(trade.get("pnl", 0.0)) == 0 for trade in subset),
             "win_rate": wins / total * 100.0 if total else 0.0,
             "pnl": pnl,
+            "fees": sum(_number(trade.get("fees")) or 0.0 for trade in subset),
+            "without_costs": sum(
+                _number(trade.get("fees")) == 0
+                and _number(trade.get("slippage_rate")) == 0
+                for trade in subset
+            ),
+            "unknown_costs": sum(
+                _number(trade.get("fees")) is None
+                or _number(trade.get("slippage_rate")) is None
+                for trade in subset
+            ),
         }
 
     return {
@@ -611,27 +659,55 @@ def format_daily_summary_message(
     auto_balance: Any,
     manual_balance: Any,
 ) -> str:
-    """Construye el resumen diario AUTO/MANUAL."""
+    """Resultados por fecha de cierre, no un flujo de caja diario inferido."""
     lines = [
         "📊 PROJECT EDGE · RESUMEN DIARIO PAPER",
         f"Fecha: {summary.get('date', '—')}",
+        f"Zona horaria: {summary.get('timezone', DEFAULT_REPORT_TIMEZONE)}",
         "",
     ]
     for label, key in (("TOTAL", "all"), ("AUTO", "auto"), ("MANUAL", "manual")):
         metrics = summary.get(key, {})
-        lines.append(
-            f"{label}: {metrics.get('total', 0)} operaciones · "
-            f"{metrics.get('wins', 0)} G / {metrics.get('losses', 0)} P · "
-            f"acierto {_format_number(metrics.get('win_rate', 0.0))}% · "
-            f"P&L {_format_number(metrics.get('pnl', 0.0), 4)} USDT"
+        count = metrics.get("total", 0)
+        wins = metrics.get("wins", 0)
+        losses = metrics.get("losses", 0)
+        closed_label = "operación cerrada" if count == 1 else "operaciones cerradas"
+        won_label = "ganada" if wins == 1 else "ganadas"
+        lost_label = "perdida" if losses == 1 else "perdidas"
+        flat_text = (
+            f" · {metrics['breakeven']} sin ganancia/pérdida"
+            if metrics.get("breakeven", 0) else ""
         )
+        lines.append(
+            f"{label}: {count} {closed_label} · "
+            f"{wins} {won_label} / {losses} {lost_label}{flat_text} · "
+            f"acierto {_format_number(metrics.get('win_rate', 0.0))}%"
+        )
+        if metrics.get("total", 0):
+            icon, title, _ = _result_label(metrics.get("pnl"))
+            lines.append(f"{icon} {title}: {_signed(metrics.get('pnl'))} USDT")
+        else:
+            lines.append("Sin operaciones cerradas; resultado: 0,0000 USDT.")
+        lines.append("")
+    total = summary.get("all", {})
+    if total.get("total", 0):
+        lines.append(f"Comisiones registradas: {_signed(-total.get('fees', 0.0))} USDT (ya descontadas).")
+        if total.get("without_costs", 0):
+            count = total["without_costs"]
+            lines.append(f"⚠️ {count} {'cierre' if count == 1 else 'cierres'} sin comisiones ni deslizamiento simulados.")
+        if total.get("unknown_costs", 0):
+            count = total["unknown_costs"]
+            lines.append(f"⚠️ {count} {'cierre' if count == 1 else 'cierres'} con información de costos incompleta.")
     lines.extend(
         [
             "",
+            "Saldos actuales al enviar este resumen:",
             "Capital AUTO DEMO: "
             f"{_format_number(auto_balance)} USDT",
             "Saldo MANUAL / legado: "
             f"{_format_number(manual_balance)} USDT",
+            "",
+            "Se cuentan cierres, no entradas. Los parciales se incluyen una sola vez, al cierre total, aunque sean de otro día.",
             "ℹ️ PAPER / DEMO · sin dinero real",
         ]
     )

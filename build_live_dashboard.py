@@ -1026,6 +1026,7 @@ def main():
             "auto_performance": (
                 auto_performance
             ),
+            "closed_trades_count": len(closed_trades),
             "closed_trades": (
                 closed_trades[-10:]
             ),
