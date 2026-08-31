@@ -28,6 +28,10 @@ from engine.decision.project_edge_v3 import (
     ProjectEdgeV3,
     ProjectEdgeV3Config,
 )
+from engine.decision.project_edge_v4 import (
+    ProjectEdgeV4,
+    ProjectEdgeV4Config,
+)
 from engine.execution.backtest_report import BacktestReport
 from engine.multitimeframe.multi_timeframe_engine import MultiTimeframeEngine
 from engine.structure.structure_engine import StructureEngine
@@ -64,8 +68,15 @@ class HistoricalBacktestConfig:
             raise ValueError("slippage_rate debe estar entre 0 y 0.1.")
         if self.cooldown_minutes < 0:
             raise ValueError("cooldown_minutes no puede ser negativo.")
-        if str(self.strategy).upper() not in {"PROJECT_EDGE_V2", "PROJECT_EDGE_V3"}:
-            raise ValueError("strategy debe ser PROJECT_EDGE_V2 o PROJECT_EDGE_V3.")
+        if str(self.strategy).upper() not in {
+            "PROJECT_EDGE_V2",
+            "PROJECT_EDGE_V3",
+            "PROJECT_EDGE_V4_INTRADAY",
+        }:
+            raise ValueError(
+                "strategy debe ser PROJECT_EDGE_V2, PROJECT_EDGE_V3 "
+                "o PROJECT_EDGE_V4_INTRADAY."
+            )
         if not 0 < self.risk_pct <= 0.05:
             raise ValueError("risk_pct debe estar entre 0 y 0.05.")
         if not 0 < self.max_exposure_pct <= 1:
@@ -121,6 +132,22 @@ class HistoricalBacktester:
                 loss_guard_losses=config.loss_guard_losses,
                 loss_guard_minutes=config.loss_guard_minutes,
             )
+        )
+        self.strategy_v4 = ProjectEdgeV4(
+            ProjectEdgeV4Config(
+                risk_pct=config.risk_pct,
+                max_exposure_pct=config.max_exposure_pct,
+                fee_rate=config.fee_rate,
+                slippage_rate=config.slippage_rate,
+                cooldown_minutes=config.cooldown_minutes,
+                loss_guard_losses=config.loss_guard_losses,
+                loss_guard_minutes=config.loss_guard_minutes,
+            )
+        )
+        self.selected_strategy = (
+            self.strategy_v4
+            if str(config.strategy).upper() == "PROJECT_EDGE_V4_INTRADAY"
+            else self.strategy_v3
         )
 
     @staticmethod
@@ -321,8 +348,11 @@ class HistoricalBacktester:
             analysis["causal_market_structure"] = (
                 self.rolling_causal_market_states(analysis)
             )
-            if str(self.config.strategy).upper() == "PROJECT_EDGE_V3":
-                analysis = self.strategy_v3.add_features(analysis)
+            if str(self.config.strategy).upper() in {
+                "PROJECT_EDGE_V3",
+                "PROJECT_EDGE_V4_INTRADAY",
+            }:
+                analysis = self.selected_strategy.add_features(analysis)
             analyses[timeframe] = analysis
 
         timeline = analyses["5M"][
@@ -334,8 +364,11 @@ class HistoricalBacktester:
             analysis = analyses[timeframe]
             columns = ["close_time", "causal_market_structure"]
 
-            if str(self.config.strategy).upper() == "PROJECT_EDGE_V3":
-                columns.extend(self.strategy_v3.FEATURE_FIELDS)
+            if str(self.config.strategy).upper() in {
+                "PROJECT_EDGE_V3",
+                "PROJECT_EDGE_V4_INTRADAY",
+            }:
+                columns.extend(self.selected_strategy.FEATURE_FIELDS)
 
             if timeframe in {"15M", "5M"}:
                 columns.extend(self.FVG_FIELDS)
@@ -351,7 +384,7 @@ class HistoricalBacktester:
                     },
                     **{
                         field: f"{field}_{timeframe}"
-                        for field in self.strategy_v3.FEATURE_FIELDS
+                        for field in self.selected_strategy.FEATURE_FIELDS
                     },
                 }
             ).sort_values("available_at")
@@ -367,8 +400,11 @@ class HistoricalBacktester:
         return timeline.reset_index(drop=True)
 
     def _decision_for_row(self, row: pd.Series) -> dict[str, Any]:
-        if str(self.config.strategy).upper() == "PROJECT_EDGE_V3":
-            return self.strategy_v3.decide_snapshot(row)
+        if str(self.config.strategy).upper() in {
+            "PROJECT_EDGE_V3",
+            "PROJECT_EDGE_V4_INTRADAY",
+        }:
+            return self.selected_strategy.decide_snapshot(row)
 
         states = {
             timeframe: str(row.get(f"state_{timeframe}", "UNDEFINED")).upper()
@@ -606,8 +642,11 @@ class HistoricalBacktester:
             raw_entry = float(entry_candle["open"])
             entry_price = self._entry_price(raw_entry, str(direction))
 
-            if decision.get("strategy") == "PROJECT_EDGE_V3":
-                trade_plan = self.strategy_v3.build_trade_plan(
+            if decision.get("strategy") in {
+                "PROJECT_EDGE_V3",
+                "PROJECT_EDGE_V4_INTRADAY",
+            }:
+                trade_plan = self.selected_strategy.build_trade_plan(
                     decision=decision,
                     entry_price=entry_price,
                     account_equity=balance,
@@ -647,7 +686,10 @@ class HistoricalBacktester:
                 "strategy": decision.get("strategy", "PROJECT_EDGE_V2"),
                 "real_order_sent": False,
             }
-            if decision.get("strategy") == "PROJECT_EDGE_V3":
+            if decision.get("strategy") in {
+                "PROJECT_EDGE_V3",
+                "PROJECT_EDGE_V4_INTRADAY",
+            }:
                 diagnostics = decision.get("diagnostics")
                 if not isinstance(diagnostics, dict):
                     diagnostics = {}
@@ -674,7 +716,7 @@ class HistoricalBacktester:
                         ),
                         **{
                             f"diag_{field}": diagnostics.get(field)
-                            for field in self.strategy_v3.DIAGNOSTIC_FIELDS
+                            for field in self.selected_strategy.DIAGNOSTIC_FIELDS
                         },
                     }
                 )

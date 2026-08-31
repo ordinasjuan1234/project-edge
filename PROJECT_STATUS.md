@@ -124,13 +124,37 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
   sintaxis Python/JavaScript validada y bloqueo REAL verificado antes de acceder
   al estado o al mercado. No se enviaron mensajes reales de Telegram.
 
+### Hito del comparador historico v4 intradia
+
+- Se agrego `PROJECT_EDGE_V4_INTRADAY` como candidata exclusiva de backtest;
+  no esta conectada al runner AUTO PAPER y v3 continua activa sin cambios.
+- La direccion candidata se define con estructura, EMA 20/50 y pendiente en
+  1H. El contexto 4H bloquea solamente cuando estructura y EMA presentan una
+  oposicion clara; 30M no puede estar estructuralmente opuesta.
+- Conserva los umbrales congelados ADX 1H >= 30 y eficiencia >= 0,30, exige
+  retroceso 15M y gatillo 5M a no mas de 1 ATR de EMA20. FVG y ADX creciente
+  solo ordenan oportunidades simultaneas y no crean entradas.
+- Reutiliza sin cambios el plan monetario v3: riesgo maximo 0,5%, x1, stop de
+  1,5 ATR con limites, objetivo 2R bruto y minimo 1,5R neto estimado.
+- El comparador mide v3 ETH, v4 ETH y v4 BTC+ETH. La cartera conjunta usa un
+  unico saldo y como maximo una posicion AUTO; cuando ambos activos confirman
+  en la misma vela elige el puntaje de calidad mayor.
+- El workflow manual ejecuta dos bloques de 365 dias desplazados 3 y 4 anos,
+  que no se usaron para descubrir los umbrales. Informa frecuencia, retorno
+  neto, profit factor, drawdown, costos y entrega JSON, resumen CSV y trades.
+- El comparador solo descarga velas publicas y escribe artefactos. REAL se
+  bloquea antes de consultar mercado o crear archivos; no lee ni modifica
+  `paper_state.json`, saldos, dashboard ni Telegram.
+- Verificacion local: 216 tests superados. Los resultados fuera de muestra
+  todavia no fueron ejecutados y no autorizan activar v4 ni REAL.
+
 ## Proximo hito
 
-Diseñar y validar una candidata intradia AUTO mas activa para reunir una muestra
-util en PAPER. El objetivo operativo es evaluar varias oportunidades diarias,
-pero no se forzaran entradas ni se asumira que mas operaciones producen mayor
-rentabilidad. La candidata debera medirse con costos, retorno neto, profit
-factor, drawdown, frecuencia y bloques fuera de muestra antes de reemplazar v3.
+Ejecutar los dos bloques fuera de muestra sin modificar parametros y comparar
+los tres resultados. v4 solo podra proponerse para PAPER si mejora actividad
+sin sacrificar resultado neto, profit factor ni drawdown. Una proteccion de
+propiedad impedira que los controles MANUAL modifiquen por accidente una
+posicion AUTO; se implementara y verificara como cambio separado.
 
 ## Estrategia AUTO v3 vigente
 
