@@ -53,6 +53,32 @@ ALLOWED_LEVERAGE = {1, 2, 3}
 ALLOWED_PARTIAL_PCT = {25.0, 50.0, 75.0, 100.0}
 ALLOWED_ORDER_TYPES = {"MARKET", "LIMIT"}
 
+AUTO_POSITION_OWNERSHIP_ERROR = (
+    "La posicion abierta pertenece a AUTO. Los controles MANUAL "
+    "no pueden cerrarla ni modificar SL, TP, Break-even, parciales "
+    "o Trailing. El motor AUTO conserva su gestion PAPER."
+)
+AUTO_LIMIT_OWNERSHIP_ERROR = (
+    "La orden LIMIT pendiente pertenece a AUTO. El control MANUAL "
+    "no puede cancelarla; el motor AUTO conserva su gestion PAPER."
+)
+
+
+def require_manual_position_ownership(state: PaperState) -> None:
+    """Impide que una accion MANUAL modifique una posicion AUTO."""
+    position = state.position or {}
+
+    if str(position.get("source", "UNCLASSIFIED")).upper() == "AUTO":
+        raise ValueError(AUTO_POSITION_OWNERSHIP_ERROR)
+
+
+def require_manual_limit_ownership(state: PaperState) -> None:
+    """Impide que una accion MANUAL cancele una LIMIT AUTO."""
+    pending_order = state.pending_order or {}
+
+    if str(pending_order.get("source", "UNCLASSIFIED")).upper() == "AUTO":
+        raise ValueError(AUTO_LIMIT_OWNERSHIP_ERROR)
+
 
 def current_price(symbol: str) -> float:
     data = BinanceHistoricalData().fetch_project_edge_timeframes(
@@ -468,6 +494,8 @@ def cancel_limit_manual(
             "No hay una orden LIMIT PAPER pendiente para cancelar."
         )
 
+    require_manual_limit_ownership(state)
+
     order = state.cancel_pending_order(
         reason="MANUAL_CANCEL",
     )
@@ -507,6 +535,8 @@ def close_manual(
         )
         return
 
+    require_manual_position_ownership(state)
+
     symbol = state.position["symbol"]
     price = current_price(symbol)
 
@@ -544,6 +574,8 @@ def partial_close_manual(
         raise ValueError(
             "No hay una posicion PAPER abierta para realizar cierre parcial."
         )
+
+    require_manual_position_ownership(state)
 
     if partial_pct is None:
         raise ValueError(
@@ -650,6 +682,8 @@ def update_manual_risk(
             "No hay una posicion PAPER abierta para modificar."
         )
 
+    require_manual_position_ownership(state)
+
     if stop_loss is None and take_profit is None:
         raise ValueError(
             "Ingresa un nuevo Stop Loss, Take Profit o ambos."
@@ -721,6 +755,8 @@ def set_break_even(
             "No hay una posicion PAPER abierta para aplicar Break-even."
         )
 
+    require_manual_position_ownership(state)
+
     position = state.position
     symbol = position["symbol"]
     direction = position["direction"]
@@ -774,6 +810,8 @@ def enable_trailing(
         raise ValueError(
             "No hay una posicion PAPER abierta para activar Trailing Stop."
         )
+
+    require_manual_position_ownership(state)
 
     pct = (
         DEFAULT_TRAILING_PCT
@@ -842,6 +880,8 @@ def disable_trailing(
         raise ValueError(
             "No hay una posicion PAPER abierta para desactivar Trailing Stop."
         )
+
+    require_manual_position_ownership(state)
 
     position = state.position
     position["trailing_enabled"] = False

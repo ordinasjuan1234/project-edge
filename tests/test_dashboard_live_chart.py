@@ -81,6 +81,21 @@ def test_live_chart_prioritizes_open_paper_position():
     assert "Entrada '+fmt(position.entry_price)+' USDT" in HTML
 
 
+def test_auto_position_is_visibly_owned_and_manual_controls_are_blocked():
+    assert "Origen y propietario" in HTML
+    assert "POSICIÓN AUTO ABIERTA · CONTROLES MANUAL BLOQUEADOS" in HTML
+    assert "const manualOwnership=connected&&!autoPosition" in HTML
+    assert "setPartialButtonsEnabled(manualOwnership&&!partialCloseBusy)" in HTML
+    assert "Posición AUTO protegida: Break-even MANUAL bloqueado." in HTML
+    assert "POSICIÓN AUTO PROTEGIDA" in HTML
+
+
+def test_auto_limit_cannot_be_cancelled_from_manual_panel():
+    assert "LIMIT AUTO PENDIENTE · CONTROL MANUAL BLOQUEADO" in HTML
+    assert "manualCancelLimitBtn').disabled=!connected||autoPending" in HTML
+    assert "LIMIT AUTO PROTEGIDA" in HTML
+
+
 def test_live_chart_identifies_pending_limit_order():
     assert "ORDEN LIMIT PAPER · LONG" in HTML
     assert "ORDEN LIMIT PAPER · SHORT" in HTML

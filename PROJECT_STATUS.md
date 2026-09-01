@@ -1,6 +1,6 @@
 # PROJECT EDGE - Estado permanente
 
-Ultima revision tecnica: 31 de agosto de 2026.
+Ultima revision tecnica: 1 de septiembre de 2026.
 
 Este archivo es la memoria operativa del proyecto. Debe consultarse al iniciar un chat nuevo y actualizarse al terminar cada hito.
 
@@ -148,13 +148,47 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - Verificacion local: 216 tests superados. Los resultados fuera de muestra
   todavia no fueron ejecutados y no autorizan activar v4 ni REAL.
 
+### Resultado fuera de muestra del comparador v4
+
+- Los dos bloques congelados de 365 dias se ejecutaron sin modificar reglas:
+  2022-09-01 a 2023-09-01 y 2021-09-01 a 2022-09-01.
+- v3 ETH fue positivo en ambos bloques: +1,60% con profit factor 1,23 y
+  +3,08% con profit factor 1,28.
+- v4 ETH fue negativo en ambos: -11,44% con profit factor 0,53 y -9,81% con
+  profit factor 0,78.
+- v4 BTC+ETH con un saldo y una sola posicion tambien fue negativo en ambos:
+  -15,22% y -16,43%, con profit factor 0,61 y 0,74.
+- En el conjunto de ambos bloques v4 ETH perdio 2.124,57 USDT y la cartera
+  v4 perdio 3.165,82 USDT sobre dos simulaciones anuales independientes de
+  10.000 USDT. La mayor actividad no compenso la baja calidad y los costos.
+- Veredicto: v4 queda rechazada y desconectada. No se ajustan sus parametros
+  despues de observar estos bloques. v3 continua exclusivamente en PAPER y
+  tampoco autoriza REAL por su resultado multianual previo.
+
+### Hito de proteccion de propiedad AUTO
+
+- Toda posicion y LIMIT muestran en el panel su origen y propietario AUTO o
+  MANUAL.
+- Cuando la posicion pertenece a AUTO, la mesa MANUAL desactiva cierre total,
+  parciales, cambios de SL/TP, break-even y activacion o desactivacion de
+  trailing. El cartel indica que la gestion continua en el motor AUTO.
+- Una LIMIT de origen AUTO tampoco puede cancelarse desde la mesa MANUAL.
+- La misma proteccion se aplica en el backend antes de consultar el mercado o
+  modificar el estado; por lo tanto no depende solamente de botones visuales.
+- Las posiciones y LIMIT MANUAL conservan sus controles normales. Se mantiene
+  una sola posicion o LIMIT total, PAUSE y EMERGENCY STOP no cambian su
+  significado, v3 no cambia y REAL continua bloqueado.
+- Verificacion local: 226 tests superados, demostracion PAPER completada,
+  sintaxis Python/JavaScript validada y rechazo de REAL confirmado antes de
+  leer estado o consultar mercado.
+
 ## Proximo hito
 
-Ejecutar los dos bloques fuera de muestra sin modificar parametros y comparar
-los tres resultados. v4 solo podra proponerse para PAPER si mejora actividad
-sin sacrificar resultado neto, profit factor ni drawdown. Una proteccion de
-propiedad impedira que los controles MANUAL modifiquen por accidente una
-posicion AUTO; se implementara y verificara como cambio separado.
+Mantener v3 en observacion PAPER con parametros congelados y comprobar en el
+uso normal que las posiciones AUTO quedan protegidas de la mesa MANUAL. Si se
+evalua una candidata posterior, congelar primero un protocolo estricto que
+elija BTC o ETH conservando una sola posicion, sin reutilizar v4 ni ajustar
+reglas sobre los bloques ya observados.
 
 ## Estrategia AUTO v3 vigente
 

@@ -449,6 +449,12 @@ async function triggerManual(action,partialPct=''){
   if(manualActionBusy){document.getElementById('manualStatus').textContent='Ya hay una acción PAPER en proceso. Esperá la confirmación del backend.';return}
   if(action==='PARTIAL_CLOSE'&&partialCloseBusy){document.getElementById('manualStatus').textContent='Ya hay un cierre parcial en proceso.';return}
 
+  const paperState=lastDashboardData?.paper||{},currentPosition=paperState.position,currentPending=paperState.pending_order;
+  const autoPosition=String(currentPosition?.source||'').toUpperCase()==='AUTO',autoPending=String(currentPending?.source||'').toUpperCase()==='AUTO';
+  const positionMutation=['CLOSE','PARTIAL_CLOSE','UPDATE_RISK','BREAK_EVEN','TRAILING_ON','TRAILING_OFF'].includes(action);
+  if(autoPosition&&positionMutation){document.getElementById('manualStatus').textContent='POSICIÓN AUTO PROTEGIDA · los controles MANUAL no pueden cerrarla ni modificar su riesgo.';return}
+  if(autoPending&&action==='CANCEL_LIMIT'){document.getElementById('manualStatus').textContent='LIMIT AUTO PROTEGIDA · el control MANUAL no puede cancelarla.';return}
+
   const symbol=document.getElementById('manualSymbol').value.replace('/','');
   const leverage=document.getElementById('manualLeverage').value.replace('x','');
   const capital=document.getElementById('manualCapital').value.trim();
@@ -549,6 +555,7 @@ let liveSocket=null,liveSocketSymbol='ETHUSDT',livePosition=null,liveReconnectTi
 function syncBreakEvenButton(price){
   const btn=document.getElementById('manualBreakEvenBtn');if(!btn)return;
   if(!getToken()||!livePosition||livePosition.symbol!==liveSocketSymbol||!Number.isFinite(Number(price))){btn.disabled=true;btn.title='BREAK-EVEN requiere una posición abierta.';return}
+  if(String(livePosition.source||'').toUpperCase()==='AUTO'){btn.disabled=true;btn.title='Posición AUTO protegida: Break-even MANUAL bloqueado.';return}
   const entry=Number(livePosition.entry_price),stop=Number(livePosition.stop_loss),current=Number(price),direction=(livePosition.direction||'LONG').toUpperCase();
   const favorable=direction==='LONG'?current>entry:current<entry,alreadyAtBreakEven=Number.isFinite(stop)&&Math.abs(stop-entry)<0.00000001;
   if(alreadyAtBreakEven){btn.disabled=true;btn.title='BREAK-EVEN ya está aplicado.';return}
@@ -815,8 +822,9 @@ async function loadData(){
 
     const box=document.getElementById('positionBox'),pendingBox=document.getElementById('pendingOrderBox');
     if(pos){
-      const trailingEnabled=Boolean(pos.trailing_enabled),trailingPct=pos.trailing_pct,trailingAnchor=pos.trailing_anchor,currentQty=Number(pos.quantity??0),initialQty=Number(pos.initial_quantity??currentQty),partialCount=Array.isArray(pos.partial_closes)?pos.partial_closes.length:0,realized=Number(pos.realized_pnl??0);
+      const positionSource=String(pos.source||'SIN CLASIFICAR').toUpperCase(),trailingEnabled=Boolean(pos.trailing_enabled),trailingPct=pos.trailing_pct,trailingAnchor=pos.trailing_anchor,currentQty=Number(pos.quantity??0),initialQty=Number(pos.initial_quantity??currentQty),partialCount=Array.isArray(pos.partial_closes)?pos.partial_closes.length:0,realized=Number(pos.realized_pnl??0);
       box.className='position';box.innerHTML=`
+        <div class="mini"><span class="mut">Origen y propietario</span><b class="${autoPosition?'y':'g'}">${positionSource}</b></div>
         <div class="mini"><span class="mut">Activo</span><b>${(pos.symbol||'').replace('USDT','/USDT')}</b></div>
         <div class="mini"><span class="mut">Dirección</span><b class="${pos.direction==='LONG'?'g':'r'}">${pos.direction}</b></div>
         <div class="mini"><span class="mut">Tipo</span><b>${pos.order_type||'MARKET'}</b></div>
@@ -839,19 +847,21 @@ async function loadData(){
       if(manualSL.dataset.dirty!=='1')manualSL.value=pos.stop_loss??'';else if(Number(manualSL.value)===Number(pos.stop_loss))delete manualSL.dataset.dirty;
       if(manualTP.dataset.dirty!=='1')manualTP.value=pos.take_profit??'';else if(Number(manualTP.value)===Number(pos.take_profit))delete manualTP.dataset.dirty;
       if(trailingPct!=null)document.getElementById('manualTrailingPct').value=trailingPct;
-      document.getElementById('trailingState').textContent=trailingEnabled?'ACTIVO':'DESACTIVADO';document.getElementById('trailingState').className=trailingEnabled?'g':'';document.getElementById('trailingInfo').textContent=trailingEnabled?`Ancla ${trailingAnchor==null?'—':fmt(trailingAnchor)} · distancia ${Number(trailingPct).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}%`:'Podés activarlo y elegir la distancia.';
+      document.getElementById('trailingState').textContent=trailingEnabled?'ACTIVO':'DESACTIVADO';document.getElementById('trailingState').className=trailingEnabled?'g':'';document.getElementById('trailingInfo').textContent=autoPosition?'Gestionado exclusivamente por el motor AUTO.':trailingEnabled?`Ancla ${trailingAnchor==null?'—':fmt(trailingAnchor)} · distancia ${Number(trailingPct).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}%`:'Podés activarlo y elegir la distancia.';
 
       ['manualSymbol','manualLeverage','manualCapital','manualOrderType','manualLimitPrice'].forEach(id=>document.getElementById(id).disabled=true);
-      document.getElementById('manualSL').disabled=!connected;document.getElementById('manualTP').disabled=!connected;document.getElementById('manualTrailingPct').disabled=!connected||trailingEnabled;
-      document.getElementById('manualLongBtn').disabled=true;document.getElementById('manualShortBtn').disabled=true;document.getElementById('manualCancelLimitBtn').disabled=true;document.getElementById('manualCloseBtn').disabled=!connected;document.getElementById('manualUpdateRiskBtn').disabled=!connected;document.getElementById('manualBreakEvenBtn').disabled=true;document.getElementById('manualTrailingOnBtn').disabled=!connected||trailingEnabled;document.getElementById('manualTrailingOffBtn').disabled=!connected||!trailingEnabled;setPartialButtonsEnabled(connected&&!partialCloseBusy);
-      document.getElementById('manualStatus').textContent='POSICIÓN ABIERTA · '+(pos.symbol||'').replace('USDT','/USDT')+' · '+pos.direction+' · '+(pos.order_type||'MARKET')+' · restante '+fmt(pos.capital)+' USDT · x'+(pos.leverage||1)+' · exposición '+fmt(pos.exposure)+' USDT'+(partialCount?' · '+partialCount+' parcial(es) · realizado '+(realized>=0?'+':'')+fmt(realized)+' USDT':'')+(trailingEnabled?' · TRAILING ACTIVO':'');
+      const manualOwnership=connected&&!autoPosition;
+      document.getElementById('manualSL').disabled=!manualOwnership;document.getElementById('manualTP').disabled=!manualOwnership;document.getElementById('manualTrailingPct').disabled=!manualOwnership||trailingEnabled;
+      document.getElementById('manualLongBtn').disabled=true;document.getElementById('manualShortBtn').disabled=true;document.getElementById('manualCancelLimitBtn').disabled=true;document.getElementById('manualCloseBtn').disabled=!manualOwnership;document.getElementById('manualUpdateRiskBtn').disabled=!manualOwnership;document.getElementById('manualBreakEvenBtn').disabled=true;document.getElementById('manualTrailingOnBtn').disabled=!manualOwnership||trailingEnabled;document.getElementById('manualTrailingOffBtn').disabled=!manualOwnership||!trailingEnabled;setPartialButtonsEnabled(manualOwnership&&!partialCloseBusy);
+      document.getElementById('manualStatus').textContent=autoPosition?'POSICIÓN AUTO ABIERTA · CONTROLES MANUAL BLOQUEADOS · el motor AUTO administra cierre, SL, TP y Trailing.':'POSICIÓN MANUAL ABIERTA · '+(pos.symbol||'').replace('USDT','/USDT')+' · '+pos.direction+' · '+(pos.order_type||'MARKET')+' · restante '+fmt(pos.capital)+' USDT · x'+(pos.leverage||1)+' · exposición '+fmt(pos.exposure)+' USDT'+(partialCount?' · '+partialCount+' parcial(es) · realizado '+(realized>=0?'+':'')+fmt(realized)+' USDT':'')+(trailingEnabled?' · TRAILING ACTIVO':'');
     }else{
       box.className='empty';box.textContent='No hay posición abierta.';document.getElementById('trailingState').textContent='DESACTIVADO';document.getElementById('trailingState').className='';document.getElementById('trailingInfo').textContent='Sin posición abierta.';
     }
 
     if(pending){
-      const current=Number(pending.current_price??p.pending_order_price??0),distance=Number(pending.distance_pct??0);
+      const pendingSource=String(pending.source||'SIN CLASIFICAR').toUpperCase(),current=Number(pending.current_price??p.pending_order_price??0),distance=Number(pending.distance_pct??0);
       pendingBox.className='pending';pendingBox.innerHTML=`
+        <div class="mini"><span class="mut">Origen y propietario</span><b class="${autoPending?'y':'g'}">${pendingSource}</b></div>
         <div class="mini"><span class="mut">Estado</span><b class="y">${pending.status||'PENDING'}</b></div>
         <div class="mini"><span class="mut">Activo</span><b>${(pending.symbol||'').replace('USDT','/USDT')}</b></div>
         <div class="mini"><span class="mut">Dirección</span><b class="${pending.direction==='LONG'?'g':'r'}">${pending.direction}</b></div>
@@ -867,8 +877,8 @@ async function loadData(){
 
       document.getElementById('manualSymbol').value=(pending.symbol||'BTCUSDT').replace('USDT','/USDT');document.getElementById('manualLeverage').value='x'+(pending.leverage||1);document.getElementById('manualCapital').value=pending.capital??'';document.getElementById('manualOrderType').value='LIMIT';document.getElementById('manualLimitPrice').value=pending.limit_price??'';document.getElementById('manualSL').value=pending.stop_loss??'';document.getElementById('manualTP').value=pending.take_profit??'';
       ['manualSymbol','manualLeverage','manualCapital','manualOrderType','manualLimitPrice','manualSL','manualTP','manualTrailingPct'].forEach(id=>document.getElementById(id).disabled=true);
-      document.getElementById('manualLongBtn').disabled=true;document.getElementById('manualShortBtn').disabled=true;document.getElementById('manualCancelLimitBtn').disabled=!connected;document.getElementById('manualCloseBtn').disabled=true;document.getElementById('manualUpdateRiskBtn').disabled=true;document.getElementById('manualBreakEvenBtn').disabled=true;document.getElementById('manualTrailingOnBtn').disabled=true;document.getElementById('manualTrailingOffBtn').disabled=true;setPartialButtonsEnabled(false);
-      document.getElementById('manualStatus').textContent='LIMIT PENDIENTE · '+(pending.symbol||'').replace('USDT','/USDT')+' · '+pending.direction+' @ '+fmt(pending.limit_price)+' · capital '+fmt(pending.capital)+' USDT · x'+(pending.leverage||1)+' · no se abre otro compromiso hasta ejecutar o cancelar.';
+      document.getElementById('manualLongBtn').disabled=true;document.getElementById('manualShortBtn').disabled=true;document.getElementById('manualCancelLimitBtn').disabled=!connected||autoPending;document.getElementById('manualCloseBtn').disabled=true;document.getElementById('manualUpdateRiskBtn').disabled=true;document.getElementById('manualBreakEvenBtn').disabled=true;document.getElementById('manualTrailingOnBtn').disabled=true;document.getElementById('manualTrailingOffBtn').disabled=true;setPartialButtonsEnabled(false);
+      document.getElementById('manualStatus').textContent=autoPending?'LIMIT AUTO PENDIENTE · CONTROL MANUAL BLOQUEADO · el motor AUTO conserva su gestión.':'LIMIT MANUAL PENDIENTE · '+(pending.symbol||'').replace('USDT','/USDT')+' · '+pending.direction+' @ '+fmt(pending.limit_price)+' · capital '+fmt(pending.capital)+' USDT · x'+(pending.leverage||1)+' · no se abre otro compromiso hasta ejecutar o cancelar.';
     }else{
       pendingBox.className='empty';pendingBox.textContent='No hay orden LIMIT pendiente.';document.getElementById('manualCancelLimitBtn').disabled=true;
     }
