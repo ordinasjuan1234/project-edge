@@ -32,11 +32,11 @@ jobs:
       - name: Ejecutar comparador v5 congelado
         run: |
           python run_v5_comparison.py \
-            --days "${{ inputs.days }}" \
-            --years-ago "${{ inputs.years_ago }}" \
+            --days "${{ github.event.inputs.days || '365' }}" \
+            --years-ago "${{ github.event.inputs.years_ago || '6' }}" \
             --output-dir artifacts/v5-comparison
       - name: Subir artefactos
         uses: actions/upload-artifact@v4
         with:
-          name: project-edge-v5-comparison-${{ inputs.days }}-days-${{ inputs.years_ago }}-years-ago
+          name: project-edge-v5-comparison-${{ github.event.inputs.days || '365' }}-days-${{ github.event.inputs.years_ago || '6' }}-years-ago
           path: artifacts/v5-comparison/
