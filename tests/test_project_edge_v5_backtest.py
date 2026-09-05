@@ -193,6 +193,6 @@ def test_workflow_is_paper_only_and_defaults_to_unseen_block():
         / ".github/workflows/v5_dual_setup_comparison.yml"
     ).read_text(encoding="utf-8")
     assert "PROJECT_EDGE_MODE: PAPER" in workflow
-    assert "default: '6'" in workflow
+    assert "default: '5'" in workflow
     assert "run_v5_comparison.py" in workflow
     assert "workflow_dispatch" in workflow
