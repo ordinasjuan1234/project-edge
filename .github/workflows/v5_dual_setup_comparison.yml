@@ -10,9 +10,9 @@ on:
         required: true
         default: '365'
       years_ago:
-        description: Bloque historico (6 = aprox. 2020-2021 al corte actual)
+        description: Bloque historico (5 anos atras)
         required: true
-        default: '6'
+        default: '5'
 
 env:
   PROJECT_EDGE_MODE: PAPER
@@ -33,10 +33,10 @@ jobs:
         run: |
           python run_v5_comparison.py \
             --days "${{ github.event.inputs.days || '365' }}" \
-            --years-ago "${{ github.event.inputs.years_ago || '6' }}" \
+            --years-ago "${{ github.event.inputs.years_ago || '5' }}" \
             --output-dir artifacts/v5-comparison
       - name: Subir artefactos
         uses: actions/upload-artifact@v4
         with:
-          name: project-edge-v5-comparison-${{ github.event.inputs.days || '365' }}-days-${{ github.event.inputs.years_ago || '6' }}-years-ago
+          name: project-edge-v5-comparison-${{ github.event.inputs.days || '365' }}-days-${{ github.event.inputs.years_ago || '5' }}-years-ago
           path: artifacts/v5-comparison/
