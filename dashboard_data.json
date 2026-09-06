@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-09-06T01:40:59+00:00",
+  "timestamp": "2026-09-06T01:46:12+00:00",
   "symbol": "ETHUSDT",
-  "price": 2506.01,
+  "price": 2500.92,
   "timeframes": {
     "4H": "BULLISH",
     "1H": "BULLISH",
@@ -16,7 +16,7 @@
       "upper": 2488.38,
       "mid": 2450.71,
       "state": "PARTIAL",
-      "distance_pct": 0.006864678038617733,
+      "distance_pct": 0.005097695841479651,
       "created_index": 485
     },
     "1H": {
@@ -44,7 +44,7 @@
       "mid": 2488.9350000000004,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 352
+      "created_index": 351
     },
     "5M": {
       "type": "BEARISH",
@@ -53,7 +53,7 @@
       "mid": 2492.055,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 54
+      "created_index": 53
     }
   },
   "alignment": "PULLBACK_OR_WAIT",
@@ -61,7 +61,7 @@
     "action": "WATCH_LONG",
     "direction": "LONG",
     "can_execute": false,
-    "reason": "Faltan condiciones: trigger_5m.",
+    "reason": "Faltan condiciones: pullback_15m, trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -70,15 +70,16 @@
   "readiness": {
     "status": "NOT_READY",
     "bias": "LONG",
-    "message": "Faltan condiciones: trigger_5m.",
+    "message": "Faltan condiciones: pullback_15m, trigger_5m.",
     "missing_conditions": [
+      "pullback_15m",
       "trigger_5m"
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 80034.18,
+      "price": 79944.55,
       "timeframes": {
         "4H": "TRANSITION",
         "1H": "TRANSITION",
@@ -121,16 +122,16 @@
           "mid": 80410.39,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 352
+          "created_index": 351
         },
         "5M": {
-          "type": "BEARISH",
-          "lower": 79980.82,
-          "upper": 81200.54,
-          "mid": 80590.68,
+          "type": "BULLISH",
+          "lower": 79930.02,
+          "upper": 79947.99,
+          "mid": 79939.005,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 54
+          "created_index": 497
         }
       },
       "alignment": "NO_DIRECTION",
@@ -156,7 +157,7 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2506.01,
+      "price": 2500.92,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "BULLISH",
@@ -171,7 +172,7 @@
           "upper": 2488.38,
           "mid": 2450.71,
           "state": "PARTIAL",
-          "distance_pct": 0.006864678038617733,
+          "distance_pct": 0.005097695841479651,
           "created_index": 485
         },
         "1H": {
@@ -199,7 +200,7 @@
           "mid": 2488.9350000000004,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 352
+          "created_index": 351
         },
         "5M": {
           "type": "BEARISH",
@@ -208,7 +209,7 @@
           "mid": 2492.055,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 54
+          "created_index": 53
         }
       },
       "alignment": "PULLBACK_OR_WAIT",
@@ -216,7 +217,7 @@
         "action": "WATCH_LONG",
         "direction": "LONG",
         "can_execute": false,
-        "reason": "Faltan condiciones: trigger_5m.",
+        "reason": "Faltan condiciones: pullback_15m, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -225,8 +226,9 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "LONG",
-        "message": "Faltan condiciones: trigger_5m.",
+        "message": "Faltan condiciones: pullback_15m, trigger_5m.",
         "missing_conditions": [
+          "pullback_15m",
           "trigger_5m"
         ]
       },
