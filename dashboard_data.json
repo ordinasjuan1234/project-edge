@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-09-06T04:51:05+00:00",
+  "timestamp": "2026-09-06T04:55:57+00:00",
   "symbol": "ETHUSDT",
-  "price": 2504.18,
+  "price": 2503.88,
   "timeframes": {
     "4H": "BULLISH",
     "1H": "BULLISH",
@@ -16,7 +16,7 @@
       "upper": 2498.49,
       "mid": 2496.0299999999997,
       "state": "ACTIVE",
-      "distance_pct": 0.0024395112992095054,
+      "distance_pct": 0.002041060872343876,
       "created_index": 499
     },
     "1H": {
@@ -53,7 +53,7 @@
       "mid": 2492.055,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 16
+      "created_index": 15
     }
   },
   "alignment": "PULLBACK_OR_WAIT",
@@ -61,7 +61,7 @@
     "action": "WATCH_LONG",
     "direction": "LONG",
     "can_execute": false,
-    "reason": "Faltan condiciones: trigger_5m.",
+    "reason": "Faltan condiciones: pullback_15m, trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -70,15 +70,16 @@
   "readiness": {
     "status": "NOT_READY",
     "bias": "LONG",
-    "message": "Faltan condiciones: trigger_5m.",
+    "message": "Faltan condiciones: pullback_15m, trigger_5m.",
     "missing_conditions": [
+      "pullback_15m",
       "trigger_5m"
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 79900.02,
+      "price": 79886.67,
       "timeframes": {
         "4H": "TRANSITION",
         "1H": "TRANSITION",
@@ -124,13 +125,13 @@
           "created_index": 339
         },
         "5M": {
-          "type": "BULLISH",
-          "lower": 79856.0,
-          "upper": 79878.54,
-          "mid": 79867.26999999999,
+          "type": "BEARISH",
+          "lower": 79932.0,
+          "upper": 79953.99,
+          "mid": 79942.995,
           "state": "PARTIAL",
-          "distance_pct": 0.0002688359777633407,
-          "created_index": 442
+          "distance_pct": 0.0005674288338718055,
+          "created_index": 493
         }
       },
       "alignment": "NO_DIRECTION",
@@ -156,7 +157,7 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2504.18,
+      "price": 2503.88,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "BULLISH",
@@ -171,7 +172,7 @@
           "upper": 2498.49,
           "mid": 2496.0299999999997,
           "state": "ACTIVE",
-          "distance_pct": 0.0024395112992095054,
+          "distance_pct": 0.002041060872343876,
           "created_index": 499
         },
         "1H": {
@@ -208,7 +209,7 @@
           "mid": 2492.055,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 16
+          "created_index": 15
         }
       },
       "alignment": "PULLBACK_OR_WAIT",
@@ -216,7 +217,7 @@
         "action": "WATCH_LONG",
         "direction": "LONG",
         "can_execute": false,
-        "reason": "Faltan condiciones: trigger_5m.",
+        "reason": "Faltan condiciones: pullback_15m, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -225,8 +226,9 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "LONG",
-        "message": "Faltan condiciones: trigger_5m.",
+        "message": "Faltan condiciones: pullback_15m, trigger_5m.",
         "missing_conditions": [
+          "pullback_15m",
           "trigger_5m"
         ]
       },
@@ -241,7 +243,7 @@
     "manual_equity": 9943.181838265025,
     "auto_initial_balance": 1000.0,
     "auto_balance": 1000.0,
-    "auto_equity": 999.6430045609994,
+    "auto_equity": 999.5420583961544,
     "auto_demo_started_at": "2026-08-29T14:31:02.355472+00:00",
     "position": {
       "trade_id": "39667d78928547bfa011e6963a670bd0",
@@ -273,8 +275,8 @@
       "estimated_net_reward_risk": 1.4999999999999998,
       "leverage": 1
     },
-    "position_price": 2504.18,
-    "unrealized_pnl": -0.3569954390005375,
+    "position_price": 2503.88,
+    "unrealized_pnl": -0.45794160384563964,
     "pending_order": null,
     "pending_order_price": null,
     "has_open_position": true,
