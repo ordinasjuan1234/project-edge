@@ -134,7 +134,10 @@ def test_trade_plan_risks_half_percent_without_leverage():
     assert plan["estimated_net_reward_risk"] >= 1.5
     assert plan["leverage"] == 1
 
+def test_minimum_stop_distance_is_six_tenths_percent():
+    config = ProjectEdgeV3Config()
 
+    assert config.minimum_stop_pct == pytest.approx(0.006)
 def test_trade_plan_rejects_excessive_atr():
     strategy = ProjectEdgeV3()
     decision = strategy.decide_snapshot(ready_snapshot("LONG"))
