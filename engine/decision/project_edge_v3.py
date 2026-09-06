@@ -24,7 +24,7 @@ class ProjectEdgeV3Config:
     pullback_lookback: int = 8
     trigger_lookback: int = 3
     stop_atr_multiple: float = 1.5
-    minimum_stop_pct: float = 0.003
+    minimum_stop_pct: float = 0.006
     maximum_stop_pct: float = 0.03
     gross_reward_risk: float = 2.0
     minimum_net_reward_risk: float = 1.5
