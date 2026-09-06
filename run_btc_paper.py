@@ -64,7 +64,7 @@ AUTO_LOSS_GUARD_MINUTES = 240
 STRATEGY = ProjectEdgeV3(
     ProjectEdgeV3Config(
         risk_pct=0.005,
-        max_exposure_pct=1.0,
+        max_exposure_pct=0.50,
         cooldown_minutes=AUTO_COOLDOWN_MINUTES,
         loss_guard_losses=AUTO_LOSS_GUARD_LOSSES,
         loss_guard_minutes=AUTO_LOSS_GUARD_MINUTES,
