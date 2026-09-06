@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-09-06T03:46:10+00:00",
+  "timestamp": "2026-09-06T03:51:06+00:00",
   "symbol": "ETHUSDT",
-  "price": 2513.7,
+  "price": 2507.29,
   "timeframes": {
     "4H": "BULLISH",
     "1H": "BULLISH",
     "30M": "BULLISH",
     "15M": "BULLISH",
-    "5M": "BEARISH"
+    "5M": "TRANSITION"
   },
   "fvg": {
     "4H": {
@@ -16,7 +16,7 @@
       "upper": 2488.38,
       "mid": 2450.71,
       "state": "PARTIAL",
-      "distance_pct": 0.010179119082566496,
+      "distance_pct": 0.0075142987053388585,
       "created_index": 485
     },
     "1H": {
@@ -53,7 +53,7 @@
       "mid": 2492.055,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 29
+      "created_index": 28
     }
   },
   "alignment": "PULLBACK_OR_WAIT",
@@ -61,7 +61,7 @@
     "action": "WATCH_LONG",
     "direction": "LONG",
     "can_execute": false,
-    "reason": "Faltan condiciones: lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
+    "reason": "Faltan condiciones: pullback_15m, trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -70,9 +70,8 @@
   "readiness": {
     "status": "NOT_READY",
     "bias": "LONG",
-    "message": "Faltan condiciones: lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
+    "message": "Faltan condiciones: pullback_15m, trigger_5m.",
     "missing_conditions": [
-      "lower_timeframes_no_conflict",
       "pullback_15m",
       "trigger_5m"
     ]
@@ -80,7 +79,7 @@
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 80107.0,
+      "price": 80010.33,
       "timeframes": {
         "4H": "TRANSITION",
         "1H": "TRANSITION",
@@ -132,7 +131,7 @@
           "mid": 80590.68,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 29
+          "created_index": 28
         }
       },
       "alignment": "NO_DIRECTION",
@@ -158,13 +157,13 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2513.7,
+      "price": 2507.29,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "BULLISH",
         "30M": "BULLISH",
         "15M": "BULLISH",
-        "5M": "BEARISH"
+        "5M": "TRANSITION"
       },
       "fvg": {
         "4H": {
@@ -173,7 +172,7 @@
           "upper": 2488.38,
           "mid": 2450.71,
           "state": "PARTIAL",
-          "distance_pct": 0.010179119082566496,
+          "distance_pct": 0.0075142987053388585,
           "created_index": 485
         },
         "1H": {
@@ -210,7 +209,7 @@
           "mid": 2492.055,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 29
+          "created_index": 28
         }
       },
       "alignment": "PULLBACK_OR_WAIT",
@@ -218,7 +217,7 @@
         "action": "WATCH_LONG",
         "direction": "LONG",
         "can_execute": false,
-        "reason": "Faltan condiciones: lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
+        "reason": "Faltan condiciones: pullback_15m, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -227,9 +226,8 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "LONG",
-        "message": "Faltan condiciones: lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
+        "message": "Faltan condiciones: pullback_15m, trigger_5m.",
         "missing_conditions": [
-          "lower_timeframes_no_conflict",
           "pullback_15m",
           "trigger_5m"
         ]
