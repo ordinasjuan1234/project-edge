@@ -130,7 +130,7 @@ def test_trade_plan_risks_half_percent_without_leverage():
 
     assert plan["approved"] is True
     assert plan["estimated_risk"] <= 50.0 + 1e-9
-    assert plan["exposure"] <= 10000.0 + 1e-9
+    assert plan["exposure"] <= 5000.0 + 1e-9
     assert plan["estimated_net_reward_risk"] >= 1.5
     assert plan["leverage"] == 1
 
