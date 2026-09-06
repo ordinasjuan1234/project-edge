@@ -38,6 +38,20 @@ def test_latest_confirmed_low_updates_support():
     assert result.loc[5, "support_source_pivot"] == 4
 
 
+def test_support_never_exceeds_resistance_when_both_exist():
+    result = StructuralLevels().calculate(sample_data())
+
+    valid = result[
+        result["structural_support"].notna()
+        & result["structural_resistance"].notna()
+    ]
+
+    assert not valid.empty
+    assert (
+        valid["structural_support"] <= valid["structural_resistance"]
+    ).all()
+
+
 def test_missing_columns_raise_error():
     with pytest.raises(ValueError):
         StructuralLevels().calculate(
