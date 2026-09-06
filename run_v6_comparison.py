@@ -39,7 +39,7 @@ from trading_mode import require_paper_mode
 SYMBOLS = ("BTCUSDT", "ETHUSDT")
 INITIAL_BALANCE = 10000.0
 V6_RISK_PCT = 0.003
-V6_COOLDOWN_MINUTES = 15
+V6_COOLDOWN_MINUTES = 30
 V6_LOSS_GUARD_MINUTES = 180
 V6_MAX_HOLDING_MINUTES = 240
 
@@ -227,7 +227,7 @@ def main() -> None:
     print(f"Periodo: {args.days} dias · bloque {args.years_ago} ano(s) atras")
     print("Mercado: BTCUSDT + ETHUSDT · velas cerradas · sin look-ahead")
     print("Costos: comision 0,10% + deslizamiento 0,02% por lado")
-    print("v6: riesgo 0,30% · x1 · maximo 4h · cooldown 15m")
+    print("v6.1: riesgo 0,30% · x1 · maximo 4h · cooldown 30m")
     print("El AUTO vigente, paper_state.json y los saldos NO se modifican")
 
     for symbol in SYMBOLS:
@@ -318,18 +318,18 @@ def main() -> None:
         "live_strategy_changed": False,
         "paper_state_changed": False,
         "rules_frozen_before_test": {
-            "context": "EMA20/50 1H; estructura 1H no opuesta",
+            "context": "EMA20/50 + pendiente 1H alineadas; estructura 1H no opuesta",
             "macro_4h": (
                 "solo veto si estructura y EMA 4H estan fuertemente opuestas"
             ),
-            "setup_a": "SCALP_PULLBACK en 15M",
+            "setup_a": "SCALP_PULLBACK en 15M con EMA y pendiente alineadas",
             "setup_b": "SCALP_MOMENTUM en 15M",
-            "adx_15m": ">=20 y (creciente o >=28)",
-            "trigger": "5M obligatorio y no extendido >1 ATR",
+            "adx_15m": ">=22 y (creciente o >=30)",
+            "trigger": "5M obligatorio y no extendido >0,75 ATR",
             "fvg": "solo confluencia; no es requisito de entrada",
-            "risk": "0,30% por operacion, x1",
+            "risk": "0,30% por operacion, x1; stop minimo 0,60%; costo/riesgo max 30%",
             "time_exit": "240 minutos maximo",
-            "cooldown": "15 minutos",
+            "cooldown": "30 minutos",
             "loss_guard": "3 perdidas consecutivas -> pausa 180 minutos",
         },
         "initial_acceptance_targets": {

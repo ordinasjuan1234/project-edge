@@ -20,19 +20,20 @@ from engine.decision.project_edge_v3 import ProjectEdgeV3, ProjectEdgeV3Config
 @dataclass(frozen=True)
 class ProjectEdgeV6Config(ProjectEdgeV3Config):
     # Perfil intradia/scalp: menor riesgo y menor permanencia esperada.
-    adx_minimum: float = 20.0
-    stop_atr_multiple: float = 1.0
-    minimum_stop_pct: float = 0.004
+    adx_minimum: float = 22.0
+    stop_atr_multiple: float = 1.2
+    minimum_stop_pct: float = 0.006
     maximum_stop_pct: float = 0.015
-    gross_reward_risk: float = 1.5
+    gross_reward_risk: float = 1.7
     minimum_net_reward_risk: float = 1.0
     risk_pct: float = 0.003
-    cooldown_minutes: int = 15
+    cooldown_minutes: int = 30
     loss_guard_minutes: int = 180
 
     # Filtros especificos v6.
-    max_trigger_distance_atr: float = 1.0
-    strong_adx_15m: float = 28.0
+    max_trigger_distance_atr: float = 0.75
+    strong_adx_15m: float = 30.0
+    max_estimated_cost_risk_ratio: float = 0.30
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -40,6 +41,8 @@ class ProjectEdgeV6Config(ProjectEdgeV3Config):
             raise ValueError("max_trigger_distance_atr debe ser mayor que cero.")
         if self.strong_adx_15m < self.adx_minimum:
             raise ValueError("strong_adx_15m debe ser >= adx_minimum.")
+        if not 0 < self.max_estimated_cost_risk_ratio < 1:
+            raise ValueError("max_estimated_cost_risk_ratio debe estar entre 0 y 1.")
 
 
 class ProjectEdgeV6(ProjectEdgeV3):
@@ -93,8 +96,11 @@ class ProjectEdgeV6(ProjectEdgeV3):
     ) -> str | None:
         fast = self._clean_number(values.get("pe_ema_fast_1H"))
         slow = self._clean_number(values.get("pe_ema_slow_1H"))
+        slope = self._clean_number(values.get("pe_ema_slope_1H"))
         direction = self._ema_direction(fast, slow)
         if direction is None:
+            return None
+        if not self._ema_direction_ok(fast, slow, slope, direction):
             return None
         if states["1H"] == self._opposite_state(direction):
             return None
@@ -169,7 +175,11 @@ class ProjectEdgeV6(ProjectEdgeV3):
         )
 
         # Setup A: retroceso 15M dentro del contexto 1H.
-        pullback_setup = pullback_15m and states["15M"] != opposite
+        pullback_setup = (
+            pullback_15m
+            and ema_15m_ok
+            and states["15M"] != opposite
+        )
         # Setup B: continuacion 15M con EMA/estructura alineadas y fuerza.
         momentum_setup = (
             states["15M"] == expected
@@ -277,6 +287,41 @@ class ProjectEdgeV6(ProjectEdgeV3):
             ),
             "config": asdict(self.config),
         }
+
+    def build_trade_plan(
+        self,
+        decision: dict[str, Any],
+        entry_price: float,
+        account_equity: float,
+    ) -> dict[str, Any]:
+        """Aplica el plan v3 y veta operaciones donde los costos pesan demasiado."""
+        plan = super().build_trade_plan(
+            decision=decision,
+            entry_price=entry_price,
+            account_equity=account_equity,
+        )
+        if not plan.get("approved"):
+            return plan
+
+        estimated_risk = float(plan.get("estimated_risk", 0.0))
+        estimated_cost = float(plan.get("estimated_cost", 0.0))
+        cost_risk_ratio = (
+            estimated_cost / estimated_risk
+            if estimated_risk > 0
+            else float("inf")
+        )
+        plan["estimated_cost_risk_ratio"] = float(cost_risk_ratio)
+        if cost_risk_ratio > self.config.max_estimated_cost_risk_ratio:
+            plan["approved"] = False
+            plan["reason"] = (
+                "Costos estimados demasiado altos respecto del riesgo: "
+                f"{cost_risk_ratio:.1%}."
+            )
+            plan["quantity"] = 0.0
+            return plan
+
+        plan["reason"] = "Riesgo v6.1 aprobado para PAPER."
+        return plan
 
     def _diagnostics(
         self,

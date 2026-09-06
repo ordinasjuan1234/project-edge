@@ -41,9 +41,13 @@ def snapshot(direction="LONG", setup="PULLBACK"):
 def test_v6_defaults_are_scalp_and_conservative():
     config = ProjectEdgeV6Config()
     assert config.risk_pct == pytest.approx(0.003)
-    assert config.cooldown_minutes == 15
-    assert config.gross_reward_risk == pytest.approx(1.5)
+    assert config.cooldown_minutes == 30
+    assert config.gross_reward_risk == pytest.approx(1.7)
     assert config.max_exposure_pct == pytest.approx(1.0)
+    assert config.adx_minimum == pytest.approx(22.0)
+    assert config.minimum_stop_pct == pytest.approx(0.006)
+    assert config.max_trigger_distance_atr == pytest.approx(0.75)
+    assert config.max_estimated_cost_risk_ratio == pytest.approx(0.30)
 
 
 def test_v6_uses_1h_as_context_without_requiring_4h_alignment():
@@ -87,7 +91,7 @@ def test_v6_requires_15m_strength():
     assert decision["checks"]["adx_15m"] is False
 
 
-def test_v6_accepts_adx_20_to_28_only_if_rising():
+def test_v61_accepts_adx_22_to_30_only_if_rising():
     value = snapshot("LONG", "PULLBACK")
     value["pe_adx_15M"] = 24.0
     value["pe_adx_rising_15M"] = False
@@ -97,6 +101,24 @@ def test_v6_accepts_adx_20_to_28_only_if_rising():
     value["pe_adx_rising_15M"] = True
     ready = ProjectEdgeV6().decide_snapshot(value)
     assert ready["can_execute"] is True
+
+
+def test_v61_requires_1h_ema_slope_in_trade_direction():
+    value = snapshot("LONG", "PULLBACK")
+    value["pe_ema_slope_1H"] = -1.0
+    decision = ProjectEdgeV6().decide_snapshot(value)
+    assert decision["decision"] == "WAIT"
+    assert decision["can_execute"] is False
+
+
+def test_v61_pullback_requires_15m_ema_alignment():
+    value = snapshot("LONG", "PULLBACK")
+    value["pe_ema_fast_15M"] = 90.0
+    value["pe_ema_slow_15M"] = 100.0
+    value["pe_ema_slope_15M"] = -1.0
+    decision = ProjectEdgeV6().decide_snapshot(value)
+    assert decision["can_execute"] is False
+    assert decision["checks"]["setup_15m"] is False
 
 
 def test_v6_blocks_extended_5m_trigger():
@@ -121,11 +143,31 @@ def test_v6_trade_plan_stays_x1_and_risks_03_percent():
     assert plan["estimated_risk"] <= 3.0 + 1e-9
 
 
+def test_v61_rejects_plan_when_costs_exceed_configured_risk_share():
+    strategy = ProjectEdgeV6(
+        ProjectEdgeV6Config(
+            minimum_stop_pct=0.004,
+            stop_atr_multiple=1.0,
+            max_estimated_cost_risk_ratio=0.20,
+        )
+    )
+    decision = strategy.decide_snapshot(snapshot("LONG", "PULLBACK"))
+    plan = strategy.build_trade_plan(
+        decision,
+        entry_price=100.0,
+        account_equity=1000.0,
+    )
+    assert plan["approved"] is False
+    assert plan["quantity"] == 0.0
+    assert "Costos estimados" in plan["reason"]
+
+
 @pytest.mark.parametrize(
     "kwargs",
     [
         {"max_trigger_distance_atr": 0.0},
-        {"strong_adx_15m": 19.0},
+        {"strong_adx_15m": 21.0},
+        {"max_estimated_cost_risk_ratio": 1.0},
     ],
 )
 def test_v6_rejects_invalid_specific_parameters(kwargs):
