@@ -101,10 +101,11 @@ class V6HistoricalBacktester(HistoricalBacktester):
 
         entry_time = pd.Timestamp(position["entry_time"])
         current_close = pd.Timestamp(candle["close_time"])
-        holding_minutes = (
-            current_close - entry_time
-        ).total_seconds() / 60.0
-        if holding_minutes >= self.max_holding_minutes:
+        deadline = entry_time + pd.Timedelta(minutes=self.max_holding_minutes)
+        # Binance fecha el ultimo milisegundo incluido en la vela (..59.999).
+        # Admitir esa precision evita esperar otra vela 5M al vencer el plazo.
+        # Conservar el timestamp original para el registro y las otras salidas.
+        if current_close >= deadline - pd.Timedelta(milliseconds=1):
             return float(candle["close"]), "TIME_EXIT"
         return None
 

@@ -1,5 +1,25 @@
 # PROJECT EDGE - Estado permanente
 
+## Correccion experimental v6.1: cierre temporal (7 septiembre 2026)
+
+- Rama destino: v6-scalp / PR #3, sin Merge a main ni conexion al AUTO.
+- Binance representa el cierre como el ultimo milisegundo de la vela.
+  La comparacion estricta contra 240 minutos esperaba una vela adicional
+  y produjo salidas TIME_EXIT a 244,999983 minutos en el artefacto 9981576039.
+- El adaptador v6 acepta un milisegundo de tolerancia al vencimiento;
+  conserva precio y timestamp originales, asi como prioridad de SL/TP.
+- Pruebas de regresion individuales y de cartera con cierres exactos e
+  inclusivos; controles LONG/SHORT, no salida una vela antes y prioridad SL/TP.
+- Validacion: 252 tests aprobados y demo PAPER correcta. El test de REAL
+  comprueba rechazo del comparador antes de consultar mercado.
+- Sin cambios de filtros, riesgo, AUTO v3, estado operativo ni backtesters
+  compartidos. v6.1 sigue rechazada por sus resultados historicos previos.
+- Pendiente: repetir 365 dias / years_ago=2 como diagnostico, no como nueva
+  validacion fuera de muestra. Para comparar exactamente, conservar el corte
+  original 2024-09-06T02:43:56.719160+00:00; el CLI actual usa fecha relativa.
+  Un run posterior con el mismo years_ago desplaza la ventana y no permite
+  atribuir toda diferencia de rendimiento solamente a esta correccion.
+
 Ultima revision tecnica: 1 de septiembre de 2026.
 
 Este archivo es la memoria operativa del proyecto. Debe consultarse al iniciar un chat nuevo y actualizarse al terminar cada hito.

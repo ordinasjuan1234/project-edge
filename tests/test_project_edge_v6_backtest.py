@@ -64,19 +64,59 @@ def test_v6_adapter_does_not_replace_live_auto_strategy():
     assert "PROJECT_EDGE_V6" not in live_source
 
 
-def test_v6_time_exit_closes_after_four_hours_without_stop_or_target():
+@pytest.mark.parametrize("inclusive_ms", [0, 1])
+@pytest.mark.parametrize("portfolio_mode", [False, True])
+def test_v6_time_exit_closes_after_four_hours_without_stop_or_target(
+    inclusive_ms, portfolio_mode,
+):
     backtester = V6HistoricalBacktester("ETHUSDT")
-    backtester._decision_for_row = lambda row: {
+    if portfolio_mode:
+        backtester = V6PortfolioHistoricalBacktester()
+        backtester.backtesters["BTCUSDT"]._decision_for_row = lambda row: {
+            "decision": "WAIT", "can_execute": False,
+        }
+    strategy_runner = (
+        backtester.backtesters["ETHUSDT"] if portfolio_mode else backtester
+    )
+    strategy_runner._decision_for_row = lambda row: {
         **ready_v6(),
         "strategy": "PROJECT_EDGE_V3",
     }
-    result = backtester.run_prepared(constant_timeline())
+    timeline = constant_timeline()
+    timeline["close_time"] -= pd.Timedelta(milliseconds=inclusive_ms)
+    result = backtester.run_prepared(
+        {"ETHUSDT": timeline, "BTCUSDT": timeline} if portfolio_mode else timeline
+    )
     assert result.trades
     first = result.trades[0]
     assert first["close_reason"] == "TIME_EXIT"
-    assert first["holding_minutes"] >= 240.0
+    expected_exit = pd.Timestamp(first["entry_time"]) + pd.Timedelta(
+        minutes=240, milliseconds=-inclusive_ms
+    )
+    assert pd.Timestamp(first["exit_time"]) == expected_exit
     assert first["strategy"] == V6_STRATEGY
     assert first["real_order_sent"] is False
+
+
+@pytest.mark.parametrize("direction", ["LONG", "SHORT"])
+def test_v6_time_boundary_keeps_stop_target_priority(direction):
+    runner = V6HistoricalBacktester("ETHUSDT")
+    position = {
+        "entry_time": "2026-01-01T00:00:00Z", "direction": direction,
+        "stop_price": 99.0 if direction == "LONG" else 101.0,
+        "target_price": 102.0 if direction == "LONG" else 98.0,
+    }
+    candle = pd.Series({
+        "close_time": pd.Timestamp("2026-01-01T03:54:59.999Z"),
+        "open": 100.0, "high": 100.1, "low": 99.9, "close": 100.0,
+    })
+    assert runner._raw_exit(position, candle) is None
+    candle["close_time"] = pd.Timestamp("2026-01-01T03:59:59.999Z")
+    assert runner._raw_exit(position, candle) == (100.0, "TIME_EXIT")
+    candle["high"], candle["low"] = (102.1, 99.9) if direction == "LONG" else (100.1, 97.9)
+    assert runner._raw_exit(position, candle) == (position["target_price"], "TARGET")
+    candle["high"], candle["low"] = 102.1, 97.9
+    assert runner._raw_exit(position, candle) == (position["stop_price"], "STOP")
 
 
 def test_v6_portfolio_selects_single_best_symbol():
