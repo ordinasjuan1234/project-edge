@@ -14,7 +14,7 @@ Reglas de paridad experimental:
 - stop minimo: 0,60%;
 - comision: 0,10% por lado;
 - slippage: 0,02% por lado;
-- filtro costo/riesgo v5: 12%.
+- filtro costo/riesgo v5 configurable por parametro.
 """
 
 from __future__ import annotations
@@ -58,6 +58,8 @@ MINIMUM_STOP_PCT = 0.006
 FEE_RATE = 0.001
 SLIPPAGE_RATE = 0.0002
 
+DEFAULT_MAX_COST_RISK_RATIO = 0.12
+
 
 def _json_safe(value: Any) -> Any:
     if isinstance(value, float) and not math.isfinite(value):
@@ -80,24 +82,39 @@ def _json_safe(value: Any) -> Any:
 
 def _apply_strategy_parity(
     backtester: HistoricalBacktester,
+    *,
+    max_cost_risk_ratio: float,
 ) -> HistoricalBacktester:
-    """Fuerza las reglas actuales sobre la estrategia historica.
+    """Fuerza reglas de paridad sobre la estrategia historica.
 
-    HistoricalBacktestConfig transporta riesgo, exposicion y costos,
-    pero la distancia minima real del stop vive dentro de la config
-    de ProjectEdgeV3/ProjectEdgeV5.
+    Riesgo, exposicion, stop minimo y costos se igualan
+    a las reglas experimentales actuales.
 
-    Se reemplaza solo la config del objeto historico.
+    Si la estrategia es v5, tambien se aplica el limite
+    costo/riesgo elegido para el barrido historico.
+
     No modifica ningun runner PAPER activo.
     """
 
+    config_changes = {
+        "risk_pct": RISK_PCT,
+        "max_exposure_pct": MAX_EXPOSURE_PCT,
+        "minimum_stop_pct": MINIMUM_STOP_PCT,
+        "fee_rate": FEE_RATE,
+        "slippage_rate": SLIPPAGE_RATE,
+    }
+
+    if hasattr(
+        backtester.selected_strategy.config,
+        "max_cost_risk_ratio",
+    ):
+        config_changes[
+            "max_cost_risk_ratio"
+        ] = max_cost_risk_ratio
+
     backtester.selected_strategy.config = replace(
         backtester.selected_strategy.config,
-        risk_pct=RISK_PCT,
-        max_exposure_pct=MAX_EXPOSURE_PCT,
-        minimum_stop_pct=MINIMUM_STOP_PCT,
-        fee_rate=FEE_RATE,
-        slippage_rate=SLIPPAGE_RATE,
+        **config_changes,
     )
 
     return backtester
@@ -107,6 +124,7 @@ def _historical_backtester(
     *,
     symbol: str,
     strategy: str,
+    max_cost_risk_ratio: float,
 ) -> HistoricalBacktester:
     backtester = HistoricalBacktester(
         HistoricalBacktestConfig(
@@ -123,11 +141,15 @@ def _historical_backtester(
     )
 
     return _apply_strategy_parity(
-        backtester
+        backtester,
+        max_cost_risk_ratio=max_cost_risk_ratio,
     )
 
 
-def _portfolio_backtester() -> PortfolioHistoricalBacktester:
+def _portfolio_backtester(
+    *,
+    max_cost_risk_ratio: float,
+) -> PortfolioHistoricalBacktester:
     portfolio = PortfolioHistoricalBacktester(
         PortfolioHistoricalConfig(
             symbols=SYMBOLS,
@@ -143,7 +165,8 @@ def _portfolio_backtester() -> PortfolioHistoricalBacktester:
 
     for backtester in portfolio.backtesters.values():
         _apply_strategy_parity(
-            backtester
+            backtester,
+            max_cost_risk_ratio=max_cost_risk_ratio,
         )
 
     return portfolio
@@ -154,6 +177,7 @@ def _enrich_report(
     *,
     candidate: str,
     requested_days: int,
+    max_cost_risk_ratio: float,
 ) -> dict[str, Any]:
     result = dict(report)
 
@@ -191,15 +215,23 @@ def _enrich_report(
     )
 
     result["test_risk_pct"] = RISK_PCT
+
     result["test_max_exposure_pct"] = (
         MAX_EXPOSURE_PCT
     )
+
     result["test_minimum_stop_pct"] = (
         MINIMUM_STOP_PCT
     )
+
     result["test_fee_rate"] = FEE_RATE
+
     result["test_slippage_rate"] = (
         SLIPPAGE_RATE
+    )
+
+    result["test_max_cost_risk_ratio"] = (
+        max_cost_risk_ratio
     )
 
     return result
@@ -304,6 +336,7 @@ def write_outputs(
         "test_minimum_stop_pct",
         "test_fee_rate",
         "test_slippage_rate",
+        "test_max_cost_risk_ratio",
     ]
 
     with (
@@ -432,6 +465,16 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--max-cost-risk-ratio",
+        type=float,
+        default=DEFAULT_MAX_COST_RISK_RATIO,
+        help=(
+            "Limite costo/riesgo v5. "
+            "Ejemplo: 0.12 equivale a 12%%."
+        ),
+    )
+
+    parser.add_argument(
         "--output-dir",
         default=(
             "artifacts/"
@@ -453,6 +496,12 @@ def main() -> None:
         raise ValueError(
             "days debe estar entre "
             "1 y 365."
+        )
+
+    if not 0 < args.max_cost_risk_ratio < 1:
+        raise ValueError(
+            "max-cost-risk-ratio debe estar "
+            "entre 0 y 1."
         )
 
     reference_now = (
@@ -478,6 +527,11 @@ def main() -> None:
         str,
         Any,
     ] = {}
+
+    cost_risk_pct = (
+        args.max_cost_risk_ratio
+        * 100
+    )
 
     print("=" * 78)
 
@@ -521,7 +575,7 @@ def main() -> None:
 
     print(
         "Filtro v5 costo/riesgo: "
-        "maximo 12%"
+        f"maximo {cost_risk_pct:.0f}%"
     )
 
     print(
@@ -559,13 +613,13 @@ def main() -> None:
             )
         )
 
-        # v5 agrega breakout 30M;
-        # v3 usa un subconjunto
-        # de los mismos campos.
         preparation_backtester = (
             _historical_backtester(
                 symbol=symbol,
                 strategy=V5_STRATEGY,
+                max_cost_risk_ratio=(
+                    args.max_cost_risk_ratio
+                ),
             )
         )
 
@@ -580,6 +634,9 @@ def main() -> None:
         _historical_backtester(
             symbol="ETHUSDT",
             strategy="PROJECT_EDGE_V3",
+            max_cost_risk_ratio=(
+                args.max_cost_risk_ratio
+            ),
         )
     )
 
@@ -594,6 +651,9 @@ def main() -> None:
         _historical_backtester(
             symbol="ETHUSDT",
             strategy=V5_STRATEGY,
+            max_cost_risk_ratio=(
+                args.max_cost_risk_ratio
+            ),
         )
     )
 
@@ -608,7 +668,11 @@ def main() -> None:
     )
 
     portfolio_backtester = (
-        _portfolio_backtester()
+        _portfolio_backtester(
+            max_cost_risk_ratio=(
+                args.max_cost_risk_ratio
+            )
+        )
     )
 
     portfolio = (
@@ -630,6 +694,9 @@ def main() -> None:
             requested_days=(
                 args.days
             ),
+            max_cost_risk_ratio=(
+                args.max_cost_risk_ratio
+            ),
         ),
 
         "v5_eth": _enrich_report(
@@ -639,6 +706,9 @@ def main() -> None:
             ),
             requested_days=(
                 args.days
+            ),
+            max_cost_risk_ratio=(
+                args.max_cost_risk_ratio
             ),
         ),
 
@@ -651,6 +721,9 @@ def main() -> None:
                 ),
                 requested_days=(
                     args.days
+                ),
+                max_cost_risk_ratio=(
+                    args.max_cost_risk_ratio
                 ),
             ),
     }
@@ -708,7 +781,7 @@ def main() -> None:
                 SLIPPAGE_RATE,
 
             "max_cost_risk_ratio":
-                0.12,
+                args.max_cost_risk_ratio,
         },
 
         "rules_frozen_before_out_of_sample": {
@@ -762,9 +835,9 @@ def main() -> None:
 
             "cost_risk":
                 (
-                    "costo estimado "
-                    "<=12% del presupuesto "
-                    "de riesgo"
+                    "costo estimado <="
+                    f"{cost_risk_pct:.0f}% "
+                    "del presupuesto de riesgo"
                 ),
 
             "risk":
