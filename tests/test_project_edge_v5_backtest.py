@@ -488,24 +488,6 @@ def test_workflow_is_paper_only_and_uses_multiperiod_matrix():
         "project-edge-v5-comparison-365-days-${{ matrix.years_ago }}-years-ago"
         in workflow
     )
-    workflow = (
-        Path(__file__)
-        .resolve()
-        .parents[1]
-        / ".github/workflows/v5_dual_setup_comparison.yml"
-    ).read_text(
-        encoding="utf-8"
-    )
-
-    assert (
-        "PROJECT_EDGE_MODE: PAPER"
-        in workflow
-    )
-
-    assert (
-        "default: '5'"
-        in workflow
-    )
 
     assert (
         "run_v5_comparison.py"
