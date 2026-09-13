@@ -475,6 +475,11 @@ def test_workflow_is_paper_only_and_uses_multiperiod_matrix():
     )
 
     assert (
+        "max_cost_risk_ratio: [0.12, 0.14, 0.16, 0.18]"
+        in workflow
+    )
+
+    assert (
         "--days 365"
         in workflow
     )
@@ -485,7 +490,17 @@ def test_workflow_is_paper_only_and_uses_multiperiod_matrix():
     )
 
     assert (
-        "project-edge-v5-comparison-365-days-${{ matrix.years_ago }}-years-ago"
+        '--max-cost-risk-ratio "${{ matrix.max_cost_risk_ratio }}"'
+        in workflow
+    )
+
+    assert (
+        'artifacts/v5-comparison-${{ matrix.years_ago }}y-cost-${{ matrix.max_cost_risk_ratio }}'
+        in workflow
+    )
+
+    assert (
+        'project-edge-v5-365d-${{ matrix.years_ago }}y-cost-${{ matrix.max_cost_risk_ratio }}'
         in workflow
     )
 
