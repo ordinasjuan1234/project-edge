@@ -449,7 +449,45 @@ def test_v5_outputs_include_setup_type(
     )
 
 
-def test_workflow_is_paper_only_and_defaults_to_unseen_block():
+def test_workflow_is_paper_only_and_uses_multiperiod_matrix():
+    workflow = (
+        Path(__file__)
+        .resolve()
+        .parents[1]
+        / ".github/workflows/v5_dual_setup_comparison.yml"
+    ).read_text(
+        encoding="utf-8"
+    )
+
+    assert (
+        "PROJECT_EDGE_MODE: PAPER"
+        in workflow
+    )
+
+    assert (
+        "matrix:"
+        in workflow
+    )
+
+    assert (
+        "years_ago: [1, 3, 5]"
+        in workflow
+    )
+
+    assert (
+        "--days 365"
+        in workflow
+    )
+
+    assert (
+        '--years-ago "${{ matrix.years_ago }}"'
+        in workflow
+    )
+
+    assert (
+        "project-edge-v5-comparison-365-days-${{ matrix.years_ago }}-years-ago"
+        in workflow
+    )
     workflow = (
         Path(__file__)
         .resolve()
