@@ -1,0 +1,42 @@
+name: V5 Dual Setup Historical Comparison
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      days:
+        description: Dias a evaluar
+        required: true
+        default: '365'
+      years_ago:
+        description: Bloque historico (5 anos atras)
+        required: true
+        default: '5'
+
+env:
+  PROJECT_EDGE_MODE: PAPER
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Ejecutar tests
+        run: pytest -q
+      - name: Ejecutar comparador v5 congelado
+        run: |
+          python run_v5_comparison.py \
+            --days "${{ github.event.inputs.days || '365' }}" \
+            --years-ago "${{ github.event.inputs.years_ago || '5' }}" \
+            --output-dir artifacts/v5-comparison
+      - name: Subir artefactos
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-edge-v5-comparison-${{ github.event.inputs.days || '365' }}-days-${{ github.event.inputs.years_ago || '5' }}-years-ago
+          path: artifacts/v5-comparison/
