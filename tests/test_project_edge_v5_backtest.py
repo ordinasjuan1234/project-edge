@@ -475,7 +475,12 @@ def test_workflow_is_paper_only_and_uses_multiperiod_matrix():
     )
 
     assert (
-        "max_cost_risk_ratio: [0.12, 0.14, 0.16, 0.18]"
+        "max_cost_risk_ratio: [0.12, 0.14]"
+        in workflow
+    )
+
+    assert (
+        "direction_mode: [BOTH, SHORT_ONLY]"
         in workflow
     )
 
@@ -495,12 +500,17 @@ def test_workflow_is_paper_only_and_uses_multiperiod_matrix():
     )
 
     assert (
-        'artifacts/v5-comparison-${{ matrix.years_ago }}y-cost-${{ matrix.max_cost_risk_ratio }}'
+        '--direction-mode "${{ matrix.direction_mode }}"'
         in workflow
     )
 
     assert (
-        'project-edge-v5-365d-${{ matrix.years_ago }}y-cost-${{ matrix.max_cost_risk_ratio }}'
+        'artifacts/v5-comparison-${{ matrix.years_ago }}y-cost-${{ matrix.max_cost_risk_ratio }}-${{ matrix.direction_mode }}'
+        in workflow
+    )
+
+    assert (
+        'project-edge-v5-365d-${{ matrix.years_ago }}y-cost-${{ matrix.max_cost_risk_ratio }}-${{ matrix.direction_mode }}'
         in workflow
     )
 
