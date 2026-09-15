@@ -1,0 +1,49 @@
+name: V5 Dual Setup Historical Comparison
+
+on:
+  pull_request:
+    branches: [main]
+
+  workflow_dispatch:
+
+env:
+  PROJECT_EDGE_MODE: PAPER
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        years_ago: [1, 3, 5]
+        max_cost_risk_ratio: [0.12, 0.14]
+        direction_mode: [BOTH, SHORT_ONLY]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar tests
+        run: pytest -q
+
+      - name: Ejecutar comparador v5 direccional
+        run: |
+          python run_v5_comparison.py \
+            --days 365 \
+            --years-ago "${{ matrix.years_ago }}" \
+            --max-cost-risk-ratio "${{ matrix.max_cost_risk_ratio }}" \
+            --direction-mode "${{ matrix.direction_mode }}" \
+            --output-dir "artifacts/v5-comparison-${{ matrix.years_ago }}y-cost-${{ matrix.max_cost_risk_ratio }}-${{ matrix.direction_mode }}"
+
+      - name: Subir artefactos
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-edge-v5-365d-${{ matrix.years_ago }}y-cost-${{ matrix.max_cost_risk_ratio }}-${{ matrix.direction_mode }}
+          path: "artifacts/v5-comparison-${{ matrix.years_ago }}y-cost-${{ matrix.max_cost_risk_ratio }}-${{ matrix.direction_mode }}/"

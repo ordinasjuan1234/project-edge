@@ -25,6 +25,7 @@ from engine.execution.historical_backtest import (
 class PortfolioHistoricalConfig:
     symbols: tuple[str, ...] = ("BTCUSDT", "ETHUSDT")
     initial_balance: float = 10000.0
+    strategy: str = "PROJECT_EDGE_V4_INTRADAY"
     fee_rate: float = 0.001
     slippage_rate: float = 0.0002
     cooldown_minutes: int = 30
@@ -38,6 +39,11 @@ class PortfolioHistoricalConfig:
         normalized = tuple(str(symbol).upper().replace("/", "") for symbol in self.symbols)
         if len(normalized) < 2 or len(set(normalized)) != len(normalized):
             raise ValueError("Se requieren al menos dos simbolos diferentes.")
+        if str(self.strategy).upper() not in {
+            "PROJECT_EDGE_V4_INTRADAY",
+            "PROJECT_EDGE_V5_DUAL_SETUP",
+        }:
+            raise ValueError("strategy de cartera debe ser v4 o v5.")
         if self.initial_balance <= 0:
             raise ValueError("initial_balance debe ser mayor que cero.")
         if not 0 <= self.fee_rate < 0.1 or not 0 <= self.slippage_rate < 0.1:
@@ -55,7 +61,7 @@ class PortfolioHistoricalConfig:
 
 
 class PortfolioHistoricalBacktester:
-    """Selecciona la mejor senal v4 disponible sin posiciones simultaneas."""
+    """Selecciona la mejor senal disponible sin posiciones simultaneas."""
 
     def __init__(self, config: PortfolioHistoricalConfig | None = None) -> None:
         self.config = config or PortfolioHistoricalConfig()
@@ -71,7 +77,7 @@ class PortfolioHistoricalBacktester:
                     fee_rate=self.config.fee_rate,
                     slippage_rate=self.config.slippage_rate,
                     cooldown_minutes=self.config.cooldown_minutes,
-                    strategy="PROJECT_EDGE_V4_INTRADAY",
+                    strategy=self.config.strategy,
                     risk_pct=self.config.risk_pct,
                     max_exposure_pct=self.config.max_exposure_pct,
                     loss_guard_losses=self.config.loss_guard_losses,
@@ -165,6 +171,8 @@ class PortfolioHistoricalBacktester:
         decision_counts: Counter[str] = Counter()
         signals_by_symbol: Counter[str] = Counter()
         trades_by_symbol: Counter[str] = Counter()
+        signals_by_direction: Counter[str] = Counter()
+        signals_by_setup: Counter[str] = Counter()
         opportunity_bars = 0
         simultaneous_signal_bars = 0
         cooldown_until: pd.Timestamp | None = None
@@ -227,6 +235,8 @@ class PortfolioHistoricalBacktester:
                     and bool(decision.get("can_execute"))
                 ):
                     signals_by_symbol[symbol] += 1
+                    signals_by_direction[str(direction)] += 1
+                    signals_by_setup[str(decision.get("setup_type") or "UNSPECIFIED")] += 1
                     candidates.append(
                         (float(decision.get("quality_score", 0.0)), symbol, decision)
                     )
@@ -274,7 +284,8 @@ class PortfolioHistoricalBacktester:
                 "target_price": float(plan["target_price"]),
                 "position_size": quantity,
                 "entry_fee": entry_fee,
-                "strategy": "PROJECT_EDGE_V4_INTRADAY",
+                "strategy": str(decision.get("strategy", self.config.strategy)),
+                "setup_type": decision.get("setup_type"),
                 "quality_score": float(decision.get("quality_score", 0.0)),
                 "risk_budget": float(plan["risk_budget"]),
                 "estimated_risk": float(plan["estimated_risk"]),
@@ -311,10 +322,22 @@ class PortfolioHistoricalBacktester:
             trades.append(closed)
             trades_by_symbol[symbol] += 1
 
+        trades_by_direction = Counter(
+            str(trade.get("direction", "UNKNOWN")) for trade in trades
+        )
+        trades_by_setup = Counter(
+            str(trade.get("setup_type") or "UNSPECIFIED") for trade in trades
+        )
         metrics = BacktestReport().generate(trades=trades)
+        strategy_name = str(self.config.strategy).upper()
+        candidate = (
+            "V5_PORTFOLIO_BTC_ETH"
+            if strategy_name == "PROJECT_EDGE_V5_DUAL_SETUP"
+            else "V4_PORTFOLIO_BTC_ETH"
+        )
         report = {
-            "candidate": "V4_PORTFOLIO_BTC_ETH",
-            "strategy": "PROJECT_EDGE_V4_INTRADAY",
+            "candidate": candidate,
+            "strategy": strategy_name,
             "symbols": list(self.symbols),
             "mode": "PAPER_BACKTEST",
             "source": "AUTO_ONLY",
@@ -328,7 +351,11 @@ class PortfolioHistoricalBacktester:
             "opportunity_bars": opportunity_bars,
             "simultaneous_signal_bars": simultaneous_signal_bars,
             "ready_signals_by_symbol": dict(signals_by_symbol),
+            "ready_signals_by_direction": dict(signals_by_direction),
+            "ready_signals_by_setup": dict(signals_by_setup),
             "trades_by_symbol": dict(trades_by_symbol),
+            "trades_by_direction": dict(trades_by_direction),
+            "trades_by_setup": dict(trades_by_setup),
             "decision_counts": dict(decision_counts),
             "initial_balance": self.config.initial_balance,
             "final_balance": balance,
