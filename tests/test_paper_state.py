@@ -2,7 +2,49 @@ import json
 
 import pytest
 
-from paper_state import PaperState
+from paper_state import PaperState, build_target_plan
+
+
+def test_target_plan_preserves_final_take_profit():
+    long_plan = build_target_plan(100.0, 120.0)
+    short_plan = build_target_plan(100.0, 80.0)
+
+    assert [target["price"] for target in long_plan] == [110.0, 115.0, 120.0]
+    assert [target["price"] for target in short_plan] == [90.0, 85.0, 80.0]
+    assert long_plan[-1]["name"] == "TP3"
+    assert long_plan[-1]["price"] == 120.0
+
+
+def test_reached_targets_are_persisted_once(tmp_path):
+    state_file = tmp_path / "paper_state.json"
+    state = PaperState(file_path=state_file)
+    state.open_position(
+        symbol="BTCUSDT",
+        direction="LONG",
+        entry_price=100.0,
+        quantity=1.0,
+        stop_loss=90.0,
+        take_profit=120.0,
+        source="MANUAL",
+    )
+
+    reached = state.mark_reached_targets(116.0)
+    assert [target["name"] for target in reached] == ["TP1", "TP2"]
+    assert state.mark_reached_targets(116.0) == []
+
+    reloaded = PaperState(file_path=state_file)
+    assert [
+        target["name"]
+        for target in reloaded.position["target_plan"]
+        if target["hit_at"]
+    ] == ["TP1", "TP2"]
+
+    final = reloaded.close_position(117.0, "MANUAL_CLOSE")
+    assert [
+        target["name"]
+        for target in final["target_plan"]
+        if target["hit_at"]
+    ] == ["TP1", "TP2"]
 
 
 def test_initial_state(tmp_path):
@@ -178,7 +220,7 @@ def test_migration_creates_and_persists_clean_auto_demo_account(tmp_path):
     assert state.balance == pytest.approx(9943.64)
     assert state.auto_demo_balance == pytest.approx(1000.0)
     migrated = json.loads(state_file.read_text(encoding="utf-8"))
-    assert migrated["version"] == 4
+    assert migrated["version"] == 5
     assert migrated["auto_demo_initial_balance"] == pytest.approx(1000.0)
     assert migrated["auto_demo_balance"] == pytest.approx(1000.0)
     assert migrated["auto_demo_started_at"]

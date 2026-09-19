@@ -4,12 +4,12 @@ from pathlib import Path
 HTML = (Path(__file__).resolve().parents[1] / "index.html").read_text(encoding="utf-8")
 
 
-def test_dashboard_embeds_two_official_tradingview_charts():
-    assert 'id="autoTradingViewChart"' in HTML
-    assert 'id="manualTradingViewChart"' in HTML
-    assert "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" in HTML
-    assert "symbol:'BINANCE:'+symbol" in HTML
-    assert "allow_symbol_change:false" in HTML
+def test_dashboard_embeds_two_project_edge_paper_charts():
+    assert 'id="autoPaperChart"' in HTML
+    assert 'id="manualPaperChart"' in HTML
+    assert 'id="autoPaperCanvas"' in HTML
+    assert 'id="manualPaperCanvas"' in HTML
+    assert '<script src="paper_chart.js"></script>' in HTML
 
 
 def test_live_chart_is_restricted_to_manual_paper_assets():
@@ -33,16 +33,17 @@ def test_live_chart_exposes_requested_timeframes():
 def test_auto_and_manual_charts_have_independent_targets():
     assert 'id="autoChartSymbolLabel">ETH/USDT' in HTML
     assert 'id="manualChartSymbol"' in HTML
-    assert "renderAutoTradingViewChart(autoTargetSymbol)" in HTML
-    assert "renderManualTradingViewChart(symbol)" in HTML
-    assert "renderManualTradingViewChart(manualChartSelector?.value||'BTC/USDT')" in HTML
+    assert "renderAutoPaperChart(autoTargetSymbol)" in HTML
+    assert "renderManualPaperChart(symbol)" in HTML
+    assert "renderManualPaperChart(manualChartSelector?.value||'BTC/USDT')" in HTML
     assert "chartSelector.value=e.target.value" in HTML
 
 
 def test_both_charts_render_when_operations_tab_opens():
-    assert "renderAutoTradingViewChart(autoChartTargetSymbol)" in HTML
-    assert "renderManualTradingViewChart(manualChartTargetSymbol)" in HTML
-    assert "mountTradingViewChart(chart,symbol,interval)" in HTML
+    assert "renderAutoPaperChart(autoChartTargetSymbol)" in HTML
+    assert "renderManualPaperChart(manualChartTargetSymbol)" in HTML
+    assert "autoPaperChart.render(symbol,interval,targetPlanFor('AUTO',symbol))" in HTML
+    assert "manualPaperChart.render(symbol,interval,targetPlanFor('MANUAL',symbol))" in HTML
 
 
 def test_auto_chart_follows_only_auto_state_and_engine_symbol():
@@ -106,11 +107,30 @@ def test_chart_status_bars_stay_outside_the_candle_area():
     assert 'id="autoChartSignal"' in HTML
     assert 'id="manualChartSignal"' in HTML
     assert HTML.index('id="autoChartSignal"') < HTML.index(
-        'id="autoTradingViewChart"'
+        'id="autoPaperChart"'
     )
     assert HTML.index('id="manualChartSignal"') < HTML.index(
-        'id="manualTradingViewChart"'
+        'id="manualPaperChart"'
     )
     assert ".chart-signal{display:flex" in HTML
-    assert "position:absolute" not in HTML
-    assert "chart.appendChild(signal)" not in HTML
+
+
+def test_trade_plan_shows_entry_stop_and_three_targets():
+    assert "targetPlanFor(source,symbol)" in HTML
+    assert "TP1/TP2 se calculan" in HTML
+    assert 'id="autoTargetStats"' in HTML
+    assert 'id="manualTargetStats"' in HTML
+    assert "TP1 es hito acumulativo, no ganancia final." in HTML
+
+
+def test_custom_chart_uses_only_public_binance_data():
+    chart_js = (
+        Path(__file__).resolve().parents[1] / "paper_chart.js"
+    ).read_text(encoding="utf-8")
+    assert "https://api.binance.com/api/v3/klines" in chart_js
+    assert "wss://stream.binance.com:9443/ws/" in chart_js
+    assert "ENTRY" in chart_js
+    assert "tp1:" in chart_js
+    assert "tp2:" in chart_js
+    assert "tp3:" in chart_js
+    assert "SL" in chart_js

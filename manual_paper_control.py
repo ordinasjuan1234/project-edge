@@ -28,12 +28,13 @@ from __future__ import annotations
 import argparse
 
 from engine.data.binance_historical_data import BinanceHistoricalData
-from paper_state import PaperState
+from paper_state import PaperState, build_target_plan
 from telegram_notifier import (
     notify_auto_control,
     notify_manual_action,
     notify_manual_entry,
     notify_manual_exit,
+    notify_target_hits,
 )
 from trading_mode import require_paper_mode
 
@@ -540,6 +541,10 @@ def close_manual(
     symbol = state.position["symbol"]
     price = current_price(symbol)
 
+    reached = state.mark_reached_targets(price)
+    if reached:
+        notify_target_hits(state.position, reached)
+
     trade = state.close_position(
         exit_price=price,
         reason="MANUAL_CLOSE",
@@ -595,6 +600,10 @@ def partial_close_manual(
         position_before["quantity"]
     )
     price = current_price(symbol)
+
+    reached = state.mark_reached_targets(price)
+    if reached:
+        notify_target_hits(state.position, reached)
 
     result = state.partial_close_position(
         exit_price=price,
@@ -726,6 +735,10 @@ def update_manual_risk(
 
     position["stop_loss"] = new_stop
     position["take_profit"] = new_tp
+    position["target_plan"] = build_target_plan(
+        position["entry_price"],
+        new_tp,
+    )
 
     state.data["position"] = position
     state.save()

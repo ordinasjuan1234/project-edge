@@ -32,6 +32,27 @@ def test_manual_entry_is_clearly_paper():
     assert "sin orden real" in message
 
 
+def test_entry_and_target_alert_explain_three_target_ladder():
+    position = sample_position()
+    position["target_plan"] = [
+        {"name": "TP1", "price": 2525.0, "hit_at": None},
+        {"name": "TP2", "price": 2537.5, "hit_at": None},
+        {"name": "TP3", "price": 2550.0, "hit_at": None},
+    ]
+
+    entry = telegram_notifier.format_manual_entry_message(position)
+    hit = telegram_notifier.format_target_hits_message(
+        position,
+        [position["target_plan"][0]],
+    )
+
+    assert "TP1: 2.525,00 USDT" in entry
+    assert "TP2: 2.537,50 USDT" in entry
+    assert "TP3: 2.550,00 USDT" in entry
+    assert "OBJETIVO ALCANZADO" in hit
+    assert "no cierran una parte automáticamente" in hit
+
+
 def test_time_close_reason_has_friendly_label():
     message = telegram_notifier.format_auto_exit_message(
         {

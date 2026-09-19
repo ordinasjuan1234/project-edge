@@ -1,6 +1,6 @@
 """
 PROJECT EDGE
-Paper State v4
+Paper State v5
 
 Estado persistente del Paper Trading.
 
@@ -14,6 +14,7 @@ Este modulo:
 - Guarda si el modo AUTO esta habilitado o pausado.
 - Puede descontar comision y deslizamiento simulados en operaciones AUTO.
 - Separa el saldo AUTO DEMO del saldo MANUAL heredado.
+- Guarda una escalera visual TP1 / TP2 / TP3 sin cambiar el TP final.
 
 IMPORTANTE:
 Pausar AUTO NO cierra posiciones y NO cancela LIMIT pendientes.
@@ -33,12 +34,49 @@ DEFAULT_STATE_FILE = "paper_state.json"
 DEFAULT_BALANCE = 10000.0
 DEFAULT_AUTO_DEMO_BALANCE = 1000.0
 
-STATE_VERSION = 4
+STATE_VERSION = 5
 MIN_QUANTITY = 1e-12
+
+TARGET_LEVELS = (
+    ("TP1", 0.50),
+    ("TP2", 0.75),
+    ("TP3", 1.00),
+)
 
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def build_target_plan(
+    entry_price: float,
+    take_profit: float,
+) -> list[dict[str, Any]]:
+    """
+    Divide el recorrido hasta el TP final en tres hitos acumulativos.
+
+    TP1 y TP2 son hitos visuales/estadisticos. TP3 conserva exactamente el
+    Take Profit final de la estrategia o de la mesa MANUAL, por lo que esta
+    funcion no altera riesgo, cantidad ni reglas de salida.
+    """
+    entry_price = float(entry_price)
+    take_profit = float(take_profit)
+    distance = take_profit - entry_price
+
+    if entry_price <= 0 or take_profit <= 0 or distance == 0:
+        raise ValueError(
+            "Entrada y Take Profit deben definir un recorrido valido."
+        )
+
+    return [
+        {
+            "name": name,
+            "price": entry_price + distance * fraction,
+            "fraction_to_final": fraction,
+            "hit_at": None,
+        }
+        for name, fraction in TARGET_LEVELS
+    ]
 
 
 class PaperState:
@@ -117,6 +155,22 @@ class PaperState:
         if "auto_demo_balance" not in data:
             data["auto_demo_balance"] = float(
                 data["auto_demo_initial_balance"]
+            )
+            migrated = True
+
+        position = data.get("position")
+        if position and "target_plan" not in position:
+            position["target_plan"] = build_target_plan(
+                position["entry_price"],
+                position["take_profit"],
+            )
+            migrated = True
+
+        pending_order = data.get("pending_order")
+        if pending_order and "target_plan" not in pending_order:
+            pending_order["target_plan"] = build_target_plan(
+                pending_order["limit_price"],
+                pending_order["take_profit"],
             )
             migrated = True
 
@@ -347,6 +401,10 @@ class PaperState:
             "initial_quantity": quantity,
             "stop_loss": float(stop_loss),
             "take_profit": float(take_profit),
+            "target_plan": build_target_plan(
+                executed_entry_price,
+                take_profit,
+            ),
             "source": source,
             "fee_rate": fee_rate,
             "slippage_rate": slippage_rate,
@@ -441,6 +499,10 @@ class PaperState:
             "quantity": quantity,
             "stop_loss": float(stop_loss),
             "take_profit": float(take_profit),
+            "target_plan": build_target_plan(
+                limit_price,
+                take_profit,
+            ),
             "source": source,
             "status": "PENDING",
             "created_at": utc_now(),
@@ -533,6 +595,10 @@ class PaperState:
             "take_profit": float(
                 order["take_profit"]
             ),
+            "target_plan": build_target_plan(
+                entry_price,
+                order["take_profit"],
+            ),
             "source": order.get(
                 "source",
                 "MANUAL",
@@ -568,6 +634,67 @@ class PaperState:
         self.data["position"] = position
         self.save()
         return position
+
+    def replace_target_plan(
+        self,
+        take_profit: float,
+    ) -> list[dict[str, Any]]:
+        """Actualiza el TP final y reinicia sus hitos tras un cambio MANUAL."""
+        if not self.has_open_position:
+            raise ValueError(
+                "No existe una posicion PAPER abierta."
+            )
+
+        position = self.position
+        position["take_profit"] = float(take_profit)
+        position["target_plan"] = build_target_plan(
+            position["entry_price"],
+            take_profit,
+        )
+        self.data["position"] = position
+        self.save()
+        return position["target_plan"]
+
+    def mark_reached_targets(
+        self,
+        current_price: float,
+    ) -> list[dict[str, Any]]:
+        """Marca una sola vez cada TP visual alcanzado por una posicion."""
+        if not self.has_open_position:
+            return []
+
+        position = self.position
+        plan = position.get("target_plan")
+        if not isinstance(plan, list) or not plan:
+            plan = build_target_plan(
+                position["entry_price"],
+                position["take_profit"],
+            )
+            position["target_plan"] = plan
+
+        direction = self._validate_direction(position["direction"])
+        current_price = float(current_price)
+        reached_at = utc_now()
+        newly_reached = []
+
+        for target in plan:
+            if target.get("hit_at"):
+                continue
+            target_price = float(target["price"])
+            reached = (
+                current_price >= target_price
+                if direction == "LONG"
+                else current_price <= target_price
+            )
+            if reached:
+                target["hit_at"] = reached_at
+                newly_reached.append(dict(target))
+
+        if newly_reached:
+            self.data["position"] = position
+            self.save()
+
+        return newly_reached
 
     def partial_close_position(
         self,
@@ -872,6 +999,9 @@ class PaperState:
             ),
             "take_profit": float(
                 position["take_profit"]
+            ),
+            "target_plan": list(
+                position.get("target_plan", [])
             ),
             "source": position.get(
                 "source",

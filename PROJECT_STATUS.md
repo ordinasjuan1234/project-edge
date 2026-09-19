@@ -1,6 +1,6 @@
 # PROJECT EDGE - Estado permanente
 
-Ultima revision tecnica: 1 de septiembre de 2026.
+Ultima revision tecnica: 19 de septiembre de 2026.
 
 Este archivo es la memoria operativa del proyecto. Debe consultarse al iniciar un chat nuevo y actualizarse al terminar cada hito.
 
@@ -181,6 +181,32 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - Verificacion local: 226 tests superados, demostracion PAPER completada,
   sintaxis Python/JavaScript validada y rechazo de REAL confirmado antes de
   leer estado o consultar mercado.
+
+### Hito visual y estadistico: mapa Entrada / SL / TP1 / TP2 / TP3
+
+- Se reemplazaron los widgets cerrados de TradingView por dos graficos propios
+  de PROJECT EDGE que consumen exclusivamente velas y WebSocket publicos de
+  Binance para BTCUSDT y ETHUSDT.
+- AUTO y MANUAL conservan graficos, simbolos y temporalidades independientes.
+  Cada posicion o LIMIT muestra Entrada, zona de riesgo hasta SL y tres zonas
+  de objetivo con etiquetas TP1, TP2 y TP3 sobre las velas.
+- TP3 conserva exactamente el Take Profit final existente. TP1 se ubica al
+  50% del recorrido Entrada-TP3 y TP2 al 75%; son hitos visuales y
+  estadisticos, no cierres parciales automaticos. Por lo tanto no se cambio la
+  estrategia AUTO v3, su riesgo, cantidad, salida final ni backtest historico.
+- El estado PAPER nuevo registra una sola vez cada objetivo alcanzado y lo
+  conserva al cerrar. Los avisos Telegram distinguen expresamente un hito de
+  un cierre parcial para no informar una ganancia que todavia no fue realizada.
+- El dashboard informa por separado AUTO y MANUAL: operaciones nuevas medidas,
+  cantidad y porcentaje acumulativo que alcanzaron TP1, TP2, TP3 y cierre por
+  SL/Trailing. Los registros historicos anteriores sin esta evidencia no se
+  reinterpretan ni se usan para inflar porcentajes.
+- Al modificar el TP3 MANUAL, la escalera se recalcula. Los botones de cierre
+  parcial 25/50/75/100 siguen siendo manuales e independientes.
+- REAL continua bloqueado, v4 continua rechazada y ninguna candidata posterior
+  fue conectada al runner AUTO.
+- Verificacion local: 234 tests superados, demostracion PAPER completada,
+  sintaxis Python/JavaScript validada y rechazo directo de REAL confirmado.
 
 ## Proximo hito
 

@@ -42,15 +42,15 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}
 .empty{color:var(--m);padding:10px 0}.error{color:var(--r)}
 .chart-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .manual-chart-frame{position:relative;height:560px;margin-top:8px;overflow:hidden;border:1px solid var(--l);border-radius:10px;background:#07101b}
-.manual-chart-frame .tradingview-widget-container{width:100%;height:100%}.manual-chart-frame .tradingview-widget-container__widget{width:100%;height:calc(100% - 24px)}
-.manual-chart-loading{display:flex;align-items:center;justify-content:center;height:100%;color:var(--m)}
-.tradingview-widget-copyright{height:24px;padding:5px 8px;background:#07101b;color:var(--m);font-size:10px}.tradingview-widget-copyright a{color:var(--c);text-decoration:none}
+.manual-chart-frame canvas{display:block;width:100%;height:100%}
+.paper-chart-status{position:absolute;left:10px;top:9px;z-index:2;padding:5px 8px;border:1px solid #28506a;border-radius:6px;background:rgba(6,16,26,.86);color:var(--c);font-size:10px;pointer-events:none}.paper-chart-status.error{border-color:#7d3a42;color:var(--r)}
+.target-score{display:grid;grid-template-columns:1.2fr repeat(4,1fr);gap:7px;margin-top:8px}.target-score>div{padding:8px 9px;border:1px solid var(--l);border-radius:7px;background:#08131f}.target-score b{display:block;margin-top:4px}.target-score .tp1 b{color:var(--g)}.target-score .tp2 b{color:#c5e85b}.target-score .tp3 b{color:#b68cff}.target-score .sl b{color:var(--r)}
 .chart-signal{display:flex;align-items:center;gap:12px;width:100%;margin-top:8px;padding:10px 12px;border:1px solid var(--l);border-radius:9px;background:#08131f;pointer-events:none}
 .chart-signal strong{font-size:13px;letter-spacing:.3px;white-space:nowrap}.chart-signal span{flex:1;color:#c2d0dd;font-size:11px;line-height:1.35}
 .chart-signal.long{border-color:#2c8d6d;background:#08372c;color:#55f0b7}.chart-signal.short{border-color:#a94550;background:#46141c;color:#ff8c94}.chart-signal.wait{border-color:#8c7230;background:#362d0f;color:#ffd76b}
 .view{display:none}.view.active{display:block}.footer{color:#62788e;font-size:10px;margin-top:12px}
 input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf4fa;border:1px solid #20354b;border-radius:7px}
-@media(max-width:950px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.top{flex-direction:column}.position,.pending{grid-template-columns:1fr}.main{padding:14px}.controls{grid-template-columns:1fr 1fr}.partials{grid-template-columns:1fr 1fr}.manual-chart-frame{height:480px}.chart-signal{align-items:flex-start;flex-direction:column;gap:4px}.chart-signal strong{white-space:normal}}
+@media(max-width:950px){.app{grid-template-columns:1fr}.side{display:none}.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.top{flex-direction:column}.position,.pending{grid-template-columns:1fr}.main{padding:14px}.controls{grid-template-columns:1fr 1fr}.partials{grid-template-columns:1fr 1fr}.manual-chart-frame{height:480px}.target-score{grid-template-columns:1fr 1fr}.target-score>div:first-child{grid-column:1/-1}.chart-signal{align-items:flex-start;flex-direction:column;gap:4px}.chart-signal strong{white-space:normal}}
 </style>
 </head>
 <body>
@@ -178,8 +178,10 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">Temporalidad visual</span><select id="autoChartInterval"><option value="5">5 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="240">4 horas</option></select></div>
         </div>
         <div id="autoChartSignal" class="chart-signal wait" aria-live="polite"><strong>● AUTO · ESPERANDO DATOS</strong><span>La lectura aparecerá aquí sin cubrir las velas.</span></div>
-        <div id="autoTradingViewChart" class="manual-chart-frame">
-          <div class="manual-chart-loading">El gráfico AUTO se cargará al abrir Operaciones.</div>
+        <div id="autoTargetStats" class="target-score" aria-label="Estadísticas de objetivos AUTO"></div>
+        <div id="autoPaperChart" class="manual-chart-frame">
+          <canvas id="autoPaperCanvas" aria-label="Velas AUTO con Entrada, Stop Loss y tres Take Profit"></canvas>
+          <div class="paper-chart-status" data-chart-status>El gráfico AUTO se cargará al abrir Operaciones.</div>
         </div>
 
         <h2 style="margin-top:18px">Scanner MANUAL · BTC / ETH</h2>
@@ -216,8 +218,10 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">Temporalidad</span><select id="manualChartInterval"><option value="5">5 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="240">4 horas</option></select></div>
         </div>
         <div id="manualChartSignal" class="chart-signal wait" aria-live="polite"><strong>● MANUAL · ESPERANDO DATOS</strong><span>La lectura aparecerá aquí sin cubrir las velas.</span></div>
-        <div id="manualTradingViewChart" class="manual-chart-frame">
-          <div class="manual-chart-loading">El gráfico se cargará al abrir Operaciones.</div>
+        <div id="manualTargetStats" class="target-score" aria-label="Estadísticas de objetivos MANUAL"></div>
+        <div id="manualPaperChart" class="manual-chart-frame">
+          <canvas id="manualPaperCanvas" aria-label="Velas MANUAL con Entrada, Stop Loss y tres Take Profit"></canvas>
+          <div class="paper-chart-status" data-chart-status>El gráfico MANUAL se cargará al abrir Operaciones.</div>
         </div>
 
         <h2 style="margin-top:18px">Mesa manual · guía rápida</h2>
@@ -239,7 +243,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">PASO 3 · Capital USDT</span><input id="manualCapital" type="number" min="0" step="0.01" placeholder="Ej: 500" disabled></div>
           <div class="mini"><span class="mut">Precio LIMIT</span><input id="manualLimitPrice" type="number" min="0" step="0.01" placeholder="Solo si elegís LIMIT" disabled><div class="mut" style="margin-top:5px">LONG LIMIT: debajo del precio actual · SHORT LIMIT: encima.</div></div>
           <div class="mini"><span class="mut">RIESGO · Stop Loss</span><input id="manualSL" type="number" min="0" step="0.01" placeholder="Precio SL" disabled></div>
-          <div class="mini"><span class="mut">RIESGO · Take Profit</span><input id="manualTP" type="number" min="0" step="0.01" placeholder="Precio TP" disabled></div>
+          <div class="mini"><span class="mut">RIESGO · TP3 final</span><input id="manualTP" type="number" min="0" step="0.01" placeholder="TP final; TP1/TP2 se calculan" disabled></div>
         </div>
 
         <h2 style="margin-top:18px">Trailing Stop PAPER</h2>
@@ -376,6 +380,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
 </main>
 </div>
 
+<script src="paper_chart.js"></script>
 <script>
 const DATA_URL='https://raw.githubusercontent.com/ordinasjuan1234/project-edge/main/dashboard_data.json';
 const GH_API='https://api.github.com/repos/ordinasjuan1234/project-edge';
@@ -396,7 +401,7 @@ function setVal(id,val,state){const el=document.getElementById(id);if(!el)return
 function decisionLabel(action){action=(action||'WAIT').toUpperCase();if(action.includes('LONG'))return'🟢 '+action;if(action.includes('SHORT')||action.includes('BLOCK'))return'🔴 '+action;return'🟡 '+action}
 function showTab(tab){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+tab).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
-  if(tab==='operaciones')setTimeout(()=>{renderAutoTradingViewChart(autoChartTargetSymbol);renderManualTradingViewChart(manualChartTargetSymbol)},0);
+  if(tab==='operaciones')setTimeout(()=>{renderAutoPaperChart(autoChartTargetSymbol);renderManualPaperChart(manualChartTargetSymbol)},0);
 }
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 
@@ -441,8 +446,10 @@ function disconnectControl(){
 
 let partialCloseBusy=false,manualActionBusy=false,liveLastPrice=null;
 let autoEnabled=true,lastDashboardData=null;
-let manualChartTargetSymbol='BTCUSDT',manualChartRenderedSymbol='',manualChartRenderedInterval='';
-let autoChartTargetSymbol='ETHUSDT',autoChartRenderedSymbol='',autoChartRenderedInterval='';
+let manualChartTargetSymbol='BTCUSDT';
+let autoChartTargetSymbol='ETHUSDT';
+const autoPaperChart=new ProjectEdgePaperChart('autoPaperChart','autoPaperCanvas');
+const manualPaperChart=new ProjectEdgePaperChart('manualPaperChart','manualPaperCanvas');
 
 async function triggerManual(action,partialPct=''){
   if(!getToken()){showTab('sistema');setControlStatus('Conectá GitHub para usar los controles.','y');return}
@@ -581,40 +588,52 @@ function connectLiveMarket(symbol){
   liveSocket.onerror=()=>document.getElementById('liveStatus').textContent='Error de conexión en vivo · reintentando...';
   liveSocket.onclose=()=>{document.getElementById('liveStatus').textContent='Reconectando precio en vivo...';liveReconnectTimer=setTimeout(()=>connectLiveMarket(liveSocketSymbol),3000)};
 }
-function mountTradingViewChart(chart,symbol,interval){
-  chart.innerHTML='';
-  const widget=document.createElement('div');widget.className='tradingview-widget-container';
-  const widgetBody=document.createElement('div');widgetBody.className='tradingview-widget-container__widget';widget.appendChild(widgetBody);
-  const attribution=document.createElement('div');attribution.className='tradingview-widget-copyright';attribution.innerHTML='<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">Gráfico de TradingView</a>';widget.appendChild(attribution);
-  const script=document.createElement('script');script.type='text/javascript';script.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';script.async=true;
-  script.textContent=JSON.stringify({autosize:true,symbol:'BINANCE:'+symbol,interval,timezone:'America/Argentina/Buenos_Aires',theme:'dark',backgroundColor:'rgba(7, 16, 27, 1)',style:'1',locale:'es',withdateranges:true,hide_side_toolbar:false,allow_symbol_change:false,save_image:false,calendar:false,support_host:'https://www.tradingview.com'});
-  widget.appendChild(script);chart.appendChild(widget);
+function targetPlanFor(source,symbol){
+  const paper=lastDashboardData?.paper||{},position=paper.position,pending=paper.pending_order;
+  const matches=record=>record&&String(record.source||'').toUpperCase()===source&&String(record.symbol||'').replace('/','').toUpperCase()===symbol;
+  const record=matches(position)?position:matches(pending)?pending:null;
+  if(!record)return null;
+  const entry=Number(record.entry_price??record.limit_price),finalTarget=Number(record.take_profit),stop=Number(record.stop_loss);
+  if(!Number.isFinite(entry)||!Number.isFinite(finalTarget)||!Number.isFinite(stop))return null;
+  const stored=Array.isArray(record.target_plan)?record.target_plan:[];
+  const fractions=[.5,.75,1];
+  const targets=fractions.map((fraction,index)=>{
+    const saved=stored.find(target=>String(target.name||'').toUpperCase()==='TP'+(index+1));
+    return{name:'TP'+(index+1),price:Number(saved?.price??entry+(finalTarget-entry)*fraction),hit_at:saved?.hit_at||null};
+  });
+  return{source,direction:String(record.direction||'LONG').toUpperCase(),entry,stop,targets,status:record.status==='PENDING'?'PENDING':'OPEN'};
 }
-function renderAutoTradingViewChart(symbol){
-  const chart=document.getElementById('autoTradingViewChart'),intervalEl=document.getElementById('autoChartInterval'),label=document.getElementById('autoChartSymbolLabel');
+function targetCards(record){
+  const entry=Number(record?.entry_price??record?.limit_price),finalTarget=Number(record?.take_profit),stored=Array.isArray(record?.target_plan)?record.target_plan:[];
+  if(!Number.isFinite(entry)||!Number.isFinite(finalTarget))return`<div class="mini"><span class="mut">TP3 final</span><b class="g">${fmt(finalTarget)}</b></div>`;
+  return[.5,.75,1].map((fraction,index)=>{const name='TP'+(index+1),saved=stored.find(target=>String(target.name||'').toUpperCase()===name),price=Number(saved?.price??entry+(finalTarget-entry)*fraction),hit=Boolean(saved?.hit_at);return`<div class="mini"><span class="mut">${name}${index<2?' · hito':' · cierre final'}</span><b class="${hit?'g':index===2?'g':'b'}">${hit?'✓ ':''}${fmt(price)}</b></div>`}).join('');
+}
+function renderTargetStatistics(source){
+  const key=source.toLowerCase(),stats=lastDashboardData?.paper?.target_statistics?.[key]||{},container=document.getElementById(key+'TargetStats');
+  if(!container)return;
+  const total=Number(stats.total||0),metric=name=>stats[name]||{count:0,rate:0};
+  const cell=(name,className)=>{const value=metric(name);return`<div class="${className}"><span class="mut">${name}</span><b>${Number(value.count||0)} · ${Number(value.rate||0).toLocaleString('es-AR',{maximumFractionDigits:1})}%</b></div>`};
+  container.innerHTML=`<div><span class="mut">${source} · operaciones nuevas medidas</span><b>${total}</b><small class="mut">TP1 es hito acumulativo, no ganancia final.</small></div>${cell('TP1','tp1')}${cell('TP2','tp2')}${cell('TP3','tp3')}${cell('SL','sl')}`;
+}
+function renderAutoPaperChart(symbol){
+  const intervalEl=document.getElementById('autoChartInterval'),label=document.getElementById('autoChartSymbolLabel');
   symbol=String(symbol||'ETHUSDT').replace('/','').toUpperCase();
   if(!['BTCUSDT','ETHUSDT'].includes(symbol))symbol='ETHUSDT';
   const interval=['5','15','30','60','240'].includes(intervalEl?.value)?intervalEl.value:'15';
   autoChartTargetSymbol=symbol;if(label)label.textContent=symbol.replace('USDT','/USDT');
-  updateAutoChartSignal();
-  if(!chart||!document.getElementById('view-operaciones').classList.contains('active'))return;
-  if(autoChartRenderedSymbol===symbol&&autoChartRenderedInterval===interval)return;
-
-  autoChartRenderedSymbol=symbol;autoChartRenderedInterval=interval;
-  mountTradingViewChart(chart,symbol,interval);updateAutoChartSignal();
+  updateAutoChartSignal();renderTargetStatistics('AUTO');
+  if(!document.getElementById('view-operaciones').classList.contains('active'))return;
+  autoPaperChart.render(symbol,interval,targetPlanFor('AUTO',symbol));
 }
-function renderManualTradingViewChart(symbol){
-  const chart=document.getElementById('manualTradingViewChart'),intervalEl=document.getElementById('manualChartInterval'),selector=document.getElementById('manualChartSymbol');
+function renderManualPaperChart(symbol){
+  const intervalEl=document.getElementById('manualChartInterval'),selector=document.getElementById('manualChartSymbol');
   symbol=String(symbol||selector?.value||'BTCUSDT').replace('/','').toUpperCase();
   if(!['BTCUSDT','ETHUSDT'].includes(symbol))symbol='BTCUSDT';
   const interval=['5','15','30','60','240'].includes(intervalEl?.value)?intervalEl.value:'15';
   manualChartTargetSymbol=symbol;if(selector)selector.value=symbol.replace('USDT','/USDT');
-  updateManualChartSignal();
-  if(!chart||!document.getElementById('view-operaciones').classList.contains('active'))return;
-  if(manualChartRenderedSymbol===symbol&&manualChartRenderedInterval===interval)return;
-
-  manualChartRenderedSymbol=symbol;manualChartRenderedInterval=interval;
-  mountTradingViewChart(chart,symbol,interval);updateManualChartSignal();
+  updateManualChartSignal();renderTargetStatistics('MANUAL');
+  if(!document.getElementById('view-operaciones').classList.contains('active'))return;
+  manualPaperChart.render(symbol,interval,targetPlanFor('MANUAL',symbol));
 }
 function updateAutoChartSignal(){
   const banner=document.getElementById('autoChartSignal');if(!banner)return;
@@ -815,10 +834,10 @@ async function loadData(){
     const pos=p.position,pending=p.pending_order;livePosition=pos||null;
     const liveTargetSymbol=pos?.symbol||pending?.symbol||(document.getElementById('manualSymbol')?.value||d.symbol||'ETH/USDT').replace('/','');connectLiveMarket(liveTargetSymbol);
     const autoPosition=pos&&String(pos.source||'').toUpperCase()==='AUTO',autoPending=pending&&String(pending.source||'').toUpperCase()==='AUTO';
-    const autoTargetSymbol=autoPosition?pos.symbol:autoPending?pending.symbol:(d.symbol||'ETHUSDT');renderAutoTradingViewChart(autoTargetSymbol);
+    const autoTargetSymbol=autoPosition?pos.symbol:autoPending?pending.symbol:(d.symbol||'ETHUSDT');renderAutoPaperChart(autoTargetSymbol);
     const manualPosition=pos&&String(pos.source||'').toUpperCase()==='MANUAL',manualPending=pending&&String(pending.source||'').toUpperCase()==='MANUAL',manualChartSelector=document.getElementById('manualChartSymbol');
     if(manualChartSelector&&(manualPosition||manualPending))manualChartSelector.value=String((manualPosition?pos.symbol:pending.symbol)||'BTCUSDT').replace('USDT','/USDT');
-    renderManualTradingViewChart(manualChartSelector?.value||'BTC/USDT');
+    renderManualPaperChart(manualChartSelector?.value||'BTC/USDT');
 
     const box=document.getElementById('positionBox'),pendingBox=document.getElementById('pendingOrderBox');
     if(pos){
@@ -837,7 +856,7 @@ async function loadData(){
         <div class="mini"><span class="mut">P&L realizado parciales</span><b class="${realized>=0?'g':'r'}">${realized>=0?'+':''}${fmt(realized)} USDT</b></div>
         <div class="mini"><span class="mut">Parciales realizados</span><b>${partialCount}</b></div>
         <div class="mini"><span class="mut">Stop Loss</span><b class="r">${fmt(pos.stop_loss)}</b></div>
-        <div class="mini"><span class="mut">Take Profit</span><b class="g">${fmt(pos.take_profit)}</b></div>
+        ${targetCards(pos)}
         <div class="mini"><span class="mut">Trailing</span><b class="${trailingEnabled?'g':''}">${trailingEnabled?'ACTIVO':'DESACTIVADO'}</b></div>
         <div class="mini"><span class="mut">Trailing %</span><b>${trailingPct==null?'—':Number(trailingPct).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'}</b></div>
         <div class="mini"><span class="mut">Ancla Trailing</span><b>${trailingAnchor==null?'—':fmt(trailingAnchor)}</b></div>`;
@@ -873,7 +892,7 @@ async function loadData(){
         <div class="mini"><span class="mut">Exposición</span><b>${fmt(pending.exposure)} USDT</b></div>
         <div class="mini"><span class="mut">Cantidad prevista</span><b>${Number(pending.quantity??0).toLocaleString('es-AR',{maximumFractionDigits:8})}</b></div>
         <div class="mini"><span class="mut">Stop Loss</span><b class="r">${fmt(pending.stop_loss)}</b></div>
-        <div class="mini"><span class="mut">Take Profit</span><b class="g">${fmt(pending.take_profit)}</b></div>`;
+        ${targetCards(pending)}`;
 
       document.getElementById('manualSymbol').value=(pending.symbol||'BTCUSDT').replace('USDT','/USDT');document.getElementById('manualLeverage').value='x'+(pending.leverage||1);document.getElementById('manualCapital').value=pending.capital??'';document.getElementById('manualOrderType').value='LIMIT';document.getElementById('manualLimitPrice').value=pending.limit_price??'';document.getElementById('manualSL').value=pending.stop_loss??'';document.getElementById('manualTP').value=pending.take_profit??'';
       ['manualSymbol','manualLeverage','manualCapital','manualOrderType','manualLimitPrice','manualSL','manualTP','manualTrailingPct'].forEach(id=>document.getElementById(id).disabled=true);
@@ -919,10 +938,10 @@ document.getElementById('autoEmergencyBtn').addEventListener('click',()=>trigger
 document.getElementById('manualSL').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualTP').addEventListener('input',e=>e.target.dataset.dirty='1');
 document.getElementById('manualOrderType').addEventListener('change',syncOrderTypeInput);
-document.getElementById('manualSymbol').addEventListener('change',e=>{const symbol=e.target.value.replace('/',''),chartSelector=document.getElementById('manualChartSymbol');if(chartSelector)chartSelector.value=e.target.value;if(!livePosition)connectLiveMarket(symbol);renderManualTradingViewChart(symbol)});
-document.getElementById('manualChartSymbol').addEventListener('change',e=>renderManualTradingViewChart(e.target.value));
-document.getElementById('manualChartInterval').addEventListener('change',()=>{manualChartRenderedInterval='';renderManualTradingViewChart(manualChartTargetSymbol)});
-document.getElementById('autoChartInterval').addEventListener('change',()=>{autoChartRenderedInterval='';renderAutoTradingViewChart(autoChartTargetSymbol)});
+document.getElementById('manualSymbol').addEventListener('change',e=>{const symbol=e.target.value.replace('/',''),chartSelector=document.getElementById('manualChartSymbol');if(chartSelector)chartSelector.value=e.target.value;if(!livePosition)connectLiveMarket(symbol);renderManualPaperChart(symbol)});
+document.getElementById('manualChartSymbol').addEventListener('change',e=>renderManualPaperChart(e.target.value));
+document.getElementById('manualChartInterval').addEventListener('change',()=>renderManualPaperChart(manualChartTargetSymbol));
+document.getElementById('autoChartInterval').addEventListener('change',()=>renderAutoPaperChart(autoChartTargetSymbol));
 document.getElementById('scannerSymbol').addEventListener('change',()=>{if(lastDashboardData)renderManualScanner(lastDashboardData)});
 
 if(getToken()){setControlEnabled(true);setControlStatus('CONTROL CONECTADO · PAPER','g')}else{setControlEnabled(false)}
