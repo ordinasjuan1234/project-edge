@@ -123,6 +123,15 @@ def test_trade_plan_shows_entry_stop_and_three_targets():
     assert "TP1 es hito acumulativo, no ganancia final." in HTML
 
 
+def test_dashboard_refreshes_state_automatically_without_browser_reload():
+    assert 'id="syncStatus"' in HTML
+    assert "const DASHBOARD_REFRESH_MS=10000" in HTML
+    assert "scheduleDashboardRefresh()" in HTML
+    assert "document.addEventListener('visibilitychange'" in HTML
+    assert "Sincronizado automáticamente:" in HTML
+    assert "setInterval(loadData,30000)" not in HTML
+
+
 def test_custom_chart_uses_only_public_binance_data():
     chart_js = (
         Path(__file__).resolve().parents[1] / "paper_chart.js"

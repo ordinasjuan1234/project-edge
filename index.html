@@ -79,6 +79,7 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
       <h1>Motor de Estructura Multitemporal</h1>
       <div class="mut">PROJECT EDGE · tablero conectado al motor PAPER</div>
       <div id="updated" class="mut" style="margin-top:4px">Última actualización: —</div>
+      <div id="syncStatus" class="mut" style="margin-top:4px">Sincronización automática: iniciando…</div>
     </div>
     <div id="topAutoMode" class="mode">● AUTO PAPER · CARGANDO</div>
   </div>
@@ -386,6 +387,8 @@ const DATA_URL='https://raw.githubusercontent.com/ordinasjuan1234/project-edge/m
 const GH_API='https://api.github.com/repos/ordinasjuan1234/project-edge';
 const MANUAL_WORKFLOW='paper_control.yml';
 const PARTIAL_BUTTON_IDS=['manualPartial25Btn','manualPartial50Btn','manualPartial75Btn','manualPartial100Btn'];
+const DASHBOARD_REFRESH_MS=10000;
+const HIDDEN_REFRESH_MS=60000;
 
 const fmt=n=>Number(n??0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 function getToken(){return sessionStorage.getItem('projectEdgeGhToken')||''}
@@ -806,6 +809,7 @@ async function loadData(){
     }
 
     document.getElementById('backendDot').className='dot';document.getElementById('backendText').textContent='Backend online';document.getElementById('sysBackend').textContent='ONLINE';document.getElementById('sysBackend').className='g';
+    document.getElementById('syncStatus').textContent='Sincronizado automáticamente: '+new Date().toLocaleTimeString('es-AR')+' · cada 10 s';
     const stamp=new Date(d.timestamp),localTime=stamp.toLocaleString('es-AR'),ageMin=Math.max(0,Math.round((Date.now()-stamp.getTime())/60000));
     document.getElementById('updated').textContent='Última actualización: '+localTime;document.getElementById('sysTimestamp').textContent=localTime;
     document.getElementById('autoAge').textContent=ageMin+' min';document.getElementById('autoFresh').textContent=ageMin<=12?'DATOS FRESCOS':'SIN ACTUALIZAR';document.getElementById('autoFresh').className=ageMin<=12?'g':'r';
@@ -915,7 +919,17 @@ async function loadData(){
     document.getElementById('tradesBody').innerHTML=trades.length?trades.slice().reverse().map(t=>`<tr><td>${(t.symbol||'').replace('USDT','/USDT')}</td><td class="${t.direction==='LONG'?'g':'r'}">${t.direction}</td><td>${fmt(t.entry_price)}</td><td>${fmt(t.exit_price)}</td><td class="${Number(t.pnl)>=0?'g':'r'}">${Number(t.pnl)>=0?'+':''}${fmt(t.pnl)}</td><td>${t.source==='MANUAL'?'MANUAL':t.source==='AUTO'?'AUTO':'SIN CLASIFICAR'}</td><td>${t.reason||'—'}${Number(t.partial_count||0)>0?' · '+t.partial_count+' parcial(es)':''}</td></tr>`).join(''):'<tr><td colspan="7" class="mut">Sin operaciones cerradas todavía.</td></tr>';
   }catch(e){
     document.getElementById('backendDot').className='dot off';document.getElementById('backendText').textContent='Sin datos del dashboard';document.getElementById('sysBackend').textContent='OFFLINE';document.getElementById('sysBackend').className='r';document.getElementById('message').innerHTML='<span class="error">No se pudo leer dashboard_data.json.</span>';
+    document.getElementById('syncStatus').textContent='Sincronización automática: reintentando…';
   }
+}
+
+let dashboardRefreshTimer=null;
+function scheduleDashboardRefresh(delay=DASHBOARD_REFRESH_MS){
+  clearTimeout(dashboardRefreshTimer);
+  dashboardRefreshTimer=setTimeout(async()=>{
+    if(!document.hidden)await loadData();
+    scheduleDashboardRefresh(document.hidden?HIDDEN_REFRESH_MS:DASHBOARD_REFRESH_MS);
+  },delay);
 }
 
 document.getElementById('refreshBtn').addEventListener('click',loadData);
@@ -943,9 +957,13 @@ document.getElementById('manualChartSymbol').addEventListener('change',e=>render
 document.getElementById('manualChartInterval').addEventListener('change',()=>renderManualPaperChart(manualChartTargetSymbol));
 document.getElementById('autoChartInterval').addEventListener('change',()=>renderAutoPaperChart(autoChartTargetSymbol));
 document.getElementById('scannerSymbol').addEventListener('change',()=>{if(lastDashboardData)renderManualScanner(lastDashboardData)});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)scheduleDashboardRefresh(HIDDEN_REFRESH_MS);
+  else{loadData();scheduleDashboardRefresh()}
+});
 
 if(getToken()){setControlEnabled(true);setControlStatus('CONTROL CONECTADO · PAPER','g')}else{setControlEnabled(false)}
-loadData();setInterval(loadData,30000);
+loadData();scheduleDashboardRefresh();
 </script>
 </body>
 </html>
