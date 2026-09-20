@@ -12,6 +12,7 @@ Genera dashboard_data.json con:
 - orden LIMIT pendiente
 - estado AUTO activo / pausado / emergencia
 - rendimiento MANUAL / AUTO
+- resultados acumulativos TP1 / TP2 / TP3 / SL por origen
 - historial reciente
 
 El scanner MANUAL NO ejecuta órdenes.
@@ -199,6 +200,60 @@ def calculate_performance(
         "profit_factor": profit_factor,
         "return_pct": return_pct,
         "max_drawdown_pct": max_drawdown_pct,
+    }
+
+
+def calculate_target_statistics(
+    trades,
+    source,
+    started_at=None,
+):
+    """Cuenta solo operaciones nuevas que guardan la escalera verificable."""
+    source = str(source).upper()
+    selected = [
+        trade
+        for trade in trades
+        if str(trade.get("source", "UNCLASSIFIED")).upper() == source
+        and isinstance(trade.get("target_plan"), list)
+        and trade.get("target_plan")
+        and (
+            not started_at
+            or str(trade.get("closed_at", "")) >= str(started_at)
+        )
+    ]
+    total = len(selected)
+
+    def metric(name):
+        count = sum(
+            any(
+                target.get("name") == name and target.get("hit_at")
+                for target in trade.get("target_plan", [])
+            )
+            for trade in selected
+        )
+        return {
+            "count": count,
+            "rate": count / total * 100.0 if total else 0.0,
+        }
+
+    stopped = sum(
+        str(trade.get("reason", "")).upper()
+        in {"STOP_LOSS", "TRAILING_STOP"}
+        for trade in selected
+    )
+
+    return {
+        "total": total,
+        "TP1": metric("TP1"),
+        "TP2": metric("TP2"),
+        "TP3": metric("TP3"),
+        "SL": {
+            "count": stopped,
+            "rate": stopped / total * 100.0 if total else 0.0,
+        },
+        "definition": (
+            "TP1 es un hito acumulativo; no equivale al resultado neto final."
+        ),
     }
 
 
@@ -890,6 +945,20 @@ def main():
         )
     )
 
+    target_statistics = {
+        "manual": calculate_target_statistics(
+            closed_trades,
+            "MANUAL",
+        ),
+        "auto": calculate_target_statistics(
+            closed_trades,
+            "AUTO",
+            started_at=state.data.get(
+                "auto_demo_started_at"
+            ),
+        ),
+    }
+
     position_source = str(
         (position or {}).get("source", "UNCLASSIFIED")
     ).upper()
@@ -1026,6 +1095,7 @@ def main():
             "auto_performance": (
                 auto_performance
             ),
+            "target_statistics": target_statistics,
             "closed_trades_count": len(closed_trades),
             "closed_trades": (
                 closed_trades[-10:]

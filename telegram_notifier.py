@@ -205,6 +205,21 @@ def _message_footer(record: dict[str, Any]) -> list[str]:
     return ["", *lines, "ℹ️ PAPER / DEMO · sin orden real"]
 
 
+def _target_plan_lines(record: dict[str, Any]) -> list[str]:
+    plan = record.get("target_plan")
+    if not isinstance(plan, list) or not plan:
+        return [
+            "TP3 FINAL: "
+            f"{_format_number(record.get('take_profit'))} USDT"
+        ]
+
+    return [
+        f"{target.get('name', 'TP')}: "
+        f"{_format_number(target.get('price'))} USDT"
+        for target in plan
+    ]
+
+
 def _direction_label(
     direction: Any,
 ) -> str:
@@ -372,7 +387,7 @@ def _format_entry_message(position: dict[str, Any], balance: Any, default: str) 
         f"Tipo: {position.get('order_type', 'MARKET')}",
         f"Entrada: {_format_number(position.get('entry_price'))} USDT",
         f"STOP LOSS: {_format_number(position.get('stop_loss'))} USDT",
-        f"TAKE PROFIT: {_format_number(position.get('take_profit'))} USDT",
+        *_target_plan_lines(position),
         "",
         *_amount_lines(position, source),
         *_cost_lines(position, closed=False),
@@ -395,6 +410,30 @@ def format_manual_entry_message(
 ) -> str:
     """Construye el aviso de una entrada MANUAL PAPER."""
     return _format_entry_message(position, balance, "MANUAL")
+
+
+def format_target_hits_message(
+    position: dict[str, Any],
+    targets: list[dict[str, Any]],
+) -> str:
+    """Informa hitos TP alcanzados sin confundirlos con cierres parciales."""
+    source = _source(position, "UNCLASSIFIED")
+    reached = " · ".join(
+        f"{target.get('name', 'TP')} {_format_number(target.get('price'))}"
+        for target in targets
+    )
+    return "\n".join(
+        [
+            f"🎯 PROJECT EDGE · OBJETIVO ALCANZADO · {source} PAPER",
+            "",
+            f"Activo: {_symbol_label(position.get('symbol'))}",
+            f"Dirección: {_direction_label(position.get('direction'))}",
+            f"Objetivo(s): {reached} USDT",
+            "TP1 y TP2 son hitos de seguimiento; no cierran una parte automáticamente.",
+            "TP3 conserva el cierre final configurado.",
+            *_message_footer(position),
+        ]
+    )
 
 
 def _format_exit_message(trade: dict[str, Any], default: str) -> str:
@@ -744,6 +783,17 @@ def notify_manual_entry(
         return False
     return send_telegram_message(
         format_manual_entry_message(position, balance=balance)
+    )
+
+
+def notify_target_hits(
+    position: dict[str, Any],
+    targets: list[dict[str, Any]],
+) -> bool:
+    if not targets:
+        return False
+    return send_telegram_message(
+        format_target_hits_message(position, targets)
     )
 
 

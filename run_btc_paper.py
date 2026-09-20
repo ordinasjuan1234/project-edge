@@ -49,6 +49,7 @@ from telegram_notifier import (
     notify_auto_entry,
     notify_manual_entry,
     notify_position_exit,
+    notify_target_hits,
 )
 from trading_mode import require_paper_mode
 
@@ -836,6 +837,23 @@ def manage_open_position(
         f"{state.balance_for_source(position.get('source', 'UNCLASSIFIED')):.2f} "
         "USDT"
     )
+
+    newly_reached = state.mark_reached_targets(
+        current_price
+    )
+    if newly_reached:
+        position = state.position
+        notify_target_hits(
+            position,
+            newly_reached,
+        )
+        print(
+            "Objetivos alcanzados: "
+            + ", ".join(
+                target["name"]
+                for target in newly_reached
+            )
+        )
 
     if direction == "LONG":
         if current_price <= stop_loss:
