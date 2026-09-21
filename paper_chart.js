@@ -21,6 +21,16 @@
     tp3: '#a979ff',
     stop: '#ff4f62',
     current: '#4dd9ff',
+    ema20: '#4dd9ff',
+    ema50: '#ffb45c',
+    volumeAverage: '#d7c96f',
+  };
+
+  const DEFAULT_OPTIONS = {
+    ema20: true,
+    ema50: true,
+    volume: true,
+    plan: true,
   };
 
   function number(value) {
@@ -38,6 +48,30 @@
     });
   }
 
+  function ema(values, period) {
+    const result = new Array(values.length).fill(null);
+    if (values.length < period) return result;
+    let seed = 0;
+    for (let index = 0; index < period; index += 1) seed += values[index];
+    result[period - 1] = seed / period;
+    const multiplier = 2 / (period + 1);
+    for (let index = period; index < values.length; index += 1) {
+      result[index] = (values[index] - result[index - 1]) * multiplier + result[index - 1];
+    }
+    return result;
+  }
+
+  function sma(values, period) {
+    const result = new Array(values.length).fill(null);
+    let total = 0;
+    for (let index = 0; index < values.length; index += 1) {
+      total += values[index];
+      if (index >= period) total -= values[index - period];
+      if (index >= period - 1) result[index] = total / period;
+    }
+    return result;
+  }
+
   class PaperTradeChart {
     constructor(containerId, canvasId) {
       this.container = document.getElementById(containerId);
@@ -48,6 +82,7 @@
       this.interval = '';
       this.candles = [];
       this.plan = null;
+      this.options = { ...DEFAULT_OPTIONS };
       this.socket = null;
       this.requestId = 0;
       this.reconnectTimer = null;
@@ -62,6 +97,15 @@
     setPlan(plan) {
       this.plan = plan || null;
       this.draw();
+    }
+
+    setOptions(options) {
+      this.options = { ...this.options, ...(options || {}) };
+      this.draw();
+    }
+
+    getOptions() {
+      return { ...this.options };
     }
 
     async render(symbol, interval, plan) {
@@ -99,6 +143,7 @@
           high: Number(row[2]),
           low: Number(row[3]),
           close: Number(row[4]),
+          volume: Number(row[5]),
         })).filter(candle => Object.values(candle).every(Number.isFinite));
         this.setStatus('● EN VIVO · Binance · ' + symbol.replace('USDT', '/USDT') + ' · ' + interval);
         this.connectSocket();
@@ -139,6 +184,7 @@
           high: Number(row.h),
           low: Number(row.l),
           close: Number(row.c),
+          volume: Number(row.v),
         };
         if (!Object.values(candle).every(Number.isFinite)) return;
         const last = this.candles[this.candles.length - 1];
@@ -188,9 +234,13 @@
         return;
       }
 
+      const volumeHeight = this.options.volume
+        ? Math.max(64, Math.min(105, height * 0.18))
+        : 0;
+      const volumeGap = this.options.volume ? 12 : 0;
       const padding = { top: 22, right: 92, bottom: 32, left: 12 };
       const plotWidth = width - padding.left - padding.right;
-      const plotHeight = height - padding.top - padding.bottom;
+      const plotHeight = height - padding.top - padding.bottom - volumeHeight - volumeGap;
       const planPrices = this.plan
         ? [this.plan.entry, this.plan.stop, ...(this.plan.targets || []).map(target => target.price)]
             .map(number).filter(value => value !== null)
@@ -219,24 +269,40 @@
         ctx.fillText(formatPrice(price), width - padding.right + 8, lineY + 3);
       }
 
-      this.drawPlan(ctx, y, padding, plotWidth, width);
+      if (this.options.plan) this.drawPlan(ctx, y, padding, plotWidth, width);
 
       const slot = plotWidth / this.candles.length;
       const candleWidth = Math.max(2, Math.min(8, slot * 0.62));
+      const closes = this.candles.map(candle => candle.close);
+      const x = index => padding.left + slot * index + slot / 2;
+      if (this.options.ema20) this.drawLine(ctx, ema(closes, 20), x, y, COLORS.ema20, 1.6);
+      if (this.options.ema50) this.drawLine(ctx, ema(closes, 50), x, y, COLORS.ema50, 1.6);
       this.candles.forEach((candle, index) => {
-        const x = padding.left + slot * index + slot / 2;
+        const candleX = x(index);
         const rising = candle.close >= candle.open;
         const color = rising ? COLORS.up : COLORS.down;
         ctx.strokeStyle = color;
         ctx.beginPath();
-        ctx.moveTo(x, y(candle.high));
-        ctx.lineTo(x, y(candle.low));
+        ctx.moveTo(candleX, y(candle.high));
+        ctx.lineTo(candleX, y(candle.low));
         ctx.stroke();
         ctx.fillStyle = color;
         const top = y(Math.max(candle.open, candle.close));
         const bottom = y(Math.min(candle.open, candle.close));
-        ctx.fillRect(x - candleWidth / 2, top, candleWidth, Math.max(1.5, bottom - top));
+        ctx.fillRect(candleX - candleWidth / 2, top, candleWidth, Math.max(1.5, bottom - top));
       });
+
+      if (this.options.volume) {
+        this.drawVolume(
+          ctx,
+          x,
+          candleWidth,
+          padding.top + plotHeight + volumeGap,
+          volumeHeight,
+          padding,
+          plotWidth,
+        );
+      }
 
       const latest = this.candles[this.candles.length - 1];
       const currentY = y(latest.close);
@@ -256,6 +322,66 @@
       ctx.fillText(firstTime.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }), padding.left, height - 10);
       ctx.textAlign = 'right';
       ctx.fillText(lastTime.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }), padding.left + plotWidth, height - 10);
+
+      this.drawLegend(ctx, padding.left + plotWidth);
+    }
+
+    drawLine(ctx, values, x, y, color, width) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      let started = false;
+      values.forEach((value, index) => {
+        if (!Number.isFinite(value)) return;
+        if (!started) {
+          ctx.moveTo(x(index), y(value));
+          started = true;
+        } else ctx.lineTo(x(index), y(value));
+      });
+      if (started) ctx.stroke();
+      ctx.restore();
+    }
+
+    drawVolume(ctx, x, candleWidth, top, height, padding, plotWidth) {
+      const volumes = this.candles.map(candle => Math.max(0, number(candle.volume) || 0));
+      const average = sma(volumes, 20);
+      const maxVolume = Math.max(...volumes, ...average.filter(Number.isFinite), 1);
+      const baseline = top + height;
+      ctx.save();
+      ctx.strokeStyle = COLORS.grid;
+      ctx.beginPath();
+      ctx.moveTo(padding.left, top);
+      ctx.lineTo(padding.left + plotWidth, top);
+      ctx.stroke();
+      this.candles.forEach((candle, index) => {
+        const barHeight = volumes[index] / maxVolume * Math.max(1, height - 5);
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = candle.close >= candle.open ? COLORS.up : COLORS.down;
+        ctx.fillRect(x(index) - candleWidth / 2, baseline - barHeight, candleWidth, barHeight);
+      });
+      ctx.globalAlpha = 1;
+      const volumeY = value => baseline - value / maxVolume * Math.max(1, height - 5);
+      this.drawLine(ctx, average, x, volumeY, COLORS.volumeAverage, 1.2);
+      ctx.restore();
+    }
+
+    drawLegend(ctx, right) {
+      const labels = [];
+      if (this.options.ema20) labels.push({ text: 'EMA20', color: COLORS.ema20 });
+      if (this.options.ema50) labels.push({ text: 'EMA50', color: COLORS.ema50 });
+      if (this.options.volume) labels.push({ text: 'VOL · MA20', color: COLORS.volumeAverage });
+      if (!labels.length) return;
+      ctx.save();
+      ctx.font = 'bold 9px Arial';
+      ctx.textAlign = 'right';
+      let offset = 0;
+      labels.slice().reverse().forEach(label => {
+        ctx.fillStyle = label.color;
+        ctx.fillText(label.text, right - offset, 13);
+        offset += ctx.measureText(label.text).width + 12;
+      });
+      ctx.restore();
     }
 
     drawPlan(ctx, y, padding, plotWidth, width) {

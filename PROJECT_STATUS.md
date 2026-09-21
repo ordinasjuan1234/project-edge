@@ -223,6 +223,27 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - Verificacion local: 17 pruebas especificas del dashboard superadas, sintaxis
   JavaScript validada, demostracion PAPER completada y rechazo REAL confirmado.
 
+### Hito visual: ayudas tecnicas activables en los graficos
+
+- Los graficos AUTO y MANUAL incorporan botones independientes para mostrar u
+  ocultar EMA 20, EMA 50, volumen con media de 20 velas y el mapa
+  Entrada/SL/TP1/TP2/TP3.
+- Todas las ayudas aparecen activas por defecto. Cada navegador recuerda por
+  separado la seleccion del grafico AUTO y del grafico MANUAL mediante
+  almacenamiento local; cambiarla no modifica el motor ni el estado PAPER.
+- Las EMA se calculan sobre los cierres de las 120 velas publicas ya cargadas.
+  El volumen y su media usan el volumen incluido en las mismas velas y en el
+  WebSocket publico de Binance, sin agregar claves ni consultas privadas.
+- El volumen ocupa una franja inferior separada para no deformar la escala de
+  precios. Los botones se adaptan en varias filas en pantallas angostas.
+- La mejora es exclusivamente visual. No crea señales, no confirma entradas,
+  no altera riesgo ni estrategia, y REAL continua bloqueado.
+- Verificacion local: 19 pruebas especificas del dashboard ejecutadas sin
+  pytest, sintaxis de `paper_chart.js` y del script de `index.html` validada,
+  demostracion PAPER completada y bloqueo REAL confirmado. El paquete pytest
+  no estaba instalado en el entorno local, por lo que la suite completa queda
+  a cargo del workflow de GitHub antes de integrar.
+
 ## Proximo hito
 
 Mantener v3 en observacion PAPER con parametros congelados y comprobar en el

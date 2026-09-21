@@ -143,3 +143,29 @@ def test_custom_chart_uses_only_public_binance_data():
     assert "tp2:" in chart_js
     assert "tp3:" in chart_js
     assert "SL" in chart_js
+
+
+def test_chart_indicators_can_be_toggled_independently():
+    assert 'id="autoChartIndicators"' in HTML
+    assert 'id="manualChartIndicators"' in HTML
+    for indicator in ("ema20", "ema50", "volume", "plan"):
+        assert HTML.count(
+            f'class="chart-indicator-toggle" data-indicator="{indicator}"'
+        ) == 2
+    assert "bindChartIndicatorButtons('auto',autoPaperChart)" in HTML
+    assert "bindChartIndicatorButtons('manual',manualPaperChart)" in HTML
+    assert "project-edge-chart-options-" in HTML
+    assert "aria-pressed" in HTML
+
+
+def test_custom_chart_draws_ema_and_volume_from_public_klines():
+    chart_js = (
+        Path(__file__).resolve().parents[1] / "paper_chart.js"
+    ).read_text(encoding="utf-8")
+    assert "volume: Number(row[5])" in chart_js
+    assert "volume: Number(row.v)" in chart_js
+    assert "ema(closes, 20)" in chart_js
+    assert "ema(closes, 50)" in chart_js
+    assert "sma(volumes, 20)" in chart_js
+    assert "drawVolume(" in chart_js
+    assert "if (this.options.plan) this.drawPlan" in chart_js
