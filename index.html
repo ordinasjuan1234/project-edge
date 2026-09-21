@@ -44,6 +44,7 @@ h1{margin:0;font-size:23px}.mut{color:var(--m);font-size:12px}
 .manual-chart-frame{position:relative;height:560px;margin-top:8px;overflow:hidden;border:1px solid var(--l);border-radius:10px;background:#07101b}
 .manual-chart-frame canvas{display:block;width:100%;height:100%}
 .paper-chart-status{position:absolute;left:10px;top:9px;z-index:2;padding:5px 8px;border:1px solid #28506a;border-radius:6px;background:rgba(6,16,26,.86);color:var(--c);font-size:10px;pointer-events:none}.paper-chart-status.error{border-color:#7d3a42;color:var(--r)}
+.chart-indicators{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.chart-indicator-toggle{padding:7px 10px;border:1px solid #2b435a;border-radius:7px;background:#08131f;color:#7f94a8;font-size:10px;font-weight:800;cursor:pointer}.chart-indicator-toggle.active{border-color:#3f789d;background:#0d2940;color:#d8efff}.chart-indicator-toggle[data-indicator="ema20"].active{border-color:#4dd9ff;color:#4dd9ff}.chart-indicator-toggle[data-indicator="ema50"].active{border-color:#ffb45c;color:#ffb45c}.chart-indicator-toggle[data-indicator="volume"].active{border-color:#d7c96f;color:#d7c96f}.chart-indicator-toggle:focus-visible{outline:2px solid var(--c);outline-offset:2px}
 .target-score{display:grid;grid-template-columns:1.2fr repeat(4,1fr);gap:7px;margin-top:8px}.target-score>div{padding:8px 9px;border:1px solid var(--l);border-radius:7px;background:#08131f}.target-score b{display:block;margin-top:4px}.target-score .tp1 b{color:var(--g)}.target-score .tp2 b{color:#c5e85b}.target-score .tp3 b{color:#b68cff}.target-score .sl b{color:var(--r)}
 .chart-signal{display:flex;align-items:center;gap:12px;width:100%;margin-top:8px;padding:10px 12px;border:1px solid var(--l);border-radius:9px;background:#08131f;pointer-events:none}
 .chart-signal strong{font-size:13px;letter-spacing:.3px;white-space:nowrap}.chart-signal span{flex:1;color:#c2d0dd;font-size:11px;line-height:1.35}
@@ -179,6 +180,12 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">Temporalidad visual</span><select id="autoChartInterval"><option value="5">5 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="240">4 horas</option></select></div>
         </div>
         <div id="autoChartSignal" class="chart-signal wait" aria-live="polite"><strong>● AUTO · ESPERANDO DATOS</strong><span>La lectura aparecerá aquí sin cubrir las velas.</span></div>
+        <div id="autoChartIndicators" class="chart-indicators" aria-label="Ayudas visuales del gráfico AUTO">
+          <button type="button" class="chart-indicator-toggle" data-indicator="ema20">EMA 20</button>
+          <button type="button" class="chart-indicator-toggle" data-indicator="ema50">EMA 50</button>
+          <button type="button" class="chart-indicator-toggle" data-indicator="volume">VOLUMEN + MA20</button>
+          <button type="button" class="chart-indicator-toggle" data-indicator="plan">ENTRADA / SL / TP</button>
+        </div>
         <div id="autoTargetStats" class="target-score" aria-label="Estadísticas de objetivos AUTO"></div>
         <div id="autoPaperChart" class="manual-chart-frame">
           <canvas id="autoPaperCanvas" aria-label="Velas AUTO con Entrada, Stop Loss y tres Take Profit"></canvas>
@@ -219,6 +226,12 @@ input,select{width:100%;margin-top:7px;padding:9px;background:#07111d;color:#edf
           <div class="mini"><span class="mut">Temporalidad</span><select id="manualChartInterval"><option value="5">5 minutos</option><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="60">1 hora</option><option value="240">4 horas</option></select></div>
         </div>
         <div id="manualChartSignal" class="chart-signal wait" aria-live="polite"><strong>● MANUAL · ESPERANDO DATOS</strong><span>La lectura aparecerá aquí sin cubrir las velas.</span></div>
+        <div id="manualChartIndicators" class="chart-indicators" aria-label="Ayudas visuales del gráfico MANUAL">
+          <button type="button" class="chart-indicator-toggle" data-indicator="ema20">EMA 20</button>
+          <button type="button" class="chart-indicator-toggle" data-indicator="ema50">EMA 50</button>
+          <button type="button" class="chart-indicator-toggle" data-indicator="volume">VOLUMEN + MA20</button>
+          <button type="button" class="chart-indicator-toggle" data-indicator="plan">ENTRADA / SL / TP</button>
+        </div>
         <div id="manualTargetStats" class="target-score" aria-label="Estadísticas de objetivos MANUAL"></div>
         <div id="manualPaperChart" class="manual-chart-frame">
           <canvas id="manualPaperCanvas" aria-label="Velas MANUAL con Entrada, Stop Loss y tres Take Profit"></canvas>
@@ -453,6 +466,29 @@ let manualChartTargetSymbol='BTCUSDT';
 let autoChartTargetSymbol='ETHUSDT';
 const autoPaperChart=new ProjectEdgePaperChart('autoPaperChart','autoPaperCanvas');
 const manualPaperChart=new ProjectEdgePaperChart('manualPaperChart','manualPaperCanvas');
+const CHART_OPTION_DEFAULTS={ema20:true,ema50:true,volume:true,plan:true};
+
+function bindChartIndicatorButtons(prefix,chart){
+  const container=document.getElementById(prefix+'ChartIndicators');if(!container)return;
+  const storageKey='project-edge-chart-options-'+prefix;
+  let saved={};
+  try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{}}catch(error){saved={}}
+  const options={...CHART_OPTION_DEFAULTS,...saved};chart.setOptions(options);
+  const syncButtons=()=>container.querySelectorAll('[data-indicator]').forEach(button=>{
+    const enabled=chart.getOptions()[button.dataset.indicator]!==false;
+    button.classList.toggle('active',enabled);button.setAttribute('aria-pressed',String(enabled));
+  });
+  container.addEventListener('click',event=>{
+    const button=event.target.closest('[data-indicator]');if(!button)return;
+    const key=button.dataset.indicator,current=chart.getOptions();
+    chart.setOptions({[key]:current[key]===false});
+    try{localStorage.setItem(storageKey,JSON.stringify(chart.getOptions()))}catch(error){}
+    syncButtons();
+  });
+  syncButtons();
+}
+bindChartIndicatorButtons('auto',autoPaperChart);
+bindChartIndicatorButtons('manual',manualPaperChart);
 
 async function triggerManual(action,partialPct=''){
   if(!getToken()){showTab('sistema');setControlStatus('Conectá GitHub para usar los controles.','y');return}
