@@ -208,6 +208,21 @@ PROJECT EDGE opera exclusivamente en PAPER. El modo REAL esta bloqueado por `tra
 - Verificacion local: 234 tests superados, demostracion PAPER completada,
   sintaxis Python/JavaScript validada y rechazo directo de REAL confirmado.
 
+### Hito visual: sincronizacion automatica del dashboard
+
+- El dashboard vuelve a consultar el estado PAPER cada 10 segundos mientras
+  la pestaña esta visible, sin necesitar F5 ni recargar el grafico completo.
+- Al regresar a una pestaña que estaba oculta se realiza una lectura inmediata;
+  mientras permanece oculta la frecuencia baja para evitar consultas inutiles.
+- El encabezado muestra la hora de la ultima sincronizacion del navegador y
+  avisa si esta reintentando por una falla temporal de lectura.
+- Los precios y velas continuan llegando por WebSocket publico de Binance; esta
+  mejora solo sincroniza posicion, LIMIT, SL, TP, contadores y controles PAPER.
+- No se modificaron estrategia, riesgo, ejecucion, estado operativo ni bloqueo
+  REAL.
+- Verificacion local: 17 pruebas especificas del dashboard superadas, sintaxis
+  JavaScript validada, demostracion PAPER completada y rechazo REAL confirmado.
+
 ## Proximo hito
 
 Mantener v3 en observacion PAPER con parametros congelados y comprobar en el
