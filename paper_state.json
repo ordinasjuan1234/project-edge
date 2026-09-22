@@ -2,56 +2,7 @@
   "version": 5,
   "initial_balance": 10000.0,
   "balance": 9943.238553976656,
-  "position": {
-    "trade_id": "8c482af3973548eebcd31c60565ae579",
-    "symbol": "ETHUSDT",
-    "direction": "LONG",
-    "signal_entry_price": 2778.32,
-    "entry_price": 2778.875664,
-    "quantity": 0.18036813675072189,
-    "initial_quantity": 0.18036813675072189,
-    "stop_loss": 2757.198806806677,
-    "take_profit": 2826.6717097899846,
-    "target_plan": [
-      {
-        "name": "TP1",
-        "price": 2802.7736868949924,
-        "fraction_to_final": 0.5,
-        "hit_at": null
-      },
-      {
-        "name": "TP2",
-        "price": 2814.7226983424885,
-        "fraction_to_final": 0.75,
-        "hit_at": null
-      },
-      {
-        "name": "TP3",
-        "price": 2826.6717097899846,
-        "fraction_to_final": 1.0,
-        "hit_at": null
-      }
-    ],
-    "source": "AUTO",
-    "fee_rate": 0.001,
-    "slippage_rate": 0.0002,
-    "realized_pnl": 0.0,
-    "realized_gross_pnl": 0.0,
-    "realized_fees": 0.0,
-    "partial_closes": [],
-    "opened_at": "2026-09-21T21:35:50.817375+00:00",
-    "trailing_enabled": false,
-    "trailing_pct": null,
-    "trailing_anchor": null,
-    "order_type": "MARKET",
-    "strategy": "PROJECT_EDGE_V3",
-    "risk_pct": 0.005,
-    "risk_budget": 5.012279226305132,
-    "estimated_risk": 5.012279226305132,
-    "estimated_cost": 1.2026889640734377,
-    "estimated_net_reward_risk": 1.5000000000000002,
-    "leverage": 1
-  },
+  "position": null,
   "closed_trades": [
     {
       "symbol": "BTCUSDT",
@@ -644,6 +595,62 @@
       "estimated_risk": 4.975017860515699,
       "estimated_cost": 1.083591634756045,
       "estimated_net_reward_risk": 1.5
+    },
+    {
+      "trade_id": "8c482af3973548eebcd31c60565ae579",
+      "symbol": "ETHUSDT",
+      "direction": "LONG",
+      "entry_price": 2778.875664,
+      "signal_entry_price": 2778.32,
+      "raw_exit_price": 2757.198806806677,
+      "exit_price": 2756.647367045316,
+      "quantity": 0.18036813675072189,
+      "final_leg_quantity": 0.18036813675072189,
+      "stop_loss": 2757.198806806677,
+      "take_profit": 2826.6717097899846,
+      "target_plan": [
+        {
+          "name": "TP1",
+          "price": 2802.7736868949924,
+          "fraction_to_final": 0.5,
+          "hit_at": null
+        },
+        {
+          "name": "TP2",
+          "price": 2814.7226983424885,
+          "fraction_to_final": 0.75,
+          "hit_at": null
+        },
+        {
+          "name": "TP3",
+          "price": 2826.6717097899846,
+          "fraction_to_final": 1.0,
+          "hit_at": null
+        }
+      ],
+      "source": "AUTO",
+      "partial_closes": [],
+      "partial_count": 0,
+      "realized_pnl_before_final": 0.0,
+      "final_leg_pnl": -5.007708479908466,
+      "gross_pnl": -4.009276504858113,
+      "fee_rate": 0.001,
+      "slippage_rate": 0.0002,
+      "fees": 0.9984319750503521,
+      "pnl": -5.007708479908466,
+      "reason": "STOP_LOSS",
+      "balance": 997.448136781118,
+      "is_final": true,
+      "closed_at": "2026-09-22T01:01:20.758399+00:00",
+      "opened_at": "2026-09-21T21:35:50.817375+00:00",
+      "leverage": 1,
+      "order_type": "MARKET",
+      "strategy": "PROJECT_EDGE_V3",
+      "risk_pct": 0.005,
+      "risk_budget": 5.012279226305132,
+      "estimated_risk": 5.012279226305132,
+      "estimated_cost": 1.2026889640734377,
+      "estimated_net_reward_risk": 1.5000000000000002
     }
   ],
   "pending_order": null,
@@ -652,5 +659,5 @@
   "auto_updated_at": "2026-08-23T23:53:36.472718+00:00",
   "auto_demo_initial_balance": 1000.0,
   "auto_demo_started_at": "2026-08-29T14:31:02.355472+00:00",
-  "auto_demo_balance": 1002.4558452610265
+  "auto_demo_balance": 997.448136781118
 }
