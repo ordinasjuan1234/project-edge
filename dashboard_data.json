@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-09T04:01:26+00:00",
+  "timestamp": "2026-10-09T04:05:58+00:00",
   "symbol": "ETHUSDT",
-  "price": 2494.6,
+  "price": 2491.52,
   "timeframes": {
     "4H": "BEARISH",
     "1H": "BEARISH",
@@ -48,12 +48,12 @@
     },
     "5M": {
       "type": "BULLISH",
-      "lower": 2493.01,
-      "upper": 2493.68,
-      "mid": 2493.3450000000003,
+      "lower": 2489.22,
+      "upper": 2490.04,
+      "mid": 2489.63,
       "state": "ACTIVE",
-      "distance_pct": 0.0003687966006574492,
-      "created_index": 499
+      "distance_pct": 0.0005940148985358408,
+      "created_index": 494
     }
   },
   "alignment": "PARTIAL_ALIGNMENT",
@@ -81,10 +81,10 @@
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 82440.99,
+      "price": 82420.72,
       "timeframes": {
         "4H": "BEARISH",
-        "1H": "BEARISH",
+        "1H": "TRANSITION",
         "30M": "BEARISH",
         "15M": "BULLISH",
         "5M": "BULLISH"
@@ -93,19 +93,19 @@
         "4H": {
           "type": "BULLISH",
           "lower": 81948.03,
-          "upper": 82427.72,
-          "mid": 82187.875,
+          "upper": 82426.74,
+          "mid": 82187.38500000001,
           "state": "ACTIVE",
-          "distance_pct": 0.0001609636177343828,
+          "distance_pct": 1.1403936153338011e-05,
           "created_index": 499
         },
         "1H": {
           "type": "BULLISH",
           "lower": 82356.2,
-          "upper": 82427.72,
-          "mid": 82391.95999999999,
+          "upper": 82420.73,
+          "mid": 82388.465,
           "state": "ACTIVE",
-          "distance_pct": 0.0001609636177343828,
+          "distance_pct": 0.0,
           "created_index": 499
         },
         "30M": {
@@ -127,21 +127,21 @@
           "created_index": 448
         },
         "5M": {
-          "type": "BEARISH",
-          "lower": 82408.01,
-          "upper": 82496.0,
-          "mid": 82452.005,
+          "type": "BULLISH",
+          "lower": 82283.6,
+          "upper": 82354.0,
+          "mid": 82318.8,
           "state": "PARTIAL",
-          "distance_pct": 0.0,
-          "created_index": 345
+          "distance_pct": 0.0008095051826773797,
+          "created_index": 495
         }
       },
-      "alignment": "PULLBACK_OR_WAIT",
+      "alignment": "PARTIAL_ALIGNMENT",
       "decision": {
-        "action": "WATCH_SHORT",
-        "direction": "SHORT",
+        "action": "WAIT",
+        "direction": null,
         "can_execute": false,
-        "reason": "Faltan condiciones: ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
+        "reason": "4H y 1H todavia no comparten una tendencia definida.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -149,21 +149,17 @@
       },
       "readiness": {
         "status": "NOT_READY",
-        "bias": "SHORT",
-        "message": "Faltan condiciones: ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
+        "bias": null,
+        "message": "4H y 1H todavia no comparten una tendencia definida.",
         "missing_conditions": [
-          "ema_1h",
-          "adx_1h",
-          "lower_timeframes_no_conflict",
-          "pullback_15m",
-          "trigger_5m"
+          "macro_4h_1h"
         ]
       },
       "scanner_signal": "WAIT"
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2494.6,
+      "price": 2491.52,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -210,12 +206,12 @@
         },
         "5M": {
           "type": "BULLISH",
-          "lower": 2493.01,
-          "upper": 2493.68,
-          "mid": 2493.3450000000003,
+          "lower": 2489.22,
+          "upper": 2490.04,
+          "mid": 2489.63,
           "state": "ACTIVE",
-          "distance_pct": 0.0003687966006574492,
-          "created_index": 499
+          "distance_pct": 0.0005940148985358408,
+          "created_index": 494
         }
       },
       "alignment": "PARTIAL_ALIGNMENT",
