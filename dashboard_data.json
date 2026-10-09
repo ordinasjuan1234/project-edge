@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-09T00:16:44+00:00",
+  "timestamp": "2026-10-09T00:21:05+00:00",
   "symbol": "ETHUSDT",
-  "price": 2479.29,
+  "price": 2475.7,
   "timeframes": {
     "4H": "BEARISH",
     "1H": "BEARISH",
@@ -53,7 +53,7 @@
       "mid": 2483.505,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 393
+      "created_index": 392
     }
   },
   "alignment": "PULLBACK_OR_WAIT",
@@ -81,7 +81,7 @@
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 81793.72,
+      "price": 81726.35,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -96,7 +96,7 @@
           "upper": 82318.0,
           "mid": 82078.86499999999,
           "state": "PARTIAL",
-          "distance_pct": 0.0004856968215158426,
+          "distance_pct": 0.001387435189193587,
           "created_index": 497
         },
         "1H": {
@@ -127,13 +127,13 @@
           "created_index": 464
         },
         "5M": {
-          "type": "BULLISH",
-          "lower": 81754.46,
-          "upper": 81762.0,
-          "mid": 81758.23000000001,
+          "type": "BEARISH",
+          "lower": 81743.8,
+          "upper": 81782.0,
+          "mid": 81762.9,
           "state": "ACTIVE",
-          "distance_pct": 0.00038780483391635893,
-          "created_index": 497
+          "distance_pct": 0.00021351742736580172,
+          "created_index": 499
         }
       },
       "alignment": "PULLBACK_OR_WAIT",
@@ -141,7 +141,7 @@
         "action": "WATCH_SHORT",
         "direction": "SHORT",
         "can_execute": false,
-        "reason": "Faltan condiciones: adx_1h, lower_timeframes_no_conflict, pullback_15m.",
+        "reason": "Faltan condiciones: adx_1h, lower_timeframes_no_conflict, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -150,18 +150,18 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "SHORT",
-        "message": "Faltan condiciones: adx_1h, lower_timeframes_no_conflict, pullback_15m.",
+        "message": "Faltan condiciones: adx_1h, lower_timeframes_no_conflict, trigger_5m.",
         "missing_conditions": [
           "adx_1h",
           "lower_timeframes_no_conflict",
-          "pullback_15m"
+          "trigger_5m"
         ]
       },
       "scanner_signal": "WAIT"
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2479.29,
+      "price": 2475.7,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -213,7 +213,7 @@
           "mid": 2483.505,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 393
+          "created_index": 392
         }
       },
       "alignment": "PULLBACK_OR_WAIT",
