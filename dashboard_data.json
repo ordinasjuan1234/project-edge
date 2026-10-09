@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-09T05:05:47+00:00",
+  "timestamp": "2026-10-09T05:11:01+00:00",
   "symbol": "ETHUSDT",
-  "price": 2490.29,
+  "price": 2491.19,
   "timeframes": {
     "4H": "BEARISH",
     "1H": "BEARISH",
@@ -47,13 +47,13 @@
       "created_index": 445
     },
     "5M": {
-      "type": "BULLISH",
-      "lower": 2488.97,
-      "upper": 2490.28,
-      "mid": 2489.625,
-      "state": "ACTIVE",
-      "distance_pct": 4.015596577010522e-06,
-      "created_index": 499
+      "type": "BEARISH",
+      "lower": 2490.82,
+      "upper": 2491.79,
+      "mid": 2491.3050000000003,
+      "state": "PARTIAL",
+      "distance_pct": 0.0,
+      "created_index": 494
     }
   },
   "alignment": "PARTIAL_ALIGNMENT",
@@ -61,7 +61,7 @@
     "action": "WATCH_SHORT",
     "direction": "SHORT",
     "can_execute": false,
-    "reason": "Faltan condiciones: adx_1h, pullback_15m.",
+    "reason": "Faltan condiciones: adx_1h, pullback_15m, trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -70,16 +70,17 @@
   "readiness": {
     "status": "NOT_READY",
     "bias": "SHORT",
-    "message": "Faltan condiciones: adx_1h, pullback_15m.",
+    "message": "Faltan condiciones: adx_1h, pullback_15m, trigger_5m.",
     "missing_conditions": [
       "adx_1h",
-      "pullback_15m"
+      "pullback_15m",
+      "trigger_5m"
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 82327.43,
+      "price": 82358.01,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "TRANSITION",
@@ -94,7 +95,7 @@
           "upper": 82209.2,
           "mid": 82078.61499999999,
           "state": "ACTIVE",
-          "distance_pct": 0.0014359735796409163,
+          "distance_pct": 0.0018068673587426126,
           "created_index": 499
         },
         "1H": {
@@ -103,14 +104,14 @@
           "upper": 82045.45,
           "mid": 82020.73,
           "state": "ACTIVE",
-          "distance_pct": 0.0034249828307506922,
+          "distance_pct": 0.0037951378378374818,
           "created_index": 497
         },
         "30M": {
           "type": "BEARISH",
-          "lower": 82327.43,
+          "lower": 82358.01,
           "upper": 82420.0,
-          "mid": 82373.715,
+          "mid": 82389.005,
           "state": "ACTIVE",
           "distance_pct": 0.0,
           "created_index": 499
@@ -126,12 +127,12 @@
         },
         "5M": {
           "type": "BEARISH",
-          "lower": 82280.01,
-          "upper": 82330.32,
-          "mid": 82305.16500000001,
+          "lower": 82336.8,
+          "upper": 82382.69,
+          "mid": 82359.745,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 496
+          "created_index": 494
         }
       },
       "alignment": "PARTIAL_ALIGNMENT",
@@ -157,7 +158,7 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2490.29,
+      "price": 2491.19,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -203,13 +204,13 @@
           "created_index": 445
         },
         "5M": {
-          "type": "BULLISH",
-          "lower": 2488.97,
-          "upper": 2490.28,
-          "mid": 2489.625,
-          "state": "ACTIVE",
-          "distance_pct": 4.015596577010522e-06,
-          "created_index": 499
+          "type": "BEARISH",
+          "lower": 2490.82,
+          "upper": 2491.79,
+          "mid": 2491.3050000000003,
+          "state": "PARTIAL",
+          "distance_pct": 0.0,
+          "created_index": 494
         }
       },
       "alignment": "PARTIAL_ALIGNMENT",
@@ -217,7 +218,7 @@
         "action": "WATCH_SHORT",
         "direction": "SHORT",
         "can_execute": false,
-        "reason": "Faltan condiciones: adx_1h, pullback_15m.",
+        "reason": "Faltan condiciones: adx_1h, pullback_15m, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -226,10 +227,11 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "SHORT",
-        "message": "Faltan condiciones: adx_1h, pullback_15m.",
+        "message": "Faltan condiciones: adx_1h, pullback_15m, trigger_5m.",
         "missing_conditions": [
           "adx_1h",
-          "pullback_15m"
+          "pullback_15m",
+          "trigger_5m"
         ]
       },
       "scanner_signal": "WAIT"
