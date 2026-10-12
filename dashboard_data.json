@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-10-12T19:31:13+00:00",
+  "timestamp": "2026-10-12T19:35:57+00:00",
   "symbol": "ETHUSDT",
-  "price": 2519.99,
+  "price": 2520.29,
   "timeframes": {
     "4H": "BULLISH",
     "1H": "BULLISH",
@@ -16,7 +16,7 @@
       "upper": 2540.42,
       "mid": 2537.71,
       "state": "ACTIVE",
-      "distance_pct": 0.005956372842749463,
+      "distance_pct": 0.005832638971550933,
       "created_index": 499
     },
     "1H": {
@@ -53,7 +53,7 @@
       "mid": 2521.87,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 468
+      "created_index": 467
     }
   },
   "alignment": "INTERMEDIATE_CONFLICT",
@@ -61,7 +61,7 @@
     "action": "WATCH_LONG",
     "direction": "LONG",
     "can_execute": false,
-    "reason": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, pullback_15m.",
+    "reason": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -70,18 +70,19 @@
   "readiness": {
     "status": "NOT_READY",
     "bias": "LONG",
-    "message": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, pullback_15m.",
+    "message": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
     "missing_conditions": [
       "ema_4h",
       "ema_1h",
       "lower_timeframes_no_conflict",
-      "pullback_15m"
+      "pullback_15m",
+      "trigger_5m"
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 82734.0,
+      "price": 82781.01,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "BULLISH",
@@ -96,7 +97,7 @@
           "upper": 83285.1,
           "mid": 83123.75,
           "state": "ACTIVE",
-          "distance_pct": 0.002760654628085118,
+          "distance_pct": 0.0021910819654069264,
           "created_index": 499
         },
         "1H": {
@@ -105,35 +106,35 @@
           "upper": 83285.1,
           "mid": 83168.555,
           "state": "PARTIAL",
-          "distance_pct": 0.0038437643532283554,
+          "distance_pct": 0.003273576479245975,
           "created_index": 493
         },
         "30M": {
-          "type": "BULLISH",
-          "lower": 82515.01,
-          "upper": 82720.26,
-          "mid": 82617.635,
-          "state": "ACTIVE",
-          "distance_pct": 0.0001660744071361863,
-          "created_index": 499
+          "type": "BEARISH",
+          "lower": 82807.28,
+          "upper": 83117.72,
+          "mid": 82962.5,
+          "state": "PARTIAL",
+          "distance_pct": 0.00031734331340006695,
+          "created_index": 486
         },
         "15M": {
           "type": "BEARISH",
-          "lower": 82620.71,
-          "upper": 82774.01,
-          "mid": 82697.36,
-          "state": "PARTIAL",
-          "distance_pct": 0.0,
-          "created_index": 489
+          "lower": 82803.68,
+          "upper": 82824.94,
+          "mid": 82814.31,
+          "state": "ACTIVE",
+          "distance_pct": 0.00027373424487870453,
+          "created_index": 488
         },
         "5M": {
-          "type": "BEARISH",
-          "lower": 82706.31,
-          "upper": 82800.0,
-          "mid": 82753.155,
-          "state": "PARTIAL",
-          "distance_pct": 0.0,
-          "created_index": 467
+          "type": "BULLISH",
+          "lower": 82737.22,
+          "upper": 82774.0,
+          "mid": 82755.61,
+          "state": "ACTIVE",
+          "distance_pct": 8.468125721098066e-05,
+          "created_index": 499
         }
       },
       "alignment": "INTERMEDIATE_CONFLICT",
@@ -141,7 +142,7 @@
         "action": "WATCH_LONG",
         "direction": "LONG",
         "can_execute": false,
-        "reason": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict.",
+        "reason": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -150,18 +151,19 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "LONG",
-        "message": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict.",
+        "message": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, trigger_5m.",
         "missing_conditions": [
           "ema_4h",
           "ema_1h",
-          "lower_timeframes_no_conflict"
+          "lower_timeframes_no_conflict",
+          "trigger_5m"
         ]
       },
       "scanner_signal": "WAIT"
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2519.99,
+      "price": 2520.29,
       "timeframes": {
         "4H": "BULLISH",
         "1H": "BULLISH",
@@ -176,7 +178,7 @@
           "upper": 2540.42,
           "mid": 2537.71,
           "state": "ACTIVE",
-          "distance_pct": 0.005956372842749463,
+          "distance_pct": 0.005832638971550933,
           "created_index": 499
         },
         "1H": {
@@ -213,7 +215,7 @@
           "mid": 2521.87,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 468
+          "created_index": 467
         }
       },
       "alignment": "INTERMEDIATE_CONFLICT",
@@ -221,7 +223,7 @@
         "action": "WATCH_LONG",
         "direction": "LONG",
         "can_execute": false,
-        "reason": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, pullback_15m.",
+        "reason": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -230,12 +232,13 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "LONG",
-        "message": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, pullback_15m.",
+        "message": "Faltan condiciones: ema_4h, ema_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
         "missing_conditions": [
           "ema_4h",
           "ema_1h",
           "lower_timeframes_no_conflict",
-          "pullback_15m"
+          "pullback_15m",
+          "trigger_5m"
         ]
       },
       "scanner_signal": "WAIT"
