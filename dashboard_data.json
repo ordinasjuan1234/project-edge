@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-09T04:21:07+00:00",
+  "timestamp": "2026-11-09T04:26:06+00:00",
   "symbol": "ETHUSDT",
-  "price": 2144.15,
+  "price": 2145.35,
   "timeframes": {
     "4H": "BEARISH",
     "1H": "BEARISH",
@@ -16,7 +16,7 @@
       "upper": 2225.0,
       "mid": 2192.75,
       "state": "ACTIVE",
-      "distance_pct": 0.007456248746799865,
+      "distance_pct": 0.007728797115577545,
       "created_index": 498
     },
     "1H": {
@@ -47,36 +47,38 @@
       "created_index": 474
     },
     "5M": {
-      "type": "BULLISH",
-      "lower": 2142.44,
-      "upper": 2143.45,
-      "mid": 2142.9449999999997,
-      "state": "PARTIAL",
-      "distance_pct": 0.000326469696616502,
-      "created_index": 497
+      "type": "BEARISH",
+      "lower": 2149.64,
+      "upper": 2153.85,
+      "mid": 2151.745,
+      "state": "ACTIVE",
+      "distance_pct": 0.00199967371291396,
+      "created_index": 480
     }
   },
   "alignment": "PARTIAL_ALIGNMENT",
   "decision": {
-    "action": "READY_SHORT",
+    "action": "WATCH_SHORT",
     "direction": "SHORT",
-    "can_execute": true,
-    "reason": "Tendencia 4H/1H, fuerza ADX, retroceso 15M y gatillo 5M confirmados.",
+    "can_execute": false,
+    "reason": "Faltan condiciones: trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
     "fvg_timeframes": []
   },
   "readiness": {
-    "status": "READY",
+    "status": "NOT_READY",
     "bias": "SHORT",
-    "message": "Tendencia 4H/1H, fuerza ADX, retroceso 15M y gatillo 5M confirmados.",
-    "missing_conditions": []
+    "message": "Faltan condiciones: trigger_5m.",
+    "missing_conditions": [
+      "trigger_5m"
+    ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 74984.74,
+      "price": 74989.2,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "TRANSITION",
@@ -91,7 +93,7 @@
           "upper": 74510.77,
           "mid": 73955.38500000001,
           "state": "PARTIAL",
-          "distance_pct": 0.006417216980848903,
+          "distance_pct": 0.00637998538456195,
           "created_index": 19
         },
         "1H": {
@@ -109,7 +111,7 @@
           "upper": 75235.73,
           "mid": 75182.14499999999,
           "state": "ACTIVE",
-          "distance_pct": 0.0018209942393855034,
+          "distance_pct": 0.001858400943069143,
           "created_index": 498
         },
         "15M": {
@@ -118,7 +120,7 @@
           "upper": 75235.73,
           "mid": 75176.86499999999,
           "state": "PARTIAL",
-          "distance_pct": 0.0016801792191167059,
+          "distance_pct": 0.0017175806649491249,
           "created_index": 495
         },
         "5M": {
@@ -127,8 +129,8 @@
           "upper": 74980.47,
           "mid": 74933.23999999999,
           "state": "PARTIAL",
-          "distance_pct": 5.694491972638799e-05,
-          "created_index": 497
+          "distance_pct": 0.00011641676401396369,
+          "created_index": 496
         }
       },
       "alignment": "PARTIAL_ALIGNMENT",
@@ -154,7 +156,7 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2144.15,
+      "price": 2145.35,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -169,7 +171,7 @@
           "upper": 2225.0,
           "mid": 2192.75,
           "state": "ACTIVE",
-          "distance_pct": 0.007456248746799865,
+          "distance_pct": 0.007728797115577545,
           "created_index": 498
         },
         "1H": {
@@ -200,33 +202,35 @@
           "created_index": 474
         },
         "5M": {
-          "type": "BULLISH",
-          "lower": 2142.44,
-          "upper": 2143.45,
-          "mid": 2142.9449999999997,
-          "state": "PARTIAL",
-          "distance_pct": 0.000326469696616502,
-          "created_index": 497
+          "type": "BEARISH",
+          "lower": 2149.64,
+          "upper": 2153.85,
+          "mid": 2151.745,
+          "state": "ACTIVE",
+          "distance_pct": 0.00199967371291396,
+          "created_index": 480
         }
       },
       "alignment": "PARTIAL_ALIGNMENT",
       "decision": {
-        "action": "READY_SHORT",
+        "action": "WATCH_SHORT",
         "direction": "SHORT",
-        "can_execute": true,
-        "reason": "Tendencia 4H/1H, fuerza ADX, retroceso 15M y gatillo 5M confirmados.",
+        "can_execute": false,
+        "reason": "Faltan condiciones: trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
         "fvg_timeframes": []
       },
       "readiness": {
-        "status": "READY",
+        "status": "NOT_READY",
         "bias": "SHORT",
-        "message": "Tendencia 4H/1H, fuerza ADX, retroceso 15M y gatillo 5M confirmados.",
-        "missing_conditions": []
+        "message": "Faltan condiciones: trigger_5m.",
+        "missing_conditions": [
+          "trigger_5m"
+        ]
       },
-      "scanner_signal": "SHORT"
+      "scanner_signal": "WAIT"
     }
   },
   "paper": {
@@ -237,7 +241,7 @@
     "manual_equity": 9943.238553976656,
     "auto_initial_balance": 1000.0,
     "auto_balance": 995.3592827070195,
-    "auto_equity": 996.4639223236911,
+    "auto_equity": 996.2606075584681,
     "auto_demo_started_at": "2026-08-29T14:31:02.355472+00:00",
     "position": {
       "trade_id": "65a7225ef1de4acd8712b6559afbe4c9",
@@ -289,8 +293,8 @@
       "estimated_net_reward_risk": 1.5,
       "leverage": 1
     },
-    "position_price": 2144.15,
-    "unrealized_pnl": 1.104639616671644,
+    "position_price": 2145.35,
+    "unrealized_pnl": 0.9013248514486218,
     "pending_order": null,
     "pending_order_price": null,
     "has_open_position": true,
