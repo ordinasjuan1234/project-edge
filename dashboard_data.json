@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-10T19:16:19+00:00",
+  "timestamp": "2026-11-10T19:21:14+00:00",
   "symbol": "ETHUSDT",
-  "price": 2041.62,
+  "price": 2041.99,
   "timeframes": {
     "4H": "BEARISH",
     "1H": "BEARISH",
@@ -16,7 +16,7 @@
       "upper": 2084.0,
       "mid": 2066.69,
       "state": "ACTIVE",
-      "distance_pct": 0.003913999774663346,
+      "distance_pct": 0.0035158162765645206,
       "created_index": 499
     },
     "1H": {
@@ -53,7 +53,7 @@
       "mid": 2043.8649999999998,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 456
+      "created_index": 455
     }
   },
   "alignment": "PULLBACK_OR_WAIT",
@@ -61,7 +61,7 @@
     "action": "WATCH_SHORT",
     "direction": "SHORT",
     "can_execute": false,
-    "reason": "Faltan condiciones: trigger_5m.",
+    "reason": "Faltan condiciones: pullback_15m, trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -70,15 +70,16 @@
   "readiness": {
     "status": "NOT_READY",
     "bias": "SHORT",
-    "message": "Faltan condiciones: trigger_5m.",
+    "message": "Faltan condiciones: pullback_15m, trigger_5m.",
     "missing_conditions": [
+      "pullback_15m",
       "trigger_5m"
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 73372.0,
+      "price": 73416.01,
       "timeframes": {
         "4H": "TRANSITION",
         "1H": "BEARISH",
@@ -93,7 +94,7 @@
           "upper": 74115.65,
           "mid": 73897.655,
           "state": "ACTIVE",
-          "distance_pct": 0.004028806820450514,
+          "distance_pct": 0.0035911785453882437,
           "created_index": 499
         },
         "1H": {
@@ -102,7 +103,7 @@
           "upper": 73342.0,
           "mid": 73316.345,
           "state": "ACTIVE",
-          "distance_pct": 0.0005723318434536138,
+          "distance_pct": 0.0010080907420601415,
           "created_index": 499
         },
         "30M": {
@@ -111,17 +112,17 @@
           "upper": 73326.01,
           "mid": 73308.35,
           "state": "ACTIVE",
-          "distance_pct": 0.0006269420723243101,
+          "distance_pct": 0.0012258906470128247,
           "created_index": 498
         },
         "15M": {
           "type": "BEARISH",
-          "lower": 73386.8,
-          "upper": 73418.87,
-          "mid": 73402.83499999999,
-          "state": "ACTIVE",
-          "distance_pct": 0.00020157550542786206,
-          "created_index": 499
+          "lower": 73416.01,
+          "upper": 74060.0,
+          "mid": 73738.005,
+          "state": "PARTIAL",
+          "distance_pct": 0.0,
+          "created_index": 485
         },
         "5M": {
           "type": "BEARISH",
@@ -130,7 +131,7 @@
           "mid": 73547.195,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 456
+          "created_index": 455
         }
       },
       "alignment": "NO_DIRECTION",
@@ -156,7 +157,7 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 2041.62,
+      "price": 2041.99,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -171,7 +172,7 @@
           "upper": 2084.0,
           "mid": 2066.69,
           "state": "ACTIVE",
-          "distance_pct": 0.003913999774663346,
+          "distance_pct": 0.0035158162765645206,
           "created_index": 499
         },
         "1H": {
@@ -208,7 +209,7 @@
           "mid": 2043.8649999999998,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 456
+          "created_index": 455
         }
       },
       "alignment": "PULLBACK_OR_WAIT",
@@ -216,7 +217,7 @@
         "action": "WATCH_SHORT",
         "direction": "SHORT",
         "can_execute": false,
-        "reason": "Faltan condiciones: trigger_5m.",
+        "reason": "Faltan condiciones: pullback_15m, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -225,8 +226,9 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "SHORT",
-        "message": "Faltan condiciones: trigger_5m.",
+        "message": "Faltan condiciones: pullback_15m, trigger_5m.",
         "missing_conditions": [
+          "pullback_15m",
           "trigger_5m"
         ]
       },
