@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-17T05:51:13+00:00",
+  "timestamp": "2026-11-17T05:55:59+00:00",
   "symbol": "ETHUSDT",
-  "price": 1834.9,
+  "price": 1834.19,
   "timeframes": {
     "4H": "BEARISH",
     "1H": "BULLISH",
@@ -16,7 +16,7 @@
       "upper": 1894.46,
       "mid": 1876.355,
       "state": "PARTIAL",
-      "distance_pct": 0.012857968233896153,
+      "distance_pct": 0.013117506910407289,
       "created_index": 484
     },
     "1H": {
@@ -25,7 +25,7 @@
       "upper": 1826.41,
       "mid": 1825.625,
       "state": "ACTIVE",
-      "distance_pct": 0.004534727180566043,
+      "distance_pct": 0.0042416543542380955,
       "created_index": 498
     },
     "30M": {
@@ -34,7 +34,7 @@
       "upper": 1829.29,
       "mid": 1824.33,
       "state": "PARTIAL",
-      "distance_pct": 0.003030220453988035,
+      "distance_pct": 0.002671478963466212,
       "created_index": 495
     },
     "15M": {
@@ -53,7 +53,7 @@
       "mid": 1835.9650000000001,
       "state": "PARTIAL",
       "distance_pct": 0.0,
-      "created_index": 322
+      "created_index": 321
     }
   },
   "alignment": "MACRO_CONTEXT_CONFLICT",
@@ -78,7 +78,7 @@
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 64836.0,
+      "price": 64822.75,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -93,7 +93,7 @@
           "upper": 66966.79,
           "mid": 66578.33499999999,
           "state": "ACTIVE",
-          "distance_pct": 0.020881451526705647,
+          "distance_pct": 0.02105468244432207,
           "created_index": 484
         },
         "1H": {
@@ -102,7 +102,7 @@
           "upper": 64745.15,
           "mid": 64108.0,
           "state": "PARTIAL",
-          "distance_pct": 0.0014012277129989287,
+          "distance_pct": 0.0012319319349121671,
           "created_index": 449
         },
         "30M": {
@@ -130,7 +130,7 @@
           "mid": 64901.235,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 471
+          "created_index": 470
         }
       },
       "alignment": "PULLBACK_OR_WAIT",
@@ -138,7 +138,7 @@
         "action": "WATCH_SHORT",
         "direction": "SHORT",
         "can_execute": false,
-        "reason": "Faltan condiciones: ema_1h, adx_1h.",
+        "reason": "Faltan condiciones: ema_1h, adx_1h, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -147,17 +147,18 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "SHORT",
-        "message": "Faltan condiciones: ema_1h, adx_1h.",
+        "message": "Faltan condiciones: ema_1h, adx_1h, trigger_5m.",
         "missing_conditions": [
           "ema_1h",
-          "adx_1h"
+          "adx_1h",
+          "trigger_5m"
         ]
       },
       "scanner_signal": "WAIT"
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 1834.9,
+      "price": 1834.19,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BULLISH",
@@ -172,7 +173,7 @@
           "upper": 1894.46,
           "mid": 1876.355,
           "state": "PARTIAL",
-          "distance_pct": 0.012857968233896153,
+          "distance_pct": 0.013117506910407289,
           "created_index": 484
         },
         "1H": {
@@ -181,7 +182,7 @@
           "upper": 1826.41,
           "mid": 1825.625,
           "state": "ACTIVE",
-          "distance_pct": 0.004534727180566043,
+          "distance_pct": 0.0042416543542380955,
           "created_index": 498
         },
         "30M": {
@@ -190,7 +191,7 @@
           "upper": 1829.29,
           "mid": 1824.33,
           "state": "PARTIAL",
-          "distance_pct": 0.003030220453988035,
+          "distance_pct": 0.002671478963466212,
           "created_index": 495
         },
         "15M": {
@@ -209,7 +210,7 @@
           "mid": 1835.9650000000001,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 322
+          "created_index": 321
         }
       },
       "alignment": "MACRO_CONTEXT_CONFLICT",
