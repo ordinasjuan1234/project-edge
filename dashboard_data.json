@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-19T23:05:57+00:00",
+  "timestamp": "2026-11-19T23:11:06+00:00",
   "symbol": "ETHUSDT",
-  "price": 1756.3,
+  "price": 1754.32,
   "timeframes": {
     "4H": "BEARISH",
     "1H": "BEARISH",
@@ -16,7 +16,7 @@
       "upper": 1798.0,
       "mid": 1794.7849999999999,
       "state": "ACTIVE",
-      "distance_pct": 0.019960034386368394,
+      "distance_pct": 0.021402142494712156,
       "created_index": 498
     },
     "1H": {
@@ -25,7 +25,7 @@
       "upper": 1768.42,
       "mid": 1765.2649999999999,
       "state": "PARTIAL",
-      "distance_pct": 0.0032395440726021266,
+      "distance_pct": 0.004423290677458883,
       "created_index": 497
     },
     "30M": {
@@ -51,9 +51,9 @@
       "lower": 1749.92,
       "upper": 1754.69,
       "mid": 1752.305,
-      "state": "ACTIVE",
-      "distance_pct": 0.0009166998804303934,
-      "created_index": 491
+      "state": "PARTIAL",
+      "distance_pct": 0.0,
+      "created_index": 490
     }
   },
   "alignment": "PULLBACK_OR_WAIT",
@@ -76,7 +76,7 @@
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 62095.41,
+      "price": 61990.0,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BULLISH",
@@ -91,7 +91,7 @@
           "upper": 62780.07,
           "mid": 62623.66,
           "state": "ACTIVE",
-          "distance_pct": 0.005731488944194627,
+          "distance_pct": 0.007633803271284318,
           "created_index": 499
         },
         "1H": {
@@ -100,7 +100,7 @@
           "upper": 62662.19,
           "mid": 62564.72,
           "state": "ACTIVE",
-          "distance_pct": 0.0058377224268051035,
+          "distance_pct": 0.007633803271284318,
           "created_index": 496
         },
         "30M": {
@@ -108,8 +108,8 @@
           "lower": 61756.17,
           "upper": 62086.0,
           "mid": 61921.085,
-          "state": "ACTIVE",
-          "distance_pct": 0.0002452447399190515,
+          "state": "PARTIAL",
+          "distance_pct": 0.0,
           "created_index": 498
         },
         "15M": {
@@ -117,18 +117,18 @@
           "lower": 61844.01,
           "upper": 62086.0,
           "mid": 61965.005000000005,
-          "state": "ACTIVE",
-          "distance_pct": 0.0002452447399190515,
+          "state": "PARTIAL",
+          "distance_pct": 0.0,
           "created_index": 497
         },
         "5M": {
           "type": "BULLISH",
-          "lower": 62065.15,
-          "upper": 62086.0,
-          "mid": 62075.575,
-          "state": "ACTIVE",
-          "distance_pct": 0.00015154099151617635,
-          "created_index": 492
+          "lower": 61876.01,
+          "upper": 62024.94,
+          "mid": 61950.475000000006,
+          "state": "PARTIAL",
+          "distance_pct": 0.0,
+          "created_index": 490
         }
       },
       "alignment": "MACRO_CONTEXT_CONFLICT",
@@ -154,7 +154,7 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 1756.3,
+      "price": 1754.32,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -169,7 +169,7 @@
           "upper": 1798.0,
           "mid": 1794.7849999999999,
           "state": "ACTIVE",
-          "distance_pct": 0.019960034386368394,
+          "distance_pct": 0.021402142494712156,
           "created_index": 498
         },
         "1H": {
@@ -178,7 +178,7 @@
           "upper": 1768.42,
           "mid": 1765.2649999999999,
           "state": "PARTIAL",
-          "distance_pct": 0.0032395440726021266,
+          "distance_pct": 0.004423290677458883,
           "created_index": 497
         },
         "30M": {
@@ -204,9 +204,9 @@
           "lower": 1749.92,
           "upper": 1754.69,
           "mid": 1752.305,
-          "state": "ACTIVE",
-          "distance_pct": 0.0009166998804303934,
-          "created_index": 491
+          "state": "PARTIAL",
+          "distance_pct": 0.0,
+          "created_index": 490
         }
       },
       "alignment": "PULLBACK_OR_WAIT",
@@ -237,14 +237,63 @@
     "manual_equity": 9943.238553976656,
     "auto_initial_balance": 1000.0,
     "auto_balance": 988.6484249656154,
-    "auto_equity": 988.6484249656154,
+    "auto_equity": 988.5706314347644,
     "auto_demo_started_at": "2026-08-29T14:31:02.355472+00:00",
-    "position": null,
-    "position_price": null,
-    "unrealized_pnl": 0.0,
+    "position": {
+      "trade_id": "be5fd389ab524e18a191fd9a35de7ade",
+      "symbol": "ETHUSDT",
+      "direction": "SHORT",
+      "signal_entry_price": 1754.35,
+      "entry_price": 1753.99913,
+      "quantity": 0.24244563483964857,
+      "initial_quantity": 0.24244563483964857,
+      "stop_loss": 1770.5286345572608,
+      "take_profit": 1719.5559481641083,
+      "target_plan": [
+        {
+          "name": "TP1",
+          "price": 1736.777539082054,
+          "fraction_to_final": 0.5,
+          "hit_at": null
+        },
+        {
+          "name": "TP2",
+          "price": 1728.1667436230812,
+          "fraction_to_final": 0.75,
+          "hit_at": null
+        },
+        {
+          "name": "TP3",
+          "price": 1719.5559481641083,
+          "fraction_to_final": 1.0,
+          "hit_at": null
+        }
+      ],
+      "source": "AUTO",
+      "fee_rate": 0.001,
+      "slippage_rate": 0.0002,
+      "realized_pnl": 0.0,
+      "realized_gross_pnl": 0.0,
+      "realized_fees": 0.0,
+      "partial_closes": [],
+      "opened_at": "2026-11-19T23:10:55.779474+00:00",
+      "trailing_enabled": false,
+      "trailing_pct": null,
+      "trailing_anchor": null,
+      "order_type": "MARKET",
+      "strategy": "PROJECT_EDGE_V3",
+      "risk_pct": 0.005,
+      "risk_budget": 4.943242124828077,
+      "estimated_risk": 4.943242124828077,
+      "estimated_cost": 1.02080279875425,
+      "estimated_net_reward_risk": 1.5000000000000002,
+      "leverage": 1
+    },
+    "position_price": 1754.32,
+    "unrealized_pnl": -0.07779353085100131,
     "pending_order": null,
     "pending_order_price": null,
-    "has_open_position": false,
+    "has_open_position": true,
     "has_pending_order": false,
     "auto_enabled": true,
     "auto_status": "ACTIVE",
