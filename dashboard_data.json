@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-21T17:41:05+00:00",
+  "timestamp": "2026-11-21T17:46:14+00:00",
   "symbol": "ETHUSDT",
-  "price": 1678.4,
+  "price": 1679.3,
   "timeframes": {
     "4H": "BEARISH",
     "1H": "BEARISH",
@@ -34,26 +34,26 @@
       "upper": 1724.67,
       "mid": 1704.365,
       "state": "PARTIAL",
-      "distance_pct": 0.003485856954731475,
+      "distance_pct": 0.0028285426752654363,
       "created_index": 447
     },
     "15M": {
       "type": "BEARISH",
-      "lower": 1697.18,
-      "upper": 1698.47,
-      "mid": 1697.825,
-      "state": "PARTIAL",
-      "distance_pct": 0.011189227836034302,
-      "created_index": 486
+      "lower": 1681.3,
+      "upper": 1683.56,
+      "mid": 1682.4299999999998,
+      "state": "ACTIVE",
+      "distance_pct": 0.0011850105102691041,
+      "created_index": 499
     },
     "5M": {
       "type": "BEARISH",
-      "lower": 1680.28,
-      "upper": 1680.8,
-      "mid": 1680.54,
+      "lower": 1683.07,
+      "upper": 1685.05,
+      "mid": 1684.06,
       "state": "ACTIVE",
-      "distance_pct": 0.001120114394661512,
-      "created_index": 499
+      "distance_pct": 0.002244983028642876,
+      "created_index": 497
     }
   },
   "alignment": "PARTIAL_ALIGNMENT",
@@ -61,7 +61,7 @@
     "action": "WATCH_SHORT",
     "direction": "SHORT",
     "can_execute": false,
-    "reason": "Faltan condiciones: ema_1h, adx_1h.",
+    "reason": "Faltan condiciones: ema_1h, adx_1h, trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -70,16 +70,17 @@
   "readiness": {
     "status": "NOT_READY",
     "bias": "SHORT",
-    "message": "Faltan condiciones: ema_1h, adx_1h.",
+    "message": "Faltan condiciones: ema_1h, adx_1h, trigger_5m.",
     "missing_conditions": [
       "ema_1h",
-      "adx_1h"
+      "adx_1h",
+      "trigger_5m"
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 60006.52,
+      "price": 60038.0,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -94,17 +95,17 @@
           "upper": 61552.0,
           "mid": 60788.619999999995,
           "state": "PARTIAL",
-          "distance_pct": 0.0003117993991653763,
+          "distance_pct": 0.0,
           "created_index": 493
         },
         "1H": {
-          "type": "BULLISH",
-          "lower": 59175.0,
-          "upper": 60164.51,
-          "mid": 59669.755000000005,
+          "type": "BEARISH",
+          "lower": 60025.24,
+          "upper": 61344.74,
+          "mid": 60684.99,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 496
+          "created_index": 474
         },
         "30M": {
           "type": "BEARISH",
@@ -112,26 +113,26 @@
           "upper": 61344.74,
           "mid": 60893.47,
           "state": "PARTIAL",
-          "distance_pct": 0.007260544354180184,
+          "distance_pct": 0.006732235129045667,
           "created_index": 447
         },
         "15M": {
-          "type": "BULLISH",
-          "lower": 59520.0,
-          "upper": 59540.0,
-          "mid": 59530.0,
+          "type": "BEARISH",
+          "lower": 60133.75,
+          "upper": 60140.0,
+          "mid": 60136.875,
           "state": "ACTIVE",
-          "distance_pct": 0.00777448850558234,
-          "created_index": 483
+          "distance_pct": 0.0015946564518044145,
+          "created_index": 499
         },
         "5M": {
           "type": "BEARISH",
-          "lower": 60028.79,
-          "upper": 60070.0,
-          "mid": 60049.395000000004,
-          "state": "ACTIVE",
-          "distance_pct": 0.0003711263376047149,
-          "created_index": 499
+          "lower": 60127.78,
+          "upper": 60218.27,
+          "mid": 60173.024999999994,
+          "state": "PARTIAL",
+          "distance_pct": 0.0014953862553715785,
+          "created_index": 497
         }
       },
       "alignment": "INTERMEDIATE_CONFLICT",
@@ -139,7 +140,7 @@
         "action": "WATCH_SHORT",
         "direction": "SHORT",
         "can_execute": false,
-        "reason": "Faltan condiciones: ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
+        "reason": "Faltan condiciones: ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -148,20 +149,19 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "SHORT",
-        "message": "Faltan condiciones: ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m, trigger_5m.",
+        "message": "Faltan condiciones: ema_1h, adx_1h, lower_timeframes_no_conflict, pullback_15m.",
         "missing_conditions": [
           "ema_1h",
           "adx_1h",
           "lower_timeframes_no_conflict",
-          "pullback_15m",
-          "trigger_5m"
+          "pullback_15m"
         ]
       },
       "scanner_signal": "WAIT"
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 1678.4,
+      "price": 1679.3,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -194,26 +194,26 @@
           "upper": 1724.67,
           "mid": 1704.365,
           "state": "PARTIAL",
-          "distance_pct": 0.003485856954731475,
+          "distance_pct": 0.0028285426752654363,
           "created_index": 447
         },
         "15M": {
           "type": "BEARISH",
-          "lower": 1697.18,
-          "upper": 1698.47,
-          "mid": 1697.825,
-          "state": "PARTIAL",
-          "distance_pct": 0.011189227836034302,
-          "created_index": 486
+          "lower": 1681.3,
+          "upper": 1683.56,
+          "mid": 1682.4299999999998,
+          "state": "ACTIVE",
+          "distance_pct": 0.0011850105102691041,
+          "created_index": 499
         },
         "5M": {
           "type": "BEARISH",
-          "lower": 1680.28,
-          "upper": 1680.8,
-          "mid": 1680.54,
+          "lower": 1683.07,
+          "upper": 1685.05,
+          "mid": 1684.06,
           "state": "ACTIVE",
-          "distance_pct": 0.001120114394661512,
-          "created_index": 499
+          "distance_pct": 0.002244983028642876,
+          "created_index": 497
         }
       },
       "alignment": "PARTIAL_ALIGNMENT",
@@ -221,7 +221,7 @@
         "action": "WATCH_SHORT",
         "direction": "SHORT",
         "can_execute": false,
-        "reason": "Faltan condiciones: ema_1h, adx_1h.",
+        "reason": "Faltan condiciones: ema_1h, adx_1h, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -230,10 +230,11 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "SHORT",
-        "message": "Faltan condiciones: ema_1h, adx_1h.",
+        "message": "Faltan condiciones: ema_1h, adx_1h, trigger_5m.",
         "missing_conditions": [
           "ema_1h",
-          "adx_1h"
+          "adx_1h",
+          "trigger_5m"
         ]
       },
       "scanner_signal": "WAIT"
