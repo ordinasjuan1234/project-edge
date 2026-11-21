@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-11-21T19:21:14+00:00",
+  "timestamp": "2026-11-21T19:26:01+00:00",
   "symbol": "ETHUSDT",
-  "price": 1684.12,
+  "price": 1684.85,
   "timeframes": {
     "4H": "BEARISH",
     "1H": "BEARISH",
@@ -43,7 +43,7 @@
       "upper": 1698.47,
       "mid": 1697.825,
       "state": "PARTIAL",
-      "distance_pct": 0.007718889904879526,
+      "distance_pct": 0.007318158886547856,
       "created_index": 479
     },
     "5M": {
@@ -52,8 +52,8 @@
       "upper": 1701.63,
       "mid": 1700.4650000000001,
       "state": "ACTIVE",
-      "distance_pct": 0.00901360948150967,
-      "created_index": 437
+      "distance_pct": 0.008576431136302963,
+      "created_index": 436
     }
   },
   "alignment": "PARTIAL_ALIGNMENT",
@@ -61,7 +61,7 @@
     "action": "WATCH_SHORT",
     "direction": "SHORT",
     "can_execute": false,
-    "reason": "Faltan condiciones: ema_1h, adx_1h, pullback_15m.",
+    "reason": "Faltan condiciones: ema_1h, adx_1h, pullback_15m, trigger_5m.",
     "fvg_required": false,
     "fvg_confirmed": null,
     "fvg_expected_type": null,
@@ -70,17 +70,18 @@
   "readiness": {
     "status": "NOT_READY",
     "bias": "SHORT",
-    "message": "Faltan condiciones: ema_1h, adx_1h, pullback_15m.",
+    "message": "Faltan condiciones: ema_1h, adx_1h, pullback_15m, trigger_5m.",
     "missing_conditions": [
       "ema_1h",
       "adx_1h",
-      "pullback_15m"
+      "pullback_15m",
+      "trigger_5m"
     ]
   },
   "manual_scanner": {
     "BTCUSDT": {
       "symbol": "BTCUSDT",
-      "price": 60297.74,
+      "price": 60290.0,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -113,16 +114,16 @@
           "upper": 61344.74,
           "mid": 60893.47,
           "state": "PARTIAL",
-          "distance_pct": 0.002395778017550892,
+          "distance_pct": 0.0024009315156549257,
           "created_index": 444
         },
         "15M": {
           "type": "BULLISH",
           "lower": 60190.92,
-          "upper": 60286.5,
-          "mid": 60238.71,
+          "upper": 60278.95,
+          "mid": 60234.935,
           "state": "ACTIVE",
-          "distance_pct": 0.0001862425003396181,
+          "distance_pct": 0.0003064807239712074,
           "created_index": 499
         },
         "5M": {
@@ -132,7 +133,7 @@
           "mid": 60252.04,
           "state": "PARTIAL",
           "distance_pct": 0.0,
-          "created_index": 496
+          "created_index": 495
         }
       },
       "alignment": "INTERMEDIATE_CONFLICT",
@@ -162,7 +163,7 @@
     },
     "ETHUSDT": {
       "symbol": "ETHUSDT",
-      "price": 1684.12,
+      "price": 1684.85,
       "timeframes": {
         "4H": "BEARISH",
         "1H": "BEARISH",
@@ -204,7 +205,7 @@
           "upper": 1698.47,
           "mid": 1697.825,
           "state": "PARTIAL",
-          "distance_pct": 0.007718889904879526,
+          "distance_pct": 0.007318158886547856,
           "created_index": 479
         },
         "5M": {
@@ -213,8 +214,8 @@
           "upper": 1701.63,
           "mid": 1700.4650000000001,
           "state": "ACTIVE",
-          "distance_pct": 0.00901360948150967,
-          "created_index": 437
+          "distance_pct": 0.008576431136302963,
+          "created_index": 436
         }
       },
       "alignment": "PARTIAL_ALIGNMENT",
@@ -222,7 +223,7 @@
         "action": "WATCH_SHORT",
         "direction": "SHORT",
         "can_execute": false,
-        "reason": "Faltan condiciones: ema_1h, adx_1h, pullback_15m.",
+        "reason": "Faltan condiciones: ema_1h, adx_1h, pullback_15m, trigger_5m.",
         "fvg_required": false,
         "fvg_confirmed": null,
         "fvg_expected_type": null,
@@ -231,11 +232,12 @@
       "readiness": {
         "status": "NOT_READY",
         "bias": "SHORT",
-        "message": "Faltan condiciones: ema_1h, adx_1h, pullback_15m.",
+        "message": "Faltan condiciones: ema_1h, adx_1h, pullback_15m, trigger_5m.",
         "missing_conditions": [
           "ema_1h",
           "adx_1h",
-          "pullback_15m"
+          "pullback_15m",
+          "trigger_5m"
         ]
       },
       "scanner_signal": "WAIT"
